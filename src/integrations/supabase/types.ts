@@ -160,6 +160,76 @@ export type Database = {
         }
         Relationships: []
       }
+      drama_comments: {
+        Row: {
+          created_at: string
+          drama_id: string
+          id: string
+          is_live_chat: boolean | null
+          message: string
+          timestamp_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          drama_id: string
+          id?: string
+          is_live_chat?: boolean | null
+          message: string
+          timestamp_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          drama_id?: string
+          id?: string
+          is_live_chat?: boolean | null
+          message?: string
+          timestamp_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drama_comments_drama_id_fkey"
+            columns: ["drama_id"]
+            isOneToOne: false
+            referencedRelation: "k_dramas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drama_reactions: {
+        Row: {
+          created_at: string
+          drama_id: string
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          drama_id: string
+          id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          drama_id?: string
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drama_reactions_drama_id_fkey"
+            columns: ["drama_id"]
+            isOneToOne: false
+            referencedRelation: "k_dramas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollments: {
         Row: {
           course_id: string
@@ -349,6 +419,60 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      k_dramas: {
+        Row: {
+          created_at: string
+          description: string | null
+          difficulty_level: string | null
+          duration_minutes: number | null
+          episode_number: number | null
+          id: string
+          is_live: boolean | null
+          scheduled_at: string | null
+          season_number: number | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string | null
+          duration_minutes?: number | null
+          episode_number?: number | null
+          id?: string
+          is_live?: boolean | null
+          scheduled_at?: string | null
+          season_number?: number | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url: string
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string | null
+          duration_minutes?: number | null
+          episode_number?: number | null
+          id?: string
+          is_live?: boolean | null
+          scheduled_at?: string | null
+          season_number?: number | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string
+          view_count?: number | null
+        }
+        Relationships: []
       }
       lesson_conversations: {
         Row: {
@@ -813,6 +937,82 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vocabulary_notes: {
+        Row: {
+          context: string | null
+          created_at: string
+          drama_id: string
+          id: string
+          timestamp_seconds: number | null
+          translation: string | null
+          user_id: string
+          word: string
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string
+          drama_id: string
+          id?: string
+          timestamp_seconds?: number | null
+          translation?: string | null
+          user_id: string
+          word: string
+        }
+        Update: {
+          context?: string | null
+          created_at?: string
+          drama_id?: string
+          id?: string
+          timestamp_seconds?: number | null
+          translation?: string | null
+          user_id?: string
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vocabulary_notes_drama_id_fkey"
+            columns: ["drama_id"]
+            isOneToOne: false
+            referencedRelation: "k_dramas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_history: {
+        Row: {
+          completed: boolean | null
+          drama_id: string
+          id: string
+          last_watched_at: string
+          progress_seconds: number | null
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          drama_id: string
+          id?: string
+          last_watched_at?: string
+          progress_seconds?: number | null
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          drama_id?: string
+          id?: string
+          last_watched_at?: string
+          progress_seconds?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_history_drama_id_fkey"
+            columns: ["drama_id"]
+            isOneToOne: false
+            referencedRelation: "k_dramas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
