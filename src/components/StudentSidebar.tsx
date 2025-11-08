@@ -1,6 +1,7 @@
 import { Home, BookOpen, Brain, Trophy, Calendar, MessageSquare } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -13,20 +14,23 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const studentItems = [
-  { title: "Dashboard", url: "/student", icon: Home },
-  { title: "My Package", url: "/student/package", icon: Calendar },
-  { title: "Book Lesson", url: "/student/book", icon: BookOpen },
-  { title: "My Lessons", url: "/student/lessons", icon: BookOpen },
-  { title: "AI Practice", url: "/student/practice", icon: Brain },
-  { title: "TOPIK Prep", url: "/student/topik", icon: Trophy },
-  { title: "Daily Conversations", url: "/student/conversations", icon: MessageSquare },
-];
+// items now computed inside component to enable translations
 
 export function StudentSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { t } = useLanguage();
+
+  const items = [
+    { title: t('dashboard'), url: '/student', icon: Home },
+    { title: t('myPackage'), url: '/student/package', icon: Calendar },
+    { title: t('bookLesson'), url: '/student/book', icon: BookOpen },
+    { title: t('lessons'), url: '/student/lessons', icon: BookOpen },
+    { title: t('practice'), url: '/student/practice', icon: Brain },
+    { title: t('topikPrep'), url: '/student/topik', icon: Trophy },
+    { title: t('conversationPractice'), url: '/student/conversations', icon: MessageSquare },
+  ];
 
   const isActive = (path: string) => currentPath === path;
 
@@ -34,11 +38,11 @@ export function StudentSidebar() {
     <Sidebar className={open ? "w-60" : "w-14"} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Student Portal</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('studentPortal')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {studentItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}

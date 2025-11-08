@@ -1,6 +1,7 @@
 import { Home, Users, Calendar, DollarSign, BookOpen, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -13,18 +14,21 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const teacherItems = [
-  { title: "Dashboard", url: "/teacher", icon: Home },
-  { title: "Availability", url: "/teacher/availability", icon: Calendar },
-  { title: "My Students", url: "/teacher/students", icon: Users },
-  { title: "Earnings", url: "/teacher/earnings", icon: DollarSign },
-  { title: "Homework", url: "/teacher/homework", icon: BookOpen },
-];
+// items now computed inside component to enable translations
 
 export function TeacherSidebar() {
   const { open } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  const { t } = useLanguage();
+
+  const items = [
+    { title: t('dashboard'), url: '/teacher', icon: Home },
+    { title: t('availability'), url: '/teacher/availability', icon: Calendar },
+    { title: t('teacherStudents'), url: '/teacher/students', icon: Users },
+    { title: t('earnings'), url: '/teacher/earnings', icon: DollarSign },
+    { title: t('homework'), url: '/teacher/homework', icon: BookOpen },
+  ];
 
   const isActive = (path: string) => currentPath === path;
 
@@ -32,11 +36,11 @@ export function TeacherSidebar() {
     <Sidebar className={open ? "w-60" : "w-14"} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Teacher Portal</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('teacherPortal')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {teacherItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}

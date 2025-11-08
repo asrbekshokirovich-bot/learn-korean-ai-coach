@@ -98,6 +98,8 @@ export const translations = {
     // Teacher Dashboard
     availability: "Mavjudlik",
     teacherStudents: "O'quvchilar",
+    earnings: "Daromadlar",
+    homework: "Uy vazifalari",
     teacherPortal: "O'qituvchi portali",
     teacher: "O'qituvchi",
     teacherPayout: "O'qituvchi (70% to'lov)",
@@ -250,6 +252,8 @@ export const translations = {
     // Teacher Dashboard
     availability: "My Availability",
     teacherStudents: "Students",
+    earnings: "Earnings",
+    homework: "Homework",
     teacherPortal: "Teacher Portal",
     teacher: "Teacher",
     teacherPayout: "Teacher (70% Payout)",
@@ -402,6 +406,8 @@ export const translations = {
     // Teacher Dashboard
     availability: "내 가능 시간",
     teacherStudents: "학생",
+    earnings: "수익",
+    homework: "숙제",
     teacherPortal: "교사 포털",
     teacher: "교사",
     teacherPayout: "교사 (70% 지급)",
@@ -554,6 +560,8 @@ export const translations = {
     // Teacher Dashboard
     availability: "Моя доступность",
     teacherStudents: "Студенты",
+    earnings: "Доходы",
+    homework: "Домашнее задание",
     teacherPortal: "Портал учителя",
     teacher: "Учитель",
     teacherPayout: "Учитель (70% выплата)",
