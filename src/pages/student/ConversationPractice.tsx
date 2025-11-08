@@ -60,7 +60,14 @@ const ConversationPractice = () => {
 
       // Create a new recording entry
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to record",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { data: recording, error } = await supabase
         .from("conversation_recordings")
@@ -84,9 +91,12 @@ const ConversationPractice = () => {
       });
     } catch (error) {
       console.error("Error starting recording:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start recording";
       toast({
         title: "Error",
-        description: "Failed to start recording",
+        description: errorMessage.includes("Permission") 
+          ? "Please allow microphone access to record" 
+          : errorMessage,
         variant: "destructive",
       });
     }
