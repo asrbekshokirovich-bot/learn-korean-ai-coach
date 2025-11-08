@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SignUpDialogProps {
   open: boolean;
@@ -44,6 +45,7 @@ const teacherSchema = authSchema.extend({
 
 const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSignIn }: SignUpDialogProps) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   // Student form state
@@ -202,9 +204,9 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Get Started with Korean AI</DialogTitle>
+          <DialogTitle>{t('getStartedWith')}</DialogTitle>
           <DialogDescription>
-            Choose your role to create your account
+            {t('chooseRole')}
           </DialogDescription>
         </DialogHeader>
 
@@ -212,7 +214,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
           <TabsContent value="student" className="space-y-4 pt-4">
             <form onSubmit={handleStudentSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="student-email">Email</Label>
+                <Label htmlFor="student-email">{t('email')}</Label>
                 <Input
                   id="student-email"
                   type="email"
@@ -226,7 +228,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="student-password">Password</Label>
+                <Label htmlFor="student-password">{t('password')}</Label>
                 <Input
                   id="student-password"
                   type="password"
@@ -240,21 +242,21 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
                   autoComplete="new-password"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters
+                  {t('mustBeChars')}
                 </p>
               </div>
               <Button className="w-full" variant="hero" type="submit" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating account...
+                    {t('creatingAccount')}
                   </>
                 ) : (
-                  "Start Learning Free"
+                  t('startLearningFree')
                 )}
               </Button>
               <p className="text-xs text-center text-muted-foreground">
-                By signing up, you agree to our Terms & Privacy Policy
+                {t('bySigningUp')}
               </p>
             </form>
           </TabsContent>
@@ -262,7 +264,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
 
         <div className="text-center pt-4 border-t">
           <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t('alreadyHaveAccount')}{" "}
             <button
               type="button"
               className="text-primary hover:underline font-medium"
@@ -272,7 +274,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
               }}
               disabled={loading}
             >
-              Sign in
+              {t('signInNow')}
             </button>
           </p>
         </div>

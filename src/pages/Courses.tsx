@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SignUpDialog from "@/components/SignUpDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Course {
   id: string;
@@ -23,6 +24,7 @@ const Courses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [signUpOpen, setSignUpOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadCourses();
@@ -62,10 +64,10 @@ const Courses = () => {
       <div className="container px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Complete Course Catalog
+            {t('completeCatalog')}
           </h2>
           <p className="text-lg text-muted-foreground">
-            From beginner to TOPIK mastery. All courses include live teachers + AI assistance.
+            {t('beginnerToMastery')}
           </p>
         </div>
 
@@ -109,15 +111,15 @@ const Courses = () => {
                   setSignUpOpen(true);
                 }}
               >
-                {course.price_usd === 0 ? "Book Free Trial" : "Enroll Now"}
+                {course.price_usd === 0 ? t('bookFreeTrial') : t('enrollNowBtn')}
               </Button>
             </Card>
           ))}
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-12">
-          No refunds. All payments to TOPIK CLUB.{" "}
-          <span className="text-primary font-medium">Teachers are employees — not freelancers.</span>
+          {t('noRefunds')}{" "}
+          <span className="text-primary font-medium">{t('teachersEmployees')}</span>
         </p>
       </div>
 

@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SignInDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ const signInSchema = z.object({
 const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -128,15 +130,15 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Welcome Back</DialogTitle>
+          <DialogTitle>{t('welcomeBack')}</DialogTitle>
           <DialogDescription>
-            Sign in to continue your Korean learning journey
+            {t('signInToContinue')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSignIn} className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label htmlFor="signin-email">Email</Label>
+            <Label htmlFor="signin-email">{t('email')}</Label>
             <Input
               id="signin-email"
               type="email"
@@ -152,18 +154,18 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="signin-password">Password</Label>
+              <Label htmlFor="signin-password">{t('password')}</Label>
               <button
                 type="button"
                 className="text-xs text-primary hover:underline"
                 onClick={() => {
                   toast({
-                    title: "Password reset",
+                    title: t('forgotPassword'),
                     description: "Password reset functionality coming soon!",
                   });
                 }}
               >
-                Forgot password?
+                {t('forgotPassword')}
               </button>
             </div>
             <Input
@@ -183,16 +185,16 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Signing in...
+                {t('signingIn')}
               </>
             ) : (
-              "Sign In"
+              t('signIn')
             )}
           </Button>
 
           <div className="text-center pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              {t('dontHaveAccount')}{" "}
               <button
                 type="button"
                 className="text-primary hover:underline font-medium"
@@ -202,7 +204,7 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
                 }}
                 disabled={loading}
               >
-                Sign up
+                {t('signUpNow')}
               </button>
             </p>
           </div>

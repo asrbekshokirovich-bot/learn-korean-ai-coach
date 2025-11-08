@@ -8,8 +8,10 @@ import { CreditCard, Calendar, Package } from "lucide-react";
 import { format, startOfMonth, addMonths } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MyPackage = () => {
+  const { t } = useLanguage();
   const [currentPackage, setCurrentPackage] = useState<any>(null);
   const [lessonsCount, setLessonsCount] = useState(4);
   const [pricePerLesson] = useState(20); // $20 per 50-min lesson
@@ -134,17 +136,17 @@ const MyPackage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">My Lesson Package</h2>
-        <p className="text-muted-foreground">Purchase lessons and manage your credits</p>
+        <h2 className="text-3xl font-bold mb-2">{t('myLessonPackage')}</h2>
+        <p className="text-muted-foreground">{t('purchaseAndManage')}</p>
       </div>
 
       {currentPackage && (
         <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-2xl font-bold">Current Package</h3>
+              <h3 className="text-2xl font-bold">{t('currentPackage')}</h3>
               <p className="text-muted-foreground">
-                Valid for {format(new Date(currentPackage.month_period), "MMMM yyyy")}
+                {t('validFor')} {format(new Date(currentPackage.month_period), "MMMM yyyy")}
               </p>
             </div>
             <Badge variant={currentPackage.status === "active" ? "default" : "secondary"}>
@@ -155,37 +157,37 @@ const MyPackage = () => {
           <div className="grid grid-cols-3 gap-4 mt-6">
             <div className="text-center p-4 bg-card rounded-lg">
               <Package className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <p className="text-sm text-muted-foreground">Purchased</p>
+              <p className="text-sm text-muted-foreground">{t('purchased')}</p>
               <p className="text-2xl font-bold">{currentPackage.lessons_purchased}</p>
             </div>
             <div className="text-center p-4 bg-card rounded-lg">
               <CreditCard className="w-8 h-8 mx-auto mb-2 text-green-500" />
-              <p className="text-sm text-muted-foreground">Remaining</p>
+              <p className="text-sm text-muted-foreground">{t('remaining')}</p>
               <p className="text-2xl font-bold">{currentPackage.lessons_remaining}</p>
             </div>
             <div className="text-center p-4 bg-card rounded-lg">
               <Calendar className="w-8 h-8 mx-auto mb-2 text-orange-500" />
-              <p className="text-sm text-muted-foreground">Used</p>
+              <p className="text-sm text-muted-foreground">{t('used')}</p>
               <p className="text-2xl font-bold">{currentPackage.lessons_used}</p>
             </div>
           </div>
 
           <div className="mt-4 p-4 bg-card rounded-lg">
-            <p className="text-sm text-muted-foreground">Total Paid</p>
+            <p className="text-sm text-muted-foreground">{t('totalPaid')}</p>
             <p className="text-xl font-bold">${currentPackage.total_amount_paid}</p>
           </div>
         </Card>
       )}
 
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">Purchase Package for Next Month</h3>
+        <h3 className="text-xl font-semibold mb-4">{t('purchaseForNextMonth')}</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Buy lessons for {format(startOfMonth(addMonths(new Date(), 1)), "MMMM yyyy")}
+          {t('buyLessonsFor')} {format(startOfMonth(addMonths(new Date(), 1)), "MMMM yyyy")}
         </p>
 
         <div className="space-y-4">
           <div>
-            <Label>Number of Lessons</Label>
+            <Label>{t('numberOfLessons')}</Label>
             <Input
               type="number"
               min="1"
@@ -198,25 +200,25 @@ const MyPackage = () => {
 
           <div className="p-4 bg-muted rounded-lg">
             <div className="flex justify-between mb-2">
-              <span>Price per lesson:</span>
+              <span>{t('pricePerLesson')}</span>
               <span className="font-semibold">${pricePerLesson}</span>
             </div>
             <div className="flex justify-between mb-2">
-              <span>Number of lessons:</span>
+              <span>{t('numberOfLessons')}:</span>
               <span className="font-semibold">{lessonsCount}</span>
             </div>
             <div className="border-t pt-2 mt-2 flex justify-between">
-              <span className="font-bold">Total:</span>
+              <span className="font-bold">{t('total')}:</span>
               <span className="font-bold text-xl">${totalCost}</span>
             </div>
           </div>
 
           <Button className="w-full" size="lg" onClick={handlePurchasePackage}>
-            Purchase Package - ${totalCost}
+            {t('purchasePackage')} - ${totalCost}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Unused lessons will automatically roll over to the next month
+            {t('unusedLessonsRollover')}
           </p>
         </div>
       </Card>

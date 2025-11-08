@@ -7,8 +7,10 @@ import { Calendar, Clock, Video, MessageSquare, Link as LinkIcon } from "lucide-
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import LinkConversationDialog from "@/components/LinkConversationDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Lessons = () => {
+  const { t } = useLanguage();
   const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
   const [completedLessons, setCompletedLessons] = useState<any[]>([]);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
