@@ -15,8 +15,8 @@ const ConversationPractice = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const [transcription, setTranscription] = useState("");
+  const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -41,24 +41,18 @@ const ConversationPractice = () => {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+      // Check if browser supports Speech Recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        toast({
+          title: "Not supported",
+          description: "Speech recognition is not supported in your browser. Please use Chrome.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await processRecording(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      // Create a new recording entry
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -69,6 +63,7 @@ const ConversationPractice = () => {
         return;
       }
 
+      // Create a new recording entry
       const { data: recording, error } = await supabase
         .from("conversation_recordings")
         .insert({
@@ -82,7 +77,45 @@ const ConversationPractice = () => {
       if (error) throw error;
 
       setCurrentRecording(recording);
-      mediaRecorder.start();
+      setTranscription("");
+
+      // Initialize speech recognition
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'ko-KR'; // Korean language
+
+      recognition.onresult = (event: any) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + ' ';
+          }
+        }
+        if (finalTranscript) {
+          setTranscription(prev => prev + finalTranscript);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error !== 'no-speech') {
+          toast({
+            title: "Recognition error",
+            description: "There was an error with speech recognition",
+            variant: "destructive",
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        if (isRecording) {
+          processRecording();
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
       setIsRecording(true);
 
       toast({
@@ -94,69 +127,52 @@ const ConversationPractice = () => {
       const errorMessage = error instanceof Error ? error.message : "Failed to start recording";
       toast({
         title: "Error",
-        description: errorMessage.includes("Permission") 
-          ? "Please allow microphone access to record" 
-          : errorMessage,
+        description: errorMessage,
         variant: "destructive",
       });
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
       setIsRecording(false);
     }
   };
 
-  const processRecording = async (audioBlob: Blob) => {
+  const processRecording = async () => {
     if (!currentRecording) return;
 
     setIsProcessing(true);
 
     try {
-      // Convert audio to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
+      // Update recording with transcription from browser's Speech Recognition
+      const { error: updateError } = await supabase
+        .from("conversation_recordings")
+        .update({
+          transcription: transcription,
+          status: "processing",
+        })
+        .eq("id", currentRecording.id);
 
-        // Transcribe using OpenAI Whisper (you'll need to add OPENAI_API_KEY secret)
-        const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke(
-          "transcribe-audio",
-          { body: { audio: base64Audio } }
-        );
+      if (updateError) throw updateError;
 
-        if (transcriptionError) throw transcriptionError;
+      // Analyze the conversation using Lovable AI
+      const { error: analysisError } = await supabase.functions.invoke(
+        "analyze-conversation",
+        { body: { recordingId: currentRecording.id } }
+      );
 
-        // Update recording with transcription
-        const { error: updateError } = await supabase
-          .from("conversation_recordings")
-          .update({
-            transcription: transcriptionData.text,
-            status: "processing",
-          })
-          .eq("id", currentRecording.id);
+      if (analysisError) throw analysisError;
 
-        if (updateError) throw updateError;
+      toast({
+        title: "Analysis complete!",
+        description: "Your conversation has been analyzed",
+      });
 
-        // Analyze the conversation
-        const { error: analysisError } = await supabase.functions.invoke(
-          "analyze-conversation",
-          { body: { recordingId: currentRecording.id } }
-        );
-
-        if (analysisError) throw analysisError;
-
-        toast({
-          title: "Analysis complete!",
-          description: "Your conversation has been analyzed",
-        });
-
-        loadRecordings();
-        setCurrentRecording(null);
-      };
+      loadRecordings();
+      setCurrentRecording(null);
+      setTranscription("");
     } catch (error) {
       console.error("Error processing recording:", error);
       toast({
