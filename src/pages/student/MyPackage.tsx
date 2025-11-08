@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 const MyPackage = () => {
   const [currentPackage, setCurrentPackage] = useState<any>(null);
   const [lessonsCount, setLessonsCount] = useState(4);
-  const [pricePerLesson] = useState(16.67); // $20/hour for 50-min lessons
+  const [pricePerLesson] = useState(20); // $20 per 50-min lesson
   const { toast } = useToast();
 
   useEffect(() => {
