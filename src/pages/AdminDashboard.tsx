@@ -30,9 +30,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign } from "lucide-react";
+import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun } from "lucide-react";
 import { z } from "zod";
 import Finance from "@/pages/admin/Finance";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface Teacher {
   user_id: string;
@@ -64,12 +65,24 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Create teacher form state
   const [teacherEmail, setTeacherEmail] = useState("");
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherTopik, setTeacherTopik] = useState("");
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    
+    setIsDarkMode(shouldBeDark);
+    if (shouldBeDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -228,6 +241,19 @@ const AdminDashboard = () => {
     navigate("/");
   };
 
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
@@ -241,6 +267,15 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleDarkMode}
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </Button>
+              <LanguageSelector />
               <div className="text-right">
                 <p className="text-sm font-medium">{currentUser?.email}</p>
                 <Badge variant="secondary">Admin</Badge>
