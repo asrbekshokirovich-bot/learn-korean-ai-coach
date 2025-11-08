@@ -119,6 +119,63 @@ export type Database = {
           },
         ]
       }
+      finance_records: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          lesson_id: string | null
+          month_period: string
+          payment_id: string | null
+          record_date: string
+          record_type: string
+          student_id: string | null
+          teacher_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id?: string | null
+          month_period: string
+          payment_id?: string | null
+          record_date?: string
+          record_type: string
+          student_id?: string | null
+          teacher_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          lesson_id?: string | null
+          month_period?: string
+          payment_id?: string | null
+          record_date?: string
+          record_type?: string
+          student_id?: string | null
+          teacher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_records_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_records_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework_assignments: {
         Row: {
           ai_grade: number | null
@@ -194,6 +251,51 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      lesson_packages: {
+        Row: {
+          created_at: string
+          id: string
+          lessons_purchased: number
+          lessons_remaining: number
+          lessons_used: number
+          month_period: string
+          price_per_lesson: number
+          purchase_date: string
+          status: string
+          student_id: string
+          total_amount_paid: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lessons_purchased: number
+          lessons_remaining: number
+          lessons_used?: number
+          month_period: string
+          price_per_lesson?: number
+          purchase_date?: string
+          status?: string
+          student_id: string
+          total_amount_paid: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lessons_purchased?: number
+          lessons_remaining?: number
+          lessons_used?: number
+          month_period?: string
+          price_per_lesson?: number
+          purchase_date?: string
+          status?: string
+          student_id?: string
+          total_amount_paid?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       lesson_reviews: {
         Row: {
@@ -274,6 +376,7 @@ export type Database = {
           lesson_type: string
           meeting_link: string | null
           notes: string | null
+          package_id: string | null
           price_usd: number | null
           scheduled_at: string
           status: string
@@ -289,6 +392,7 @@ export type Database = {
           lesson_type: string
           meeting_link?: string | null
           notes?: string | null
+          package_id?: string | null
           price_usd?: number | null
           scheduled_at: string
           status?: string
@@ -304,6 +408,7 @@ export type Database = {
           lesson_type?: string
           meeting_link?: string | null
           notes?: string | null
+          package_id?: string | null
           price_usd?: number | null
           scheduled_at?: string
           status?: string
@@ -320,11 +425,65 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "lessons_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_packages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "lessons_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      monthly_payments: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          id: string
+          month_period: string
+          package_id: string | null
+          payment_date: string
+          payment_method: string | null
+          payment_status: string
+          student_id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          id?: string
+          month_period: string
+          package_id?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          payment_status?: string
+          student_id: string
+          transaction_id?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          id?: string
+          month_period?: string
+          package_id?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          payment_status?: string
+          student_id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_payments_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_packages"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -533,6 +692,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      rollover_unused_lessons: {
+        Args: { _new_month: string; _old_month: string; _student_id: string }
+        Returns: string
       }
     }
     Enums: {

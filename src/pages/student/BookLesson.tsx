@@ -96,17 +96,37 @@ const BookLesson = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Check if student has active package with remaining lessons
+    const currentMonth = new Date(selectedDate).toISOString().split('T')[0].slice(0, 7) + '-01';
+    const { data: activePackage } = await supabase
+      .from("lesson_packages")
+      .select("*")
+      .eq("student_id", user.id)
+      .eq("status", "active")
+      .gt("lessons_remaining", 0)
+      .maybeSingle();
+
+    if (!activePackage) {
+      toast({
+        title: "No active package",
+        description: "Please purchase a lesson package first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const [hour, minute] = selectedTime.split(":");
     const scheduledAt = setMinutes(setHours(selectedDate, parseInt(hour)), parseInt(minute));
 
     const { error } = await supabase.from("lessons").insert({
       teacher_id: selectedTeacher,
       student_id: user.id,
+      package_id: activePackage.id,
       scheduled_at: scheduledAt.toISOString(),
       lesson_type: "individual",
       status: "scheduled",
       duration_minutes: 50,
-      price_usd: 0,
+      price_usd: activePackage.price_per_lesson,
     });
 
     if (error) {

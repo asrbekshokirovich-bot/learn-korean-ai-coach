@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut } from "lucide-react";
 import Dashboard from "@/pages/student/Dashboard";
+import MyPackage from "@/pages/student/MyPackage";
 import BookLesson from "@/pages/student/BookLesson";
 import Lessons from "@/pages/student/Lessons";
 import Practice from "@/pages/student/Practice";
@@ -69,6 +70,7 @@ const StudentLayout = () => {
             <div className="max-w-7xl mx-auto">
             <Routes>
               <Route index element={<Dashboard />} />
+              <Route path="package" element={<MyPackage />} />
               <Route path="book" element={<BookLesson />} />
               <Route path="lessons" element={<Lessons />} />
               <Route path="practice" element={<Practice />} />

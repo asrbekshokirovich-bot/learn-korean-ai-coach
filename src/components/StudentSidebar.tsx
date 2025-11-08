@@ -15,7 +15,8 @@ import {
 
 const studentItems = [
   { title: "Dashboard", url: "/student", icon: Home },
-  { title: "Book Lesson", url: "/student/book", icon: Calendar },
+  { title: "My Package", url: "/student/package", icon: Calendar },
+  { title: "Book Lesson", url: "/student/book", icon: BookOpen },
   { title: "My Lessons", url: "/student/lessons", icon: BookOpen },
   { title: "AI Practice", url: "/student/practice", icon: Brain },
   { title: "TOPIK Prep", url: "/student/topik", icon: Trophy },

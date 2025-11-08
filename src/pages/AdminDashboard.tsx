@@ -30,8 +30,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2 } from "lucide-react";
+import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign } from "lucide-react";
 import { z } from "zod";
+import Finance from "@/pages/admin/Finance";
 
 interface Teacher {
   user_id: string;
@@ -265,6 +266,10 @@ const AdminDashboard = () => {
               <Users className="w-4 h-4 mr-2" />
               Students ({students.length})
             </TabsTrigger>
+            <TabsTrigger value="finance">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Finance
+            </TabsTrigger>
           </TabsList>
 
           {/* Teachers Tab */}
@@ -387,6 +392,11 @@ const AdminDashboard = () => {
                 </TableBody>
               </Table>
             </Card>
+          </TabsContent>
+
+          {/* Finance Tab */}
+          <TabsContent value="finance">
+            <Finance />
           </TabsContent>
         </Tabs>
       </main>
