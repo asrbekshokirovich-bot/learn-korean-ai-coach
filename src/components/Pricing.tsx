@@ -5,68 +5,71 @@ import { useState } from "react";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { useToast } from "@/hooks/use-toast";
-
-const plans = [
-  {
-    name: "Free Trial",
-    price: "0",
-    description: "30-min diagnostic + AI placement",
-    features: [
-      "1-on-1 diagnostic session",
-      "AI level assessment",
-      "Personalized learning path",
-      "No credit card required",
-    ],
-    cta: "Start Free Trial",
-    variant: "outline" as const,
-  },
-  {
-    name: "Monthly Unlimited",
-    price: "249",
-    description: "Serious learners",
-    features: [
-      "Unlimited group classes",
-      "4 private lessons/month",
-      "50-min sessions ($20/lesson)",
-      "AI co-pilot included",
-      "Homework + grading",
-      "Progress analytics",
-    ],
-    cta: "Get Started",
-    variant: "default" as const,
-    popular: true,
-  },
-  {
-    name: "TOPIK Bootcamp",
-    price: "899",
-    description: "12-week intensive prep",
-    features: [
-      "12-week program",
-      "Group + 6 private lessons",
-      "TOPIK 3/4/5/6 focused",
-      "AI practice unlimited",
-      "Mock tests included",
-      "Priority teacher matching",
-      "Certificate of completion",
-    ],
-    cta: "Enroll Now",
-    variant: "hero" as const,
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Pricing = () => {
   const [signUpOpen, setSignUpOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
+  
+  const plans = [
+    {
+      name: t('freeTrial'),
+      price: "0",
+      description: t('diagnosticSession'),
+      features: [
+        t('oneOnOneDiagnostic'),
+        t('aiLevelAssessment'),
+        t('personalizedLearningPath'),
+        t('noCreditCard'),
+      ],
+      cta: t('startFreeTrial'),
+      variant: "outline" as const,
+    },
+    {
+      name: t('monthlyUnlimited'),
+      price: "249",
+      description: t('seriousLearners'),
+      features: [
+        t('unlimitedGroupClasses'),
+        t('privateMonthly'),
+        t('fiftyMinSessions'),
+        t('aiCoPilotIncluded'),
+        t('homeworkGrading'),
+        t('progressAnalytics'),
+      ],
+      cta: t('getStarted'),
+      variant: "default" as const,
+      popular: true,
+    },
+    {
+      name: t('topikBootcamp'),
+      price: "899",
+      description: t('intensivePrep'),
+      features: [
+        t('twelveWeekProgram'),
+        t('groupPrivate'),
+        t('topikFocused'),
+        t('aiPracticeUnlimited'),
+        t('mockTestsIncluded'),
+        t('priorityMatching'),
+        t('certificate'),
+      ],
+      cta: t('enrollNow'),
+      variant: "hero" as const,
+    },
+  ];
+
   return (
     <section className="py-20 md:py-32 bg-gradient-subtle">
       <div className="container px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Flexible Plans for Every Learner
+            {t('flexiblePlans')}
           </h2>
           <p className="text-lg text-muted-foreground">
-            Start free, upgrade anytime. All plans include AI assistance.
+            {t('startFreeUpgrade')}
           </p>
         </div>
 
@@ -82,7 +85,7 @@ const Pricing = () => {
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-accent text-white text-sm font-medium rounded-full">
-                  Most Popular
+                  {t('mostPopular')}
                 </div>
               )}
 
@@ -91,7 +94,7 @@ const Pricing = () => {
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center gap-1">
                   <span className="text-4xl font-bold">${plan.price}</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-muted-foreground">{t('perMonth')}</span>
                 </div>
               </div>
 
@@ -110,8 +113,8 @@ const Pricing = () => {
                 size="lg"
                 onClick={() => {
                   toast({
-                    title: `${plan.name} Plan Selected!`,
-                    description: `Perfect choice! Let's get you started with ${plan.name}.`,
+                    title: t('planSelected', { plan: plan.name }),
+                    description: t('perfectChoice', { plan: plan.name }),
                   });
                   setSignUpOpen(true);
                 }}
@@ -123,17 +126,17 @@ const Pricing = () => {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-12">
-          Enterprise licenses available for schools and organizations.{" "}
+          {t('enterpriseLicenses')}{" "}
           <button 
             className="text-primary hover:underline"
             onClick={() => {
               toast({
-                title: "Enterprise Inquiry",
-                description: "Our sales team will contact you within 24 hours!",
+                title: t('enterpriseInquiry'),
+                description: t('salesContact'),
               });
             }}
           >
-            Contact sales
+            {t('contactSales')}
           </button>
         </p>
       </div>

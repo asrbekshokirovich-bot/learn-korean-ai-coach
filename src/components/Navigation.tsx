@@ -7,6 +7,7 @@ import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelector } from "./LanguageSelector";
 import topikClubLogo from "@/assets/topik-club-logo.png";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Navigation = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Check for saved theme preference
@@ -71,10 +73,10 @@ const Navigation = () => {
   };
 
   const navItems = [
-    { label: "Features", href: "#features" },
-    { label: "Teaching Modes", href: "#modes" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "For Teachers", href: "#teachers" },
+    { label: t('features'), href: "#features" },
+    { label: t('teachingModes'), href: "#modes" },
+    { label: t('pricing'), href: "#pricing" },
+    { label: t('forTeachers'), href: "#teachers" },
   ];
 
   return (
@@ -111,16 +113,16 @@ const Navigation = () => {
             {isAdmin && (
               <Button variant="outline" onClick={() => navigate("/admin")}>
                 <Settings className="w-4 h-4 mr-2" />
-                Admin Dashboard
+                {t('adminDashboard')}
               </Button>
             )}
             {!user && (
               <>
                 <Button variant="ghost" onClick={() => setSignInOpen(true)}>
-                  Sign In
+                  {t('signIn')}
                 </Button>
                 <Button variant="hero" onClick={() => setSignUpOpen(true)}>
-                  Start Free
+                  {t('startFree')}
                 </Button>
               </>
             )}
@@ -166,12 +168,12 @@ const Navigation = () => {
                     {isDarkMode ? (
                       <>
                         <Sun className="w-5 h-5 mr-2" />
-                        Light Mode
+                        {t('lightMode')}
                       </>
                     ) : (
                       <>
                         <Moon className="w-5 h-5 mr-2" />
-                        Dark Mode
+                        {t('darkMode')}
                       </>
                     )}
                   </Button>
@@ -187,7 +189,7 @@ const Navigation = () => {
                     }}
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Admin Dashboard
+                    {t('adminDashboard')}
                   </Button>
                 )}
                 {!user && (
@@ -200,7 +202,7 @@ const Navigation = () => {
                         setMobileMenuOpen(false); 
                       }}
                     >
-                      Sign In
+                      {t('signIn')}
                     </Button>
                     <Button 
                       variant="hero" 
@@ -210,7 +212,7 @@ const Navigation = () => {
                         setMobileMenuOpen(false); 
                       }}
                     >
-                      Start Free
+                      {t('startFree')}
                     </Button>
                   </>
                 )}

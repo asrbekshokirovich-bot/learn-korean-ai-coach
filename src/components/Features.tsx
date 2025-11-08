@@ -1,49 +1,52 @@
 import { Card } from "@/components/ui/card";
 import { Brain, Mic, Users, Trophy, Lightbulb, Target } from "lucide-react";
-
-const features = [
-  {
-    icon: Brain,
-    title: "AI Co-Pilot",
-    description: "Real-time pronunciation feedback with 3D mouth models, grammar correction, and cultural nuance detection.",
-  },
-  {
-    icon: Mic,
-    title: "Multimodal Learning",
-    description: "Speech, writing, and handwriting analysis. Practice with Seoul, Busan, Jeju, and Gyeongsang accents.",
-  },
-  {
-    icon: Users,
-    title: "Hybrid Teaching",
-    description: "Choose between certified native speakers, AI avatars, or group classes with built-in AI assistance.",
-  },
-  {
-    icon: Trophy,
-    title: "TOPIK Pathway",
-    description: "AI-generated official-style mock exams with predictive scoring to reach Level 6 certification.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Adaptive Curriculum",
-    description: "Daily personalized lessons based on your performance gaps, interests, and learning style.",
-  },
-  {
-    icon: Target,
-    title: "50+ AI Personas",
-    description: "Practice with K-drama actors, business professionals, K-pop idols—each with contextual memory.",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Features = () => {
+  const { t } = useLanguage();
+  
+  const features = [
+    {
+      icon: Brain,
+      title: t('aiCoPilot'),
+      description: t('aiCoPilotDesc'),
+    },
+    {
+      icon: Mic,
+      title: t('multimodalLearning'),
+      description: t('multimodalDesc'),
+    },
+    {
+      icon: Users,
+      title: t('hybridTeaching'),
+      description: t('hybridTeachingDesc'),
+    },
+    {
+      icon: Trophy,
+      title: t('topikPathway'),
+      description: t('topikPathwayDesc'),
+    },
+    {
+      icon: Lightbulb,
+      title: t('adaptiveCurriculum'),
+      description: t('adaptiveCurriculumDesc'),
+    },
+    {
+      icon: Target,
+      title: t('fiftyAIPersonas'),
+      description: t('fiftyAIPersonasDesc'),
+    },
+  ];
+
   return (
     <section className="py-20 md:py-32 bg-gradient-subtle">
       <div className="container px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            The Most Advanced Korean Learning Experience
+            {t('mostAdvancedExperience')}
           </h2>
           <p className="text-lg text-muted-foreground">
-            Combining cutting-edge AI technology with expert human instruction for unmatched results
+            {t('cuttingEdgeAI')}
           </p>
         </div>
 

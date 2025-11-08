@@ -4,14 +4,17 @@ import heroBg from "@/assets/hero-bg.jpg";
 import { useState } from "react";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Hero = () => {
   const [signUpOpen, setSignUpOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const { t } = useLanguage();
 
   const scrollToFeatures = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
   };
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with overlay */}
@@ -31,44 +34,43 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border shadow-elegant">
             <Sparkles className="w-4 h-4 text-secondary" />
-            <span className="text-sm font-medium">AI-Powered Korean Learning Platform</span>
+            <span className="text-sm font-medium">{t('aiPoweredPlatform')}</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            <span className="text-primary-foreground">Master Korean with</span>
+            <span className="text-primary-foreground">{t('masterKoreanWith')}</span>
             <br />
             <span className="bg-gradient-accent bg-clip-text text-transparent">
-              Human Teachers + AI
+              {t('humanTeachersAI')}
             </span>
           </h1>
 
           <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            Experience the future of language learning. Real-time pronunciation feedback, 
-            personalized AI curriculum, and certified native speakers—all in one platform.
+            {t('futureOfLearning')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Button size="xl" variant="hero" onClick={() => setSignUpOpen(true)}>
-              Start Learning Free
+              {t('startLearningFree')}
               <ArrowRight className="w-5 h-5" />
             </Button>
             <Button size="xl" variant="outline" className="bg-card/80 backdrop-blur-sm border-primary-foreground/20 text-card-foreground hover:bg-card" onClick={scrollToFeatures}>
-              See How It Works
+              {t('seeHowItWorks')}
             </Button>
           </div>
 
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-12">
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-primary-foreground">50+</div>
-              <div className="text-sm text-primary-foreground/70">AI Personas</div>
+              <div className="text-sm text-primary-foreground/70">{t('aiPersonas')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-primary-foreground">90%</div>
-              <div className="text-sm text-primary-foreground/70">TOPIK Pass Rate</div>
+              <div className="text-sm text-primary-foreground/70">{t('topikPassRate')}</div>
             </div>
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-primary-foreground">24/7</div>
-              <div className="text-sm text-primary-foreground/70">AI Practice</div>
+              <div className="text-sm text-primary-foreground/70">{t('aiPractice')}</div>
             </div>
           </div>
         </div>
