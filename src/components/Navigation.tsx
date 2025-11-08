@@ -1,13 +1,46 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navigation = () => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signUpOpen, setSignUpOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkUser();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+
+    if (session?.user) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      setIsAdmin(!!roleData);
+    } else {
+      setIsAdmin(false);
+    }
+  };
 
   const navItems = [
     { label: "Features", href: "#features" },
@@ -41,12 +74,22 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" onClick={() => setSignInOpen(true)}>
-              Sign In
-            </Button>
-            <Button variant="hero" onClick={() => setSignUpOpen(true)}>
-              Start Free
-            </Button>
+            {isAdmin && (
+              <Button variant="outline" onClick={() => navigate("/admin")}>
+                <Settings className="w-4 h-4 mr-2" />
+                Admin Dashboard
+              </Button>
+            )}
+            {!user && (
+              <>
+                <Button variant="ghost" onClick={() => setSignInOpen(true)}>
+                  Sign In
+                </Button>
+                <Button variant="hero" onClick={() => setSignUpOpen(true)}>
+                  Start Free
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -78,26 +121,43 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button 
-                  variant="ghost" 
-                  className="w-full" 
-                  onClick={() => { 
-                    setSignInOpen(true); 
-                    setMobileMenuOpen(false); 
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button 
-                  variant="hero" 
-                  className="w-full" 
-                  onClick={() => { 
-                    setSignUpOpen(true); 
-                    setMobileMenuOpen(false); 
-                  }}
-                >
-                  Start Free
-                </Button>
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={() => { 
+                      navigate("/admin"); 
+                      setMobileMenuOpen(false); 
+                    }}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Admin Dashboard
+                  </Button>
+                )}
+                {!user && (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full" 
+                      onClick={() => { 
+                        setSignInOpen(true); 
+                        setMobileMenuOpen(false); 
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button 
+                      variant="hero" 
+                      className="w-full" 
+                      onClick={() => { 
+                        setSignUpOpen(true); 
+                        setMobileMenuOpen(false); 
+                      }}
+                    >
+                      Start Free
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

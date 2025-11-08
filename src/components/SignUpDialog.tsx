@@ -209,11 +209,6 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
         </DialogHeader>
 
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="student">I'm a Student</TabsTrigger>
-            <TabsTrigger value="teacher">I'm a Teacher</TabsTrigger>
-          </TabsList>
-
           <TabsContent value="student" className="space-y-4 pt-4">
             <form onSubmit={handleStudentSignUp} className="space-y-4">
               <div className="space-y-2">
@@ -260,67 +255,6 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
               </Button>
               <p className="text-xs text-center text-muted-foreground">
                 By signing up, you agree to our Terms & Privacy Policy
-              </p>
-            </form>
-          </TabsContent>
-
-          <TabsContent value="teacher" className="space-y-4 pt-4">
-            <form onSubmit={handleTeacherSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="teacher-email">Email</Label>
-                <Input
-                  id="teacher-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={teacherEmail}
-                  onChange={(e) => setTeacherEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                  maxLength={255}
-                  autoComplete="email"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="teacher-password">Password</Label>
-                <Input
-                  id="teacher-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={teacherPassword}
-                  onChange={(e) => setTeacherPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  minLength={6}
-                  maxLength={72}
-                  autoComplete="new-password"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 6 characters
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="teacher-cert">TOPIK Certification (Optional)</Label>
-                <Input
-                  id="teacher-cert"
-                  placeholder="e.g., Level 6"
-                  value={topikLevel}
-                  onChange={(e) => setTopikLevel(e.target.value)}
-                  disabled={loading}
-                  maxLength={50}
-                />
-              </div>
-              <Button className="w-full" variant="hero" type="submit" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  "Join as Teacher"
-                )}
-              </Button>
-              <p className="text-xs text-center text-muted-foreground">
-                Earn 75-80% of lesson fees. Platform fee: 20-25%
               </p>
             </form>
           </TabsContent>
