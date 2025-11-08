@@ -71,24 +71,26 @@ const Lessons = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">My Lessons</h2>
-        <p className="text-muted-foreground">Manage your upcoming and past lessons</p>
+        <h2 className="text-3xl font-bold mb-2">{t('myLessons')}</h2>
+        <p className="text-muted-foreground">{t('manageYourLessons')}</p>
       </div>
 
       {/* Upcoming Lessons */}
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">Upcoming Lessons</h3>
+        <h3 className="text-xl font-semibold mb-4">{t('upcomingLessonsTitle')}</h3>
         {upcomingLessons.length === 0 ? (
-          <p className="text-muted-foreground">No upcoming lessons scheduled</p>
+          <p className="text-muted-foreground">{t('noUpcomingScheduled')}</p>
         ) : (
           <div className="space-y-4">
             {upcomingLessons.map((lesson) => (
               <div key={lesson.id} className="p-4 border rounded-lg">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h4 className="font-semibold text-lg">{lesson.lesson_type === "individual" ? "1-on-1 Lesson" : "Group Lesson"}</h4>
+                    <h4 className="font-semibold text-lg">
+                      {lesson.lesson_type === "individual" ? t('oneOnOneLesson') : t('groupLesson')}
+                    </h4>
                     <p className="text-sm text-muted-foreground">
-                      Teacher: {lesson.profiles?.full_name || "TBA"}
+                      {t('teacher')}: {lesson.profiles?.full_name || t('tba')}
                     </p>
                   </div>
                   <Badge>{lesson.lesson_type}</Badge>
@@ -100,7 +102,7 @@ const Lessons = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    {format(new Date(lesson.scheduled_at), "p")} ({lesson.duration_minutes} min)
+                    {format(new Date(lesson.scheduled_at), "p")} ({lesson.duration_minutes} {t('min')})
                   </div>
                 </div>
 
@@ -126,7 +128,7 @@ const Lessons = () => {
                   {lesson.meeting_link && (
                     <Button size="sm" onClick={() => window.open(lesson.meeting_link, "_blank")}>
                       <Video className="w-4 h-4 mr-2" />
-                      Join Lesson
+                      {t('joinLesson')}
                     </Button>
                   )}
                   <Button
@@ -138,7 +140,7 @@ const Lessons = () => {
                     }}
                   >
                     <LinkIcon className="w-4 h-4 mr-2" />
-                    Link Conversations
+                    {t('linkConversations')}
                   </Button>
                 </div>
               </div>
@@ -149,26 +151,28 @@ const Lessons = () => {
 
       {/* Completed Lessons */}
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-4">Completed Lessons</h3>
+        <h3 className="text-xl font-semibold mb-4">{t('completedLessons')}</h3>
         {completedLessons.length === 0 ? (
-          <p className="text-muted-foreground">No completed lessons yet</p>
+          <p className="text-muted-foreground">{t('noCompletedYet')}</p>
         ) : (
           <div className="space-y-3">
             {completedLessons.map((lesson) => (
               <div key={lesson.id} className="p-3 bg-muted rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="font-medium">{lesson.lesson_type === "individual" ? "1-on-1 Lesson" : "Group Lesson"}</p>
+                    <p className="font-medium">
+                      {lesson.lesson_type === "individual" ? t('oneOnOneLesson') : t('groupLesson')}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(lesson.scheduled_at), "PPP")} • {lesson.profiles?.full_name}
                     </p>
                   </div>
-                  <Badge variant="secondary">Completed</Badge>
+                  <Badge variant="secondary">{t('completed')}</Badge>
                 </div>
                 {lesson.lesson_conversations && lesson.lesson_conversations.length > 0 && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                     <MessageSquare className="w-3 h-3" />
-                    <span>{lesson.lesson_conversations.length} linked conversation(s)</span>
+                    <span>{lesson.lesson_conversations.length} {t('linkedConversations')}</span>
                   </div>
                 )}
               </div>
