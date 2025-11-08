@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface AvailabilitySlot {
   id: string;
@@ -36,8 +38,8 @@ const HOURS = Array.from({ length: 24 }, (_, i) =>
 
 const Availability = () => {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [newSlot, setNewSlot] = useState({
-    day_of_week: 1,
     start_time: "09:00",
     end_time: "17:00",
   });
@@ -62,17 +64,47 @@ const Availability = () => {
     }
   };
 
+  const toggleDay = (dayIndex: number) => {
+    setSelectedDays(prev => 
+      prev.includes(dayIndex) 
+        ? prev.filter(d => d !== dayIndex)
+        : [...prev, dayIndex]
+    );
+  };
+
+  const selectAllDays = () => {
+    if (selectedDays.length === DAYS.length) {
+      setSelectedDays([]);
+    } else {
+      setSelectedDays(DAYS.map((_, i) => i));
+    }
+  };
+
   const handleAddSlot = async () => {
+    if (selectedDays.length === 0) {
+      toast({
+        title: "No days selected",
+        description: "Please select at least one day",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("teacher_availability").insert({
+    // Create availability slots for all selected days
+    const slotsToInsert = selectedDays.map(day => ({
       teacher_id: user.id,
-      day_of_week: newSlot.day_of_week,
+      day_of_week: day,
       start_time: newSlot.start_time,
       end_time: newSlot.end_time,
       is_available: true,
-    });
+    }));
+
+    const { error } = await supabase
+      .from("teacher_availability")
+      .insert(slotsToInsert);
 
     if (error) {
       toast({
@@ -83,8 +115,9 @@ const Availability = () => {
     } else {
       toast({
         title: "Availability added",
-        description: "Your availability slot has been added",
+        description: `Added availability for ${selectedDays.length} day(s)`,
       });
+      setSelectedDays([]);
       loadAvailability();
     }
   };
@@ -119,61 +152,103 @@ const Availability = () => {
 
       <Card className="p-6">
         <h3 className="text-xl font-semibold mb-4">Add Availability Slot</h3>
-        <div className="grid gap-4 md:grid-cols-4">
-          <Select
-            value={newSlot.day_of_week.toString()}
-            onValueChange={(value) =>
-              setNewSlot({ ...newSlot, day_of_week: parseInt(value) })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
+        
+        <div className="space-y-6">
+          {/* Day selection */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <Label className="text-base font-medium">Select Days</Label>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={selectAllDays}
+              >
+                {selectedDays.length === DAYS.length ? "Deselect All" : "Select All"}
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {DAYS.map((day, index) => (
-                <SelectItem key={index} value={index.toString()}>
-                  {day}
-                </SelectItem>
+                <div 
+                  key={index} 
+                  className={`flex items-center space-x-2 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedDays.includes(index) 
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border hover:bg-muted'
+                  }`}
+                  onClick={() => toggleDay(index)}
+                >
+                  <Checkbox
+                    id={`day-${index}`}
+                    checked={selectedDays.includes(index)}
+                    onCheckedChange={() => toggleDay(index)}
+                  />
+                  <Label 
+                    htmlFor={`day-${index}`} 
+                    className="flex-1 cursor-pointer font-medium"
+                  >
+                    {day}
+                  </Label>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </div>
 
-          <Select
-            value={newSlot.start_time}
-            onValueChange={(value) => setNewSlot({ ...newSlot, start_time: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Start time" />
-            </SelectTrigger>
-            <SelectContent>
-              {HOURS.map((hour) => (
-                <SelectItem key={hour} value={hour}>
-                  {hour}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Time selection */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <Label className="mb-2 block">Start Time</Label>
+              <Select
+                value={newSlot.start_time}
+                onValueChange={(value) => setNewSlot({ ...newSlot, start_time: value })}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Start time" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {HOURS.map((hour) => (
+                    <SelectItem key={hour} value={hour}>
+                      {hour}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Select
-            value={newSlot.end_time}
-            onValueChange={(value) => setNewSlot({ ...newSlot, end_time: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="End time" />
-            </SelectTrigger>
-            <SelectContent>
-              {HOURS.map((hour) => (
-                <SelectItem key={hour} value={hour}>
-                  {hour}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <div>
+              <Label className="mb-2 block">End Time</Label>
+              <Select
+                value={newSlot.end_time}
+                onValueChange={(value) => setNewSlot({ ...newSlot, end_time: value })}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="End time" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {HOURS.map((hour) => (
+                    <SelectItem key={hour} value={hour}>
+                      {hour}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Button onClick={handleAddSlot}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Slot
-          </Button>
+            <div className="flex items-end">
+              <Button onClick={handleAddSlot} className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Add to {selectedDays.length || 0} Day(s)
+              </Button>
+            </div>
+          </div>
+
+          {selectedDays.length > 0 && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm font-medium mb-1">Selected Days:</p>
+              <p className="text-sm text-muted-foreground">
+                {selectedDays.map(d => DAYS[d]).join(", ")}
+              </p>
+            </div>
+          )}
         </div>
       </Card>
 
