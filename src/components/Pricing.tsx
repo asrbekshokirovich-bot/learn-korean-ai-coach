@@ -22,12 +22,12 @@ const plans = [
   },
   {
     name: "Monthly Unlimited",
-    price: "299",
+    price: "199",
     description: "Serious learners",
     features: [
       "Unlimited group classes",
       "4 private lessons/month",
-      "50-min sessions",
+      "50-min sessions ($20/hour)",
       "AI co-pilot included",
       "Homework + grading",
       "Progress analytics",
