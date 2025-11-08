@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut } from "lucide-react";
 import Dashboard from "@/pages/student/Dashboard";
+import BookLesson from "@/pages/student/BookLesson";
 import Lessons from "@/pages/student/Lessons";
 import Practice from "@/pages/student/Practice";
 import TopikPrep from "@/pages/student/TopikPrep";
-import Schedule from "@/pages/student/Schedule";
 
 const StudentLayout = () => {
   const navigate = useNavigate();
@@ -67,13 +67,13 @@ const StudentLayout = () => {
           {/* Main Content */}
           <main className="flex-1 p-6 bg-gradient-subtle overflow-auto">
             <div className="max-w-7xl mx-auto">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/lessons" element={<Lessons />} />
-                <Route path="/practice" element={<Practice />} />
-                <Route path="/topik" element={<TopikPrep />} />
-                <Route path="/schedule" element={<Schedule />} />
-              </Routes>
+            <Routes>
+              <Route index element={<Dashboard />} />
+              <Route path="book" element={<BookLesson />} />
+              <Route path="lessons" element={<Lessons />} />
+              <Route path="practice" element={<Practice />} />
+              <Route path="topik" element={<TopikPrep />} />
+            </Routes>
             </div>
           </main>
         </div>

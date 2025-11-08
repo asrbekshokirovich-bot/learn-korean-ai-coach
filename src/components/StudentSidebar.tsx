@@ -15,10 +15,10 @@ import {
 
 const studentItems = [
   { title: "Dashboard", url: "/student", icon: Home },
+  { title: "Book Lesson", url: "/student/book", icon: Calendar },
   { title: "My Lessons", url: "/student/lessons", icon: BookOpen },
   { title: "AI Practice", url: "/student/practice", icon: Brain },
   { title: "TOPIK Prep", url: "/student/topik", icon: Trophy },
-  { title: "Schedule", url: "/student/schedule", icon: Calendar },
 ];
 
 export function StudentSidebar() {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut } from "lucide-react";
 import NewTeacherDashboard from "@/pages/NewTeacherDashboard";
+import Availability from "@/pages/teacher/Availability";
 
 const TeacherLayout = () => {
   const navigate = useNavigate();
@@ -64,7 +65,8 @@ const TeacherLayout = () => {
           <main className="flex-1 p-6 bg-gradient-subtle overflow-auto">
             <div className="max-w-7xl mx-auto">
               <Routes>
-                <Route path="/" element={<NewTeacherDashboard />} />
+                <Route index element={<NewTeacherDashboard />} />
+                <Route path="availability" element={<Availability />} />
               </Routes>
             </div>
           </main>

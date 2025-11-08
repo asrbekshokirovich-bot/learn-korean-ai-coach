@@ -15,8 +15,8 @@ import {
 
 const teacherItems = [
   { title: "Dashboard", url: "/teacher", icon: Home },
+  { title: "Availability", url: "/teacher/availability", icon: Calendar },
   { title: "My Students", url: "/teacher/students", icon: Users },
-  { title: "Schedule", url: "/teacher/schedule", icon: Calendar },
   { title: "Earnings", url: "/teacher/earnings", icon: DollarSign },
   { title: "Homework", url: "/teacher/homework", icon: BookOpen },
 ];

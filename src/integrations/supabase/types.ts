@@ -269,39 +269,45 @@ export type Database = {
         Row: {
           created_at: string
           duration_minutes: number
-          enrollment_id: string
+          enrollment_id: string | null
           id: string
           lesson_type: string
           meeting_link: string | null
           notes: string | null
+          price_usd: number | null
           scheduled_at: string
           status: string
+          student_id: string | null
           teacher_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           duration_minutes?: number
-          enrollment_id: string
+          enrollment_id?: string | null
           id?: string
           lesson_type: string
           meeting_link?: string | null
           notes?: string | null
+          price_usd?: number | null
           scheduled_at: string
           status?: string
+          student_id?: string | null
           teacher_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           duration_minutes?: number
-          enrollment_id?: string
+          enrollment_id?: string | null
           id?: string
           lesson_type?: string
           meeting_link?: string | null
           notes?: string | null
+          price_usd?: number | null
           scheduled_at?: string
           status?: string
+          student_id?: string | null
           teacher_id?: string
           updated_at?: string
         }
