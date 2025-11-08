@@ -91,10 +91,16 @@ export const translations = {
     lessons: "Darslar",
     conversationPractice: "Suhbat mashqlari",
     topikPrep: "TOPIK tayyorgarlik",
+    studentPortal: "Talaba portali",
+    student: "Talaba",
+    signOut: "Chiqish",
     
     // Teacher Dashboard
     availability: "Mavjudlik",
     teacherStudents: "O'quvchilar",
+    teacherPortal: "O'qituvchi portali",
+    teacher: "O'qituvchi",
+    teacherPayout: "O'qituvchi (70% to'lov)",
     
     // Book Lesson
     bookALesson: "Dars band qilish",
@@ -237,10 +243,16 @@ export const translations = {
     lessons: "Lessons",
     conversationPractice: "Conversation Practice",
     topikPrep: "TOPIK Prep",
+    studentPortal: "Student Portal",
+    student: "Student",
+    signOut: "Sign Out",
     
     // Teacher Dashboard
     availability: "My Availability",
     teacherStudents: "Students",
+    teacherPortal: "Teacher Portal",
+    teacher: "Teacher",
+    teacherPayout: "Teacher (70% Payout)",
     
     // Book Lesson
     bookALesson: "Book a Lesson",
@@ -383,10 +395,16 @@ export const translations = {
     lessons: "레슨",
     conversationPractice: "회화 연습",
     topikPrep: "TOPIK 준비",
+    studentPortal: "학생 포털",
+    student: "학생",
+    signOut: "로그아웃",
     
     // Teacher Dashboard
     availability: "내 가능 시간",
     teacherStudents: "학생",
+    teacherPortal: "교사 포털",
+    teacher: "교사",
+    teacherPayout: "교사 (70% 지급)",
     
     // Book Lesson
     bookALesson: "수업 예약",
@@ -529,10 +547,16 @@ export const translations = {
     lessons: "Уроки",
     conversationPractice: "Разговорная практика",
     topikPrep: "Подготовка к TOPIK",
+    studentPortal: "Студенческий портал",
+    student: "Студент",
+    signOut: "Выйти",
     
     // Teacher Dashboard
     availability: "Моя доступность",
     teacherStudents: "Студенты",
+    teacherPortal: "Портал учителя",
+    teacher: "Учитель",
+    teacherPayout: "Учитель (70% выплата)",
     
     // Book Lesson
     bookALesson: "Забронировать урок",
