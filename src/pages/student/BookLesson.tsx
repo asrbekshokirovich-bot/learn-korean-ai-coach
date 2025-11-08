@@ -3,108 +3,68 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { format, addDays, setHours, setMinutes } from "date-fns";
+import { format, setHours, setMinutes } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface Teacher {
-  user_id: string;
-  full_name: string;
-  email: string;
-}
-
-interface AvailabilitySlot {
-  id: string;
+interface TimeSlot {
+  time: string;
   teacher_id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  teacher: Teacher;
+  availability_id: string;
 }
 
 const BookLesson = () => {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [selectedTeacher, setSelectedTeacher] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadTeachers();
-  }, []);
-
-  useEffect(() => {
-    if (selectedTeacher && selectedDate) {
+    if (selectedLevel && selectedDate) {
       loadAvailableSlots();
     }
-  }, [selectedTeacher, selectedDate]);
-
-  const loadTeachers = async () => {
-    const { data: roleRows, error: rolesError } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "teacher");
-
-    if (rolesError) {
-      toast({
-        title: "Unable to load teachers",
-        description: rolesError.message,
-        variant: "destructive",
-      });
-      setTeachers([]);
-      return;
-    }
-
-    const teacherIds = (roleRows ?? []).map((r: any) => r.user_id);
-    if (teacherIds.length === 0) {
-      setTeachers([]);
-      return;
-    }
-
-    const { data: profilesData, error: profilesError } = await supabase
-      .from("profiles")
-      .select("user_id, full_name, email")
-      .in("user_id", teacherIds);
-
-    if (profilesError) {
-      toast({
-        title: "Unable to load teacher profiles",
-        description: profilesError.message,
-        variant: "destructive",
-      });
-      setTeachers([]);
-      return;
-    }
-
-    const teacherList = (profilesData ?? []).map((p: any) => ({
-      user_id: p.user_id,
-      full_name: p.full_name,
-      email: p.email,
-    }));
-
-    setTeachers(teacherList);
-  };
+  }, [selectedLevel, selectedDate]);
 
   const loadAvailableSlots = async () => {
-    if (!selectedTeacher || !selectedDate) return;
+    if (!selectedLevel || !selectedDate) return;
 
     const dayOfWeek = selectedDate.getDay();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("teacher_availability")
-      .select("start_time, end_time")
-      .eq("teacher_id", selectedTeacher)
+      .select("id, teacher_id, start_time, end_time")
       .eq("day_of_week", dayOfWeek)
+      .eq("level", selectedLevel)
       .eq("is_available", true);
 
+    if (error) {
+      toast({
+        title: "Error loading slots",
+        description: error.message,
+        variant: "destructive",
+      });
+      setAvailableSlots([]);
+      return;
+    }
+
     if (data && data.length > 0) {
-      const slots: string[] = [];
+      const slots: TimeSlot[] = [];
       data.forEach((slot) => {
         const [startHour] = slot.start_time.split(":");
         const [endHour] = slot.end_time.split(":");
         for (let hour = parseInt(startHour); hour < parseInt(endHour); hour++) {
-          slots.push(`${hour.toString().padStart(2, "0")}:00`);
+          slots.push({
+            time: `${hour.toString().padStart(2, "0")}:00`,
+            teacher_id: slot.teacher_id,
+            availability_id: slot.id,
+          });
         }
       });
       setAvailableSlots(slots);
@@ -113,11 +73,12 @@ const BookLesson = () => {
     }
   };
 
+
   const handleBookLesson = async () => {
-    if (!selectedTeacher || !selectedDate || !selectedTime) {
+    if (!selectedSlot || !selectedDate || !selectedLevel) {
       toast({
         title: "Missing information",
-        description: "Please select a teacher, date, and time",
+        description: "Please select a level, date, and time",
         variant: "destructive",
       });
       return;
@@ -145,11 +106,11 @@ const BookLesson = () => {
       return;
     }
 
-    const [hour, minute] = selectedTime.split(":");
+    const [hour, minute] = selectedSlot.time.split(":");
     const scheduledAt = setMinutes(setHours(selectedDate, parseInt(hour)), parseInt(minute));
 
     const { error } = await supabase.from("lessons").insert({
-      teacher_id: selectedTeacher,
+      teacher_id: selectedSlot.teacher_id,
       student_id: user.id,
       package_id: activePackage.id,
       scheduled_at: scheduledAt.toISOString(),
@@ -170,7 +131,8 @@ const BookLesson = () => {
         title: "Lesson booked!",
         description: "Your lesson has been scheduled successfully",
       });
-      setSelectedTime(null);
+      setSelectedSlot(null);
+      setAvailableSlots([]);
     }
   };
 
@@ -178,28 +140,22 @@ const BookLesson = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold mb-2">Book a Lesson</h2>
-        <p className="text-muted-foreground">Choose a teacher and time slot for your lesson</p>
+        <p className="text-muted-foreground">Select your level and preferred time slot</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">Select Teacher</h3>
-          <div className="space-y-2">
-            {teachers.length === 0 ? (
-              <p className="text-muted-foreground">No teachers available yet.</p>
-            ) : (
-              teachers.map((teacher) => (
-                <Button
-                  key={teacher.user_id}
-                  variant={selectedTeacher === teacher.user_id ? "default" : "outline"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedTeacher(teacher.user_id)}
-                >
-                  {teacher.full_name || teacher.email}
-                </Button>
-              ))
-            )}
-          </div>
+          <h3 className="text-xl font-semibold mb-4">Select Your Level</h3>
+          <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choose your level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="beginner">Beginner</SelectItem>
+              <SelectItem value="intermediate">Intermediate</SelectItem>
+              <SelectItem value="advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
         </Card>
 
         <Card className="p-6">
@@ -214,21 +170,23 @@ const BookLesson = () => {
         </Card>
       </div>
 
-      {selectedTeacher && selectedDate && (
+      {selectedLevel && selectedDate && (
         <Card className="p-6">
           <h3 className="text-xl font-semibold mb-4">Available Time Slots</h3>
           {availableSlots.length === 0 ? (
-            <p className="text-muted-foreground">No available slots for this day</p>
+            <p className="text-muted-foreground">
+              No available slots for {selectedLevel} level on this day
+            </p>
           ) : (
             <div className="grid grid-cols-4 gap-2">
               {availableSlots.map((slot) => (
                 <Button
-                  key={slot}
-                  variant={selectedTime === slot ? "default" : "outline"}
-                  onClick={() => setSelectedTime(slot)}
+                  key={`${slot.teacher_id}-${slot.time}`}
+                  variant={selectedSlot?.time === slot.time ? "default" : "outline"}
+                  onClick={() => setSelectedSlot(slot)}
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  {slot}
+                  {slot.time}
                 </Button>
               ))}
             </div>
@@ -236,7 +194,7 @@ const BookLesson = () => {
         </Card>
       )}
 
-      {selectedTime && (
+      {selectedSlot && (
         <div className="flex justify-end">
           <Button size="lg" onClick={handleBookLesson}>
             Book Lesson

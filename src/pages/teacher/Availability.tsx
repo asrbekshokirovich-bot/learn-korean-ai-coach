@@ -20,6 +20,7 @@ interface AvailabilitySlot {
   start_time: string;
   end_time: string;
   is_available: boolean;
+  level: string;
 }
 
 const DAYS = [
@@ -42,6 +43,7 @@ const Availability = () => {
   const [newSlot, setNewSlot] = useState({
     start_time: "09:00",
     end_time: "17:00",
+    level: "",
   });
   const { toast } = useToast();
 
@@ -90,6 +92,15 @@ const Availability = () => {
       return;
     }
 
+    if (!newSlot.level) {
+      toast({
+        title: "No level selected",
+        description: "Please select a teaching level",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -99,6 +110,7 @@ const Availability = () => {
       day_of_week: day,
       start_time: newSlot.start_time,
       end_time: newSlot.end_time,
+      level: newSlot.level,
       is_available: true,
     }));
 
@@ -233,6 +245,23 @@ const Availability = () => {
               </Select>
             </div>
 
+            <div>
+              <Label className="mb-2 block">Teaching Level</Label>
+              <Select
+                value={newSlot.level}
+                onValueChange={(value) => setNewSlot({ ...newSlot, level: value })}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex items-end">
               <Button onClick={handleAddSlot} className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
@@ -267,6 +296,9 @@ const Availability = () => {
                   <span className="font-medium">{DAYS[slot.day_of_week]}</span>
                   <span className="text-muted-foreground ml-4">
                     {slot.start_time} - {slot.end_time}
+                  </span>
+                  <span className="ml-4 text-sm bg-primary/10 text-primary px-2 py-1 rounded">
+                    {slot.level}
                   </span>
                 </div>
                 <Button

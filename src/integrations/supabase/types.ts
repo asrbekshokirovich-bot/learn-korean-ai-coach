@@ -709,6 +709,7 @@ export type Database = {
           end_time: string
           id: string
           is_available: boolean | null
+          level: string
           start_time: string
           teacher_id: string
         }
@@ -718,6 +719,7 @@ export type Database = {
           end_time: string
           id?: string
           is_available?: boolean | null
+          level?: string
           start_time: string
           teacher_id: string
         }
@@ -727,6 +729,7 @@ export type Database = {
           end_time?: string
           id?: string
           is_available?: boolean | null
+          level?: string
           start_time?: string
           teacher_id?: string
         }
