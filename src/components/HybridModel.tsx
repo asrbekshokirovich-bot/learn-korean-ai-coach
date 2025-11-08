@@ -1,6 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Video, Bot, Users as UsersIcon } from "lucide-react";
+import { useState } from "react";
+import SignUpDialog from "./SignUpDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const learningModes = [
   {
@@ -39,6 +42,8 @@ const learningModes = [
 ];
 
 const HybridModel = () => {
+  const [signUpOpen, setSignUpOpen] = useState(false);
+  const { toast } = useToast();
   return (
     <section className="py-20 md:py-32">
       <div className="container px-4">
@@ -75,7 +80,17 @@ const HybridModel = () => {
                   ))}
                 </ul>
 
-                <Button className="w-full" variant="outline">
+                <Button 
+                  className="w-full" 
+                  variant="outline"
+                  onClick={() => {
+                    toast({
+                      title: "Mode Selected!",
+                      description: `You've chosen ${mode.title}. Sign up to start learning!`,
+                    });
+                    setSignUpOpen(true);
+                  }}
+                >
                   Try This Mode
                 </Button>
               </div>
@@ -83,6 +98,8 @@ const HybridModel = () => {
           ))}
         </div>
       </div>
+      
+      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
     </section>
   );
 };

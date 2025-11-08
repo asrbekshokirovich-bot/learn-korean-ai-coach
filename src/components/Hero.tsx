@@ -1,8 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useState } from "react";
+import SignUpDialog from "./SignUpDialog";
 
 const Hero = () => {
+  const [signUpOpen, setSignUpOpen] = useState(false);
+
+  const scrollToFeatures = () => {
+    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+  };
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with overlay */}
@@ -39,11 +46,11 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button size="xl" variant="hero">
+            <Button size="xl" variant="hero" onClick={() => setSignUpOpen(true)}>
               Start Learning Free
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button size="xl" variant="outline" className="bg-card/80 backdrop-blur-sm border-primary-foreground/20 text-card-foreground hover:bg-card">
+            <Button size="xl" variant="outline" className="bg-card/80 backdrop-blur-sm border-primary-foreground/20 text-card-foreground hover:bg-card" onClick={scrollToFeatures}>
               See How It Works
             </Button>
           </div>
@@ -67,6 +74,8 @@ const Hero = () => {
 
       {/* Decorative elements */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-10" />
+      
+      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
     </section>
   );
 };

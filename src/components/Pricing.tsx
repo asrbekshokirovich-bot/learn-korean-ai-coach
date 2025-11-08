@@ -1,6 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useState } from "react";
+import SignUpDialog from "./SignUpDialog";
+import { useToast } from "@/hooks/use-toast";
 
 const plans = [
   {
@@ -51,6 +54,8 @@ const plans = [
 ];
 
 const Pricing = () => {
+  const [signUpOpen, setSignUpOpen] = useState(false);
+  const { toast } = useToast();
   return (
     <section className="py-20 md:py-32 bg-gradient-subtle">
       <div className="container px-4">
@@ -97,7 +102,18 @@ const Pricing = () => {
                 ))}
               </ul>
 
-              <Button className="w-full" variant={plan.variant} size="lg">
+              <Button 
+                className="w-full" 
+                variant={plan.variant} 
+                size="lg"
+                onClick={() => {
+                  toast({
+                    title: `${plan.name} Plan Selected!`,
+                    description: `Perfect choice! Let's get you started with ${plan.name}.`,
+                  });
+                  setSignUpOpen(true);
+                }}
+              >
                 {plan.cta}
               </Button>
             </Card>
@@ -106,9 +122,21 @@ const Pricing = () => {
 
         <p className="text-center text-sm text-muted-foreground mt-12">
           Enterprise licenses available for schools and organizations.{" "}
-          <button className="text-primary hover:underline">Contact sales</button>
+          <button 
+            className="text-primary hover:underline"
+            onClick={() => {
+              toast({
+                title: "Enterprise Inquiry",
+                description: "Our sales team will contact you within 24 hours!",
+              });
+            }}
+          >
+            Contact sales
+          </button>
         </p>
       </div>
+      
+      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
     </section>
   );
 };

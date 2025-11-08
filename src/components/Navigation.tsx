@@ -1,9 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import SignUpDialog from "./SignUpDialog";
 
 const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [signUpOpen, setSignUpOpen] = useState(false);
+  const [signInMode, setSignInMode] = useState(false);
 
   const navItems = [
     { label: "Features", href: "#features" },
@@ -37,8 +40,12 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button variant="hero">Start Free</Button>
+            <Button variant="ghost" onClick={() => { setSignInMode(true); setSignUpOpen(true); }}>
+              Sign In
+            </Button>
+            <Button variant="hero" onClick={() => { setSignInMode(false); setSignUpOpen(true); }}>
+              Start Free
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -70,10 +77,10 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="ghost" className="w-full">
+                <Button variant="ghost" className="w-full" onClick={() => { setSignInMode(true); setSignUpOpen(true); setMobileMenuOpen(false); }}>
                   Sign In
                 </Button>
-                <Button variant="hero" className="w-full">
+                <Button variant="hero" className="w-full" onClick={() => { setSignInMode(false); setSignUpOpen(true); setMobileMenuOpen(false); }}>
                   Start Free
                 </Button>
               </div>
@@ -81,6 +88,11 @@ const Navigation = () => {
           </div>
         )}
       </div>
+      
+      <SignUpDialog 
+        open={signUpOpen} 
+        onOpenChange={setSignUpOpen}
+      />
     </nav>
   );
 };
