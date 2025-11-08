@@ -3,13 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Video } from "lucide-react";
+import { Calendar, Clock, Video, MessageSquare, Link as LinkIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import LinkConversationDialog from "@/components/LinkConversationDialog";
 
 const Lessons = () => {
   const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
   const [completedLessons, setCompletedLessons] = useState<any[]>([]);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -25,13 +28,16 @@ const Lessons = () => {
       .from("lessons")
       .select(`
         *,
-        enrollments!inner (
-          student_id,
-          courses (name)
-        ),
-        profiles!lessons_teacher_id_fkey (full_name)
+        profiles!lessons_teacher_id_fkey (full_name),
+        lesson_conversations (
+          conversation_analysis (
+            id,
+            analysis_date,
+            confidence_score
+          )
+        )
       `)
-      .eq("enrollments.student_id", user.id)
+      .eq("student_id", user.id)
       .eq("status", "scheduled")
       .gte("scheduled_at", new Date().toISOString())
       .order("scheduled_at", { ascending: true });
@@ -43,13 +49,16 @@ const Lessons = () => {
       .from("lessons")
       .select(`
         *,
-        enrollments!inner (
-          student_id,
-          courses (name)
-        ),
-        profiles!lessons_teacher_id_fkey (full_name)
+        profiles!lessons_teacher_id_fkey (full_name),
+        lesson_conversations (
+          conversation_analysis (
+            id,
+            analysis_date,
+            confidence_score
+          )
+        )
       `)
-      .eq("enrollments.student_id", user.id)
+      .eq("student_id", user.id)
       .eq("status", "completed")
       .order("scheduled_at", { ascending: false })
       .limit(10);
@@ -75,7 +84,7 @@ const Lessons = () => {
               <div key={lesson.id} className="p-4 border rounded-lg">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h4 className="font-semibold text-lg">{lesson.enrollments.courses.name}</h4>
+                    <h4 className="font-semibold text-lg">{lesson.lesson_type === "individual" ? "1-on-1 Lesson" : "Group Lesson"}</h4>
                     <p className="text-sm text-muted-foreground">
                       Teacher: {lesson.profiles?.full_name || "TBA"}
                     </p>
@@ -92,12 +101,44 @@ const Lessons = () => {
                     {format(new Date(lesson.scheduled_at), "p")} ({lesson.duration_minutes} min)
                   </div>
                 </div>
-                {lesson.meeting_link && (
-                  <Button size="sm" className="w-full" onClick={() => window.open(lesson.meeting_link, "_blank")}>
-                    <Video className="w-4 h-4 mr-2" />
-                    Join Lesson
-                  </Button>
+
+                {lesson.lesson_conversations && lesson.lesson_conversations.length > 0 && (
+                  <div className="mb-3 p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="w-4 h-4" />
+                      <p className="text-sm font-medium">
+                        {lesson.lesson_conversations.length} Linked Conversation(s)
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {lesson.lesson_conversations.map((lc: any) => (
+                        <Badge key={lc.conversation_analysis.id} variant="outline">
+                          {format(new Date(lc.conversation_analysis.analysis_date), "MMM dd")}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
+
+                <div className="flex gap-2">
+                  {lesson.meeting_link && (
+                    <Button size="sm" onClick={() => window.open(lesson.meeting_link, "_blank")}>
+                      <Video className="w-4 h-4 mr-2" />
+                      Join Lesson
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedLesson(lesson);
+                      setLinkDialogOpen(true);
+                    }}
+                  >
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    Link Conversations
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -113,20 +154,35 @@ const Lessons = () => {
           <div className="space-y-3">
             {completedLessons.map((lesson) => (
               <div key={lesson.id} className="p-3 bg-muted rounded-lg">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="font-medium">{lesson.enrollments.courses.name}</p>
+                    <p className="font-medium">{lesson.lesson_type === "individual" ? "1-on-1 Lesson" : "Group Lesson"}</p>
                     <p className="text-sm text-muted-foreground">
                       {format(new Date(lesson.scheduled_at), "PPP")} • {lesson.profiles?.full_name}
                     </p>
                   </div>
                   <Badge variant="secondary">Completed</Badge>
                 </div>
+                {lesson.lesson_conversations && lesson.lesson_conversations.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{lesson.lesson_conversations.length} linked conversation(s)</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </Card>
+
+      {selectedLesson && (
+        <LinkConversationDialog
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+          lessonId={selectedLesson.id}
+          onSuccess={loadLessons}
+        />
+      )}
     </div>
   );
 };

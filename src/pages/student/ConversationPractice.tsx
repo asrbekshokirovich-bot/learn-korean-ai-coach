@@ -4,14 +4,17 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, Square, Loader2, TrendingUp, BookOpen, MessageSquare } from "lucide-react";
+import { Mic, Square, Loader2, TrendingUp, BookOpen, MessageSquare, Link as LinkIcon } from "lucide-react";
 import { format } from "date-fns";
+import LinkConversationDialog from "@/components/LinkConversationDialog";
 
 const ConversationPractice = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordings, setRecordings] = useState<any[]>([]);
   const [currentRecording, setCurrentRecording] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { toast } = useToast();
@@ -287,6 +290,17 @@ const ConversationPractice = () => {
                   </div>
 
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedConversation(recording.conversation_analysis[0]);
+                        setLinkDialogOpen(true);
+                      }}
+                    >
+                      <LinkIcon className="w-4 h-4 mr-2" />
+                      Link to Lesson
+                    </Button>
                     {!recording.conversation_analysis[0].shared_with_teacher && (
                       <Button
                         size="sm"
@@ -307,6 +321,16 @@ const ConversationPractice = () => {
           ))
         )}
       </div>
+
+      {selectedConversation && (
+        <LinkConversationDialog
+          open={linkDialogOpen}
+          onOpenChange={setLinkDialogOpen}
+          conversationAnalysisId={selectedConversation.id}
+          conversationDate={selectedConversation.analysis_date}
+          onSuccess={loadRecordings}
+        />
+      )}
     </div>
   );
 };

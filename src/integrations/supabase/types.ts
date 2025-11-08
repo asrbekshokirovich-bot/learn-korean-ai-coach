@@ -350,6 +350,42 @@ export type Database = {
           },
         ]
       }
+      lesson_conversations: {
+        Row: {
+          conversation_analysis_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+        }
+        Insert: {
+          conversation_analysis_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+        }
+        Update: {
+          conversation_analysis_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_conversations_conversation_analysis_id_fkey"
+            columns: ["conversation_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_analysis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_conversations_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_packages: {
         Row: {
           created_at: string
