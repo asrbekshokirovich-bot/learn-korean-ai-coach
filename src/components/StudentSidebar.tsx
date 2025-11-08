@@ -1,4 +1,4 @@
-import { Home, BookOpen, Brain, Trophy, Calendar, Settings, LogOut } from "lucide-react";
+import { Home, BookOpen, Brain, Trophy, Calendar, MessageSquare } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ const studentItems = [
   { title: "My Lessons", url: "/student/lessons", icon: BookOpen },
   { title: "AI Practice", url: "/student/practice", icon: Brain },
   { title: "TOPIK Prep", url: "/student/topik", icon: Trophy },
+  { title: "Daily Conversations", url: "/student/conversations", icon: MessageSquare },
 ];
 
 export function StudentSidebar() {
