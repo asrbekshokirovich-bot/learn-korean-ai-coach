@@ -8,85 +8,88 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 35 25% 97%;
-    --foreground: 230 45% 15%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 230 45% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 230 45% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Korean indigo - deep, sophisticated */
-    --primary: 230 65% 35%;
-    --primary-foreground: 35 25% 97%;
+    /* TOPIK Club Blue (primary) */
+    --primary: 230 52% 46%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Warm coral accent */
-    --secondary: 12 85% 62%;
+    /* TOPIK Club Red (secondary) */
+    --secondary: 4 78% 56%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 35 20% 92%;
-    --muted-foreground: 230 25% 45%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Vibrant accent for CTAs */
-    --accent: 340 75% 55%;
+    /* Accent using TOPIK red */
+    --accent: 4 78% 56%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 230 20% 88%;
-    --input: 230 20% 88%;
-    --ring: 230 65% 35%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 230 52% 46%;
 
     --radius: 0.75rem;
 
     /* Custom design tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(230 65% 35%), hsl(250 60% 45%));
-    --gradient-accent: linear-gradient(135deg, hsl(340 75% 55%), hsl(12 85% 62%));
-    --gradient-subtle: linear-gradient(180deg, hsl(35 25% 97%), hsl(230 15% 95%));
+    --gradient-hero: linear-gradient(135deg, hsl(230 52% 46%), hsl(4 78% 56%));
+    --gradient-accent: linear-gradient(135deg, hsl(4 78% 56%), hsl(230 52% 46%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 40% 98%));
     
-    --shadow-elegant: 0 10px 40px -10px hsl(230 65% 35% / 0.15);
-    --shadow-glow: 0 0 60px hsl(340 75% 55% / 0.3);
+    --shadow-elegant: 0 10px 40px -10px hsl(230 52% 46% / 0.15);
+    --shadow-glow: 0 0 60px hsl(4 78% 56% / 0.3);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 230 45% 8%;
-    --foreground: 35 25% 97%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
 
-    --card: 230 40% 12%;
-    --card-foreground: 35 25% 97%;
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 230 40% 12%;
-    --popover-foreground: 35 25% 97%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 230 70% 65%;
-    --primary-foreground: 230 45% 8%;
+    /* TOPIK Club Blue (lighter in dark mode) */
+    --primary: 230 52% 56%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 12 85% 62%;
+    /* TOPIK Club Red */
+    --secondary: 4 78% 56%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 230 30% 18%;
-    --muted-foreground: 230 15% 65%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 340 75% 55%;
+    /* Accent using TOPIK red */
+    --accent: 4 78% 56%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 230 30% 20%;
-    --input: 230 30% 20%;
-    --ring: 230 70% 65%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 230 52% 56%;
     
-    --gradient-hero: linear-gradient(135deg, hsl(230 70% 25%), hsl(250 65% 35%));
-    --gradient-accent: linear-gradient(135deg, hsl(340 75% 55%), hsl(12 85% 62%));
-    --gradient-subtle: linear-gradient(180deg, hsl(230 45% 8%), hsl(230 40% 12%));
+    --gradient-hero: linear-gradient(135deg, hsl(230 52% 36%), hsl(4 78% 46%));
+    --gradient-accent: linear-gradient(135deg, hsl(4 78% 56%), hsl(230 52% 56%));
+    --gradient-subtle: linear-gradient(180deg, hsl(222 47% 11%), hsl(222 47% 15%));
     
-    --shadow-elegant: 0 10px 40px -10px hsl(230 70% 65% / 0.2);
-    --shadow-glow: 0 0 60px hsl(340 75% 55% / 0.4);
+    --shadow-elegant: 0 10px 40px -10px hsl(230 52% 56% / 0.2);
+    --shadow-glow: 0 0 60px hsl(4 78% 56% / 0.4);
   }
 }
 

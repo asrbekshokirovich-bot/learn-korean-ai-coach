@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Menu, X, Settings } from "lucide-react";
+import { Menu, X, Settings, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelector } from "./LanguageSelector";
+import topikClubLogo from "@/assets/topik-club-logo.png";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -14,6 +15,19 @@ const Navigation = () => {
   const [signInOpen, setSignInOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    
+    setIsDarkMode(shouldBeDark);
+    if (shouldBeDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
 
   useEffect(() => {
     checkUser();
@@ -43,6 +57,19 @@ const Navigation = () => {
     }
   };
 
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
+
   const navItems = [
     { label: "Features", href: "#features" },
     { label: "Teaching Modes", href: "#modes" },
@@ -54,11 +81,8 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-accent flex items-center justify-center">
-              <span className="text-white font-bold text-sm">한</span>
-            </div>
-            <span className="text-xl font-bold">Korean AI</span>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+            <img src={topikClubLogo} alt="TOPIK Club" className="h-10 w-auto" />
           </div>
 
           {/* Desktop Navigation */}
@@ -75,6 +99,14 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
             <LanguageSelector />
             {isAdmin && (
               <Button variant="outline" onClick={() => navigate("/admin")}>
@@ -123,6 +155,27 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleDarkMode}
+                    aria-label="Toggle dark mode"
+                    className="w-full justify-start"
+                  >
+                    {isDarkMode ? (
+                      <>
+                        <Sun className="w-5 h-5 mr-2" />
+                        Light Mode
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="w-5 h-5 mr-2" />
+                        Dark Mode
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <LanguageSelector />
                 {isAdmin && (
                   <Button 
