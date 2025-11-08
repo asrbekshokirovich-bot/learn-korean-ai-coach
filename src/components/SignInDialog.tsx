@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -33,6 +34,7 @@ const signInSchema = z.object({
 });
 
 const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -77,6 +79,13 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
         return;
       }
 
+      // Check user role and redirect
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
       toast({
         title: "Welcome back! 👋",
         description: "You've successfully signed in.",
@@ -86,6 +95,15 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
       setEmail("");
       setPassword("");
       onOpenChange(false);
+
+      // Redirect based on role
+      if (roleData?.role === "admin") {
+        navigate("/admin");
+      } else if (roleData?.role === "teacher") {
+        navigate("/teacher");
+      } else {
+        navigate("/student");
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
