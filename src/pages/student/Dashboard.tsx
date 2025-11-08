@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Dashboard = () => {
   const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadUpcomingLessons();
@@ -35,15 +37,15 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">My Lessons</h2>
-        <p className="text-muted-foreground">Your upcoming scheduled lessons</p>
+        <h2 className="text-3xl font-bold mb-2">{t('myLessons')}</h2>
+        <p className="text-muted-foreground">{t('upcomingLessons')}</p>
       </div>
 
       {upcomingLessons.length === 0 ? (
         <Card className="p-12 text-center">
           <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-lg font-medium mb-2">No upcoming lessons</p>
-          <p className="text-sm text-muted-foreground">Check back later or contact your teacher</p>
+          <p className="text-lg font-medium mb-2">{t('noUpcomingLessons')}</p>
+          <p className="text-sm text-muted-foreground">{t('checkBackLater')}</p>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -64,7 +66,7 @@ const Dashboard = () => {
                   </div>
                   {lesson.profiles?.full_name && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Teacher: {lesson.profiles.full_name}
+                      {t('teacher')}: {lesson.profiles.full_name}
                     </p>
                   )}
                 </div>

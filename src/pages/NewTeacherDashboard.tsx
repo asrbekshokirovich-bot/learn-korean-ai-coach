@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { TeacherSidebar } from "@/components/TeacherSidebar";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Users, Calendar, DollarSign, BookOpen, TrendingUp } from "lucide-react";
+import { Users, Calendar, DollarSign, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const NewTeacherDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [todayLessons, setTodayLessons] = useState<any[]>([]);
@@ -123,47 +122,27 @@ const NewTeacherDashboard = () => {
   };
 
   const stats = [
-    { label: "Active Students", value: studentCount.toString(), icon: Users, color: "text-blue-500" },
-    { label: "Today's Lessons", value: todayLessons.length.toString(), icon: Calendar, color: "text-purple-500" },
-    { label: "Current Payout (70%)", value: `$${earnings?.payout_amount || 0}`, icon: DollarSign, color: "text-green-500" },
-    { label: "Pending Reviews", value: pendingHomework.length.toString(), icon: BookOpen, color: "text-orange-500" },
+    { label: t('activeStudents'), value: studentCount.toString(), icon: Users, color: "text-blue-500" },
+    { label: t('todayLessons'), value: todayLessons.length.toString(), icon: Calendar, color: "text-purple-500" },
+    { label: t('currentPayout'), value: `$${earnings?.payout_amount || 0}`, icon: DollarSign, color: "text-green-500" },
+    { label: t('pendingReviews'), value: pendingHomework.length.toString(), icon: BookOpen, color: "text-orange-500" },
   ];
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <TeacherSidebar />
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="h-16 border-b bg-card flex items-center px-4 sticky top-0 z-10">
-            <SidebarTrigger className="mr-4" />
-            <div className="flex-1">
-              <h1 className="text-xl font-bold">TOPIK CLUB Teacher Portal</h1>
+    <div className="flex min-h-screen w-full">
+      <div className="flex-1 flex flex-col">
+        {/* Main Content */}
+        <main className="flex-1 p-6 bg-gradient-subtle overflow-auto">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Welcome Section */}
+            <div>
+              <h2 className="text-3xl font-bold mb-2">
+                {t('welcome')}, {profile?.full_name || "Teacher"}! 👋
+              </h2>
+              <p className="text-muted-foreground">
+                {t('yourTeachingDashboard')}
+              </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium">{profile?.full_name || user?.email}</p>
-                <Badge>Teacher (70% Payout)</Badge>
-              </div>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </header>
-
-          {/* Main Content */}
-          <main className="flex-1 p-6 bg-gradient-subtle overflow-auto">
-            <div className="max-w-7xl mx-auto space-y-6">
-              {/* Welcome Section */}
-              <div>
-                <h2 className="text-3xl font-bold mb-2">
-                  Welcome, {profile?.full_name || "Teacher"}! 👋
-                </h2>
-                <p className="text-muted-foreground">
-                  Your teaching dashboard at TOPIK CLUB
-                </p>
-              </div>
 
               {/* Stats Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -185,10 +164,10 @@ const NewTeacherDashboard = () => {
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />
-                    Today's Schedule
+                    {t('todaySchedule')}
                   </h3>
                   {todayLessons.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No lessons scheduled for today</p>
+                    <p className="text-sm text-muted-foreground">{t('noLessonsToday')}</p>
                   ) : (
                     <div className="space-y-3">
                       {todayLessons.map((lesson) => (
@@ -216,10 +195,10 @@ const NewTeacherDashboard = () => {
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-orange-500" />
-                    Pending Homework Reviews
+                    {t('pendingHomeworkReviews')}
                   </h3>
                   {pendingHomework.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No pending homework to review</p>
+                    <p className="text-sm text-muted-foreground">{t('noPendingHomework')}</p>
                   ) : (
                     <div className="space-y-3">
                       {pendingHomework.slice(0, 5).map((hw) => (
@@ -231,10 +210,10 @@ const NewTeacherDashboard = () => {
                                 Student: {hw.profiles?.full_name || "Unknown"}
                               </p>
                             </div>
-                            <Badge variant="destructive">Review</Badge>
+                            <Badge variant="destructive">{t('review')}</Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Submitted: {format(new Date(hw.created_at), "PPp")}
+                            {t('submitted')}: {format(new Date(hw.created_at), "PPp")}
                           </p>
                         </div>
                       ))}
@@ -247,41 +226,40 @@ const NewTeacherDashboard = () => {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-green-500" />
-                  Earnings Overview (70% Payout Model)
+                  {t('earningsOverview')}
                 </h3>
                 {earnings ? (
                   <div className="grid md:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Period</p>
+                      <p className="text-sm text-muted-foreground">{t('period')}</p>
                       <p className="font-medium">
                         {format(new Date(earnings.period_start), "MMM d")} - {format(new Date(earnings.period_end), "MMM d")}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Revenue</p>
+                      <p className="text-sm text-muted-foreground">{t('totalRevenue')}</p>
                       <p className="font-medium">${earnings.total_revenue}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Your Payout (70%)</p>
+                      <p className="text-sm text-muted-foreground">{t('yourPayout')}</p>
                       <p className="font-medium text-green-600">${earnings.payout_amount}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Lessons Taught</p>
+                      <p className="text-sm text-muted-foreground">{t('lessonsTaught')}</p>
                       <p className="font-medium">{earnings.lessons_count}</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No payout data available yet</p>
+                  <p className="text-sm text-muted-foreground">{t('noPayoutData')}</p>
                 )}
                 <p className="text-xs text-muted-foreground mt-4">
-                  All revenue flows through TOPIK CLUB. You receive 70% bi-weekly.
+                  {t('revenueNote')}
                 </p>
               </Card>
             </div>
           </main>
         </div>
       </div>
-    </SidebarProvider>
   );
 };
 

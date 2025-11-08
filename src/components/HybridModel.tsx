@@ -5,56 +5,58 @@ import { useState } from "react";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { useToast } from "@/hooks/use-toast";
-
-const learningModes = [
-  {
-    icon: Video,
-    title: "1-on-1 with Native Teacher",
-    features: [
-      "Certified TOPIK 6 instructors",
-      "AI co-pilot suggestions in real-time",
-      "Custom lesson plans",
-      "Flexible scheduling",
-    ],
-    accent: "from-primary to-primary/80",
-  },
-  {
-    icon: Bot,
-    title: "AI Avatar Teacher",
-    features: [
-      "50+ cultural personas",
-      "24/7 availability",
-      "Instant pronunciation feedback",
-      "Adaptive difficulty",
-    ],
-    accent: "from-secondary to-accent",
-  },
-  {
-    icon: UsersIcon,
-    title: "Group Classes (1:6)",
-    features: [
-      "Small interactive groups",
-      "Real-time AI feedback for all",
-      "Peer learning dynamics",
-      "Cost-effective",
-    ],
-    accent: "from-accent to-secondary",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HybridModel = () => {
   const [signUpOpen, setSignUpOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
+
+  const learningModes = [
+    {
+      icon: Video,
+      title: t('oneOnOneNativeTeacher'),
+      features: [
+        t('certifiedTopikInstructors'),
+        t('aiCoPilotRealTime'),
+        t('customLessonPlans'),
+        t('flexibleScheduling'),
+      ],
+      accent: "from-primary to-primary/80",
+    },
+    {
+      icon: Bot,
+      title: t('aiAvatarTeacher'),
+      features: [
+        t('culturalPersonas'),
+        t('availability247'),
+        t('instantPronunciation'),
+        t('adaptiveDifficulty'),
+      ],
+      accent: "from-secondary to-accent",
+    },
+    {
+      icon: UsersIcon,
+      title: t('groupClasses'),
+      features: [
+        t('smallInteractiveGroups'),
+        t('realTimeAIFeedback'),
+        t('peerLearning'),
+        t('costEffective'),
+      ],
+      accent: "from-accent to-secondary",
+    },
+  ];
   return (
     <section className="py-20 md:py-32">
       <div className="container px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Choose Your Learning Style
+            {t('chooseYourLearningStyle')}
           </h2>
           <p className="text-lg text-muted-foreground">
-            Every session includes AI assistance—whether you choose human teachers, AI avatars, or group classes
+            {t('everySessionIncludesAI')}
           </p>
         </div>
 
@@ -87,13 +89,13 @@ const HybridModel = () => {
                   variant="outline"
                   onClick={() => {
                     toast({
-                      title: "Mode Selected!",
-                      description: `You've chosen ${mode.title}. Sign up to start learning!`,
+                      title: t('modeSelected'),
+                      description: t('modeSelectedDesc', { mode: mode.title }),
                     });
                     setSignUpOpen(true);
                   }}
                 >
-                  Try This Mode
+                  {t('tryThisMode')}
                 </Button>
               </div>
             </Card>
