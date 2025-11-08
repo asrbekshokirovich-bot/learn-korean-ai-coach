@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_analysis: {
+        Row: {
+          ai_recommendations: string | null
+          analysis_date: string
+          confidence_score: number | null
+          created_at: string
+          grammar_issues: Json
+          id: string
+          practice_suggestions: Json
+          recording_id: string
+          shared_with_teacher: boolean | null
+          struggle_areas: Json
+          student_id: string
+          teacher_report: string | null
+          topics_discussed: Json
+          updated_at: string
+          vocabulary_gaps: Json
+        }
+        Insert: {
+          ai_recommendations?: string | null
+          analysis_date: string
+          confidence_score?: number | null
+          created_at?: string
+          grammar_issues?: Json
+          id?: string
+          practice_suggestions?: Json
+          recording_id: string
+          shared_with_teacher?: boolean | null
+          struggle_areas?: Json
+          student_id: string
+          teacher_report?: string | null
+          topics_discussed?: Json
+          updated_at?: string
+          vocabulary_gaps?: Json
+        }
+        Update: {
+          ai_recommendations?: string | null
+          analysis_date?: string
+          confidence_score?: number | null
+          created_at?: string
+          grammar_issues?: Json
+          id?: string
+          practice_suggestions?: Json
+          recording_id?: string
+          shared_with_teacher?: boolean | null
+          struggle_areas?: Json
+          student_id?: string
+          teacher_report?: string | null
+          topics_discussed?: Json
+          updated_at?: string
+          vocabulary_gaps?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_analysis_recording_id_fkey"
+            columns: ["recording_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_recordings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_recordings: {
+        Row: {
+          audio_segments: Json
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          recording_date: string
+          status: string
+          student_id: string
+          transcription: string | null
+          updated_at: string
+        }
+        Insert: {
+          audio_segments?: Json
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          recording_date: string
+          status?: string
+          student_id: string
+          transcription?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audio_segments?: Json
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          recording_date?: string
+          status?: string
+          student_id?: string
+          transcription?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           course_type: string
