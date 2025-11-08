@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { Menu, X, Settings } from "lucide-react";
+import { Menu, X, Settings, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageSelector } from "./LanguageSelector";
 import topikClubLogo from "@/assets/topik-club-logo.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -15,7 +16,19 @@ const Navigation = () => {
   const [signInOpen, setSignInOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const { t } = useLanguage();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    
+    setIsDarkMode(shouldBeDark);
+    if (shouldBeDark) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
 
   useEffect(() => {
     checkUser();
@@ -42,6 +55,19 @@ const Navigation = () => {
       setIsAdmin(!!roleData);
     } else {
       setIsAdmin(false);
+    }
+  };
+
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   };
 
@@ -74,6 +100,15 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            <LanguageSelector />
             {isAdmin && (
               <Button variant="outline" onClick={() => navigate("/admin")}>
                 <Settings className="w-4 h-4 mr-2" />
@@ -125,6 +160,28 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleDarkMode}
+                    aria-label="Toggle dark mode"
+                    className="w-full justify-start"
+                  >
+                    {isDarkMode ? (
+                      <>
+                        <Sun className="w-5 h-5 mr-2" />
+                        {t('lightMode')}
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="w-5 h-5 mr-2" />
+                        {t('darkMode')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <LanguageSelector />
                 {isAdmin && (
                   <Button 
                     variant="outline" 
