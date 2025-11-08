@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageSelector } from "./LanguageSelector";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -74,6 +75,7 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <LanguageSelector />
             {isAdmin && (
               <Button variant="outline" onClick={() => navigate("/admin")}>
                 <Settings className="w-4 h-4 mr-2" />
@@ -121,6 +123,7 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                <LanguageSelector />
                 {isAdmin && (
                   <Button 
                     variant="outline" 

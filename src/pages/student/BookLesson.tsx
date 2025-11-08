@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { format, setHours, setMinutes } from "date-fns";
+import { Clock } from "lucide-react";
+import { setHours, setMinutes } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TimeSlot {
   time: string;
@@ -26,6 +27,7 @@ const BookLesson = () => {
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (selectedLevel && selectedDate) {
@@ -77,8 +79,8 @@ const BookLesson = () => {
   const handleBookLesson = async () => {
     if (!selectedSlot || !selectedDate || !selectedLevel) {
       toast({
-        title: "Missing information",
-        description: "Please select a level, date, and time",
+        title: t('missingInformation'),
+        description: t('selectLevelDateAndTime'),
         variant: "destructive",
       });
       return;
@@ -99,8 +101,8 @@ const BookLesson = () => {
 
     if (!activePackage) {
       toast({
-        title: "No active package",
-        description: "Please purchase a lesson package first",
+        title: t('noActivePackage'),
+        description: t('purchasePackageFirst'),
         variant: "destructive",
       });
       return;
@@ -122,14 +124,14 @@ const BookLesson = () => {
 
     if (error) {
       toast({
-        title: "Booking failed",
+        title: t('bookingFailed'),
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Lesson booked!",
-        description: "Your lesson has been scheduled successfully",
+        title: t('lessonBooked'),
+        description: t('lessonScheduledSuccess'),
       });
       setSelectedSlot(null);
       setAvailableSlots([]);
@@ -139,27 +141,27 @@ const BookLesson = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Book a Lesson</h2>
-        <p className="text-muted-foreground">Select your level and preferred time slot</p>
+        <h2 className="text-3xl font-bold mb-2">{t('bookALesson')}</h2>
+        <p className="text-muted-foreground">{t('selectYourLevel')}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">Select Your Level</h3>
+          <h3 className="text-xl font-semibold mb-4">{t('chooseYourLevel')}</h3>
           <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose your level" />
+            <SelectTrigger className="bg-background">
+              <SelectValue placeholder={t('chooseYourLevel')} />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="beginner">{t('beginner')}</SelectItem>
+              <SelectItem value="intermediate">{t('intermediate')}</SelectItem>
+              <SelectItem value="advanced">{t('advanced')}</SelectItem>
             </SelectContent>
           </Select>
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">Select Date</h3>
+          <h3 className="text-xl font-semibold mb-4">{t('selectDate')}</h3>
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -172,10 +174,10 @@ const BookLesson = () => {
 
       {selectedLevel && selectedDate && (
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">Available Time Slots</h3>
+          <h3 className="text-xl font-semibold mb-4">{t('availableTimeSlots')}</h3>
           {availableSlots.length === 0 ? (
             <p className="text-muted-foreground">
-              No available slots for {selectedLevel} level on this day
+              {t('noAvailableSlots', { level: t(selectedLevel as any) })}
             </p>
           ) : (
             <div className="grid grid-cols-4 gap-2">
@@ -197,7 +199,7 @@ const BookLesson = () => {
       {selectedSlot && (
         <div className="flex justify-end">
           <Button size="lg" onClick={handleBookLesson}>
-            Book Lesson
+            {t('bookLessonButton')}
           </Button>
         </div>
       )}
