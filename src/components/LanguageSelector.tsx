@@ -10,10 +10,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Language } from "@/lib/translations";
 
 const languages = [
-  { code: 'uz' as Language, name: 'O\'zbekcha', flag: '🇺🇿' },
-  { code: 'en' as Language, name: 'English', flag: '🇬🇧' },
-  { code: 'ko' as Language, name: '한국어', flag: '🇰🇷' },
-  { code: 'ru' as Language, name: 'Русский', flag: '🇷🇺' },
+  { code: 'uz' as Language, name: 'UZ', flag: '🇺🇿' },
+  { code: 'en' as Language, name: 'EN', flag: '🇬🇧' },
+  { code: 'ko' as Language, name: 'KO', flag: '🇰🇷' },
+  { code: 'ru' as Language, name: 'RU', flag: '🇷🇺' },
 ];
 
 export const LanguageSelector = () => {
@@ -21,7 +21,7 @@ export const LanguageSelector = () => {
 
   return (
     <Select value={language} onValueChange={(value) => setLanguage(value as Language)}>
-      <SelectTrigger className="w-[140px] bg-background">
+      <SelectTrigger className="w-[110px] bg-background">
         <Globe className="w-4 h-4 mr-2" />
         <SelectValue />
       </SelectTrigger>

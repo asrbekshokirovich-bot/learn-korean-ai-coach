@@ -116,7 +116,7 @@ const Navigation = () => {
                 {t('adminDashboard')}
               </Button>
             )}
-            {!user && (
+            {!user ? (
               <>
                 <Button variant="ghost" onClick={() => setSignInOpen(true)}>
                   {t('signIn')}
@@ -125,6 +125,10 @@ const Navigation = () => {
                   {t('startFree')}
                 </Button>
               </>
+            ) : (
+              <Button variant="outline" onClick={() => navigate("/")}>
+                {t('home')}
+              </Button>
             )}
           </div>
 
