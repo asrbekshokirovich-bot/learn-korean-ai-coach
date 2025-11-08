@@ -1,5 +1,3 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +19,7 @@ interface SignUpDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTab?: "student" | "teacher";
+  onSwitchToSignIn: () => void;
 }
 
 // Validation schemas
@@ -42,7 +42,7 @@ const teacherSchema = authSchema.extend({
     .transform((val) => val?.trim()),
 });
 
-const SignUpDialog = ({ open, onOpenChange, defaultTab = "student" }: SignUpDialogProps) => {
+const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSignIn }: SignUpDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -227,6 +227,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student" }: SignUpDial
                   required
                   disabled={loading}
                   maxLength={255}
+                  autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
@@ -241,6 +242,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student" }: SignUpDial
                   disabled={loading}
                   minLength={6}
                   maxLength={72}
+                  autoComplete="new-password"
                 />
                 <p className="text-xs text-muted-foreground">
                   Must be at least 6 characters
@@ -275,6 +277,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student" }: SignUpDial
                   required
                   disabled={loading}
                   maxLength={255}
+                  autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
@@ -289,6 +292,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student" }: SignUpDial
                   disabled={loading}
                   minLength={6}
                   maxLength={72}
+                  autoComplete="new-password"
                 />
                 <p className="text-xs text-muted-foreground">
                   Must be at least 6 characters
@@ -321,6 +325,23 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student" }: SignUpDial
             </form>
           </TabsContent>
         </Tabs>
+
+        <div className="text-center pt-4 border-t">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <button
+              type="button"
+              className="text-primary hover:underline font-medium"
+              onClick={() => {
+                onOpenChange(false);
+                onSwitchToSignIn();
+              }}
+              disabled={loading}
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -3,9 +3,11 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
 import { useState } from "react";
 import SignUpDialog from "./SignUpDialog";
+import SignInDialog from "./SignInDialog";
 
 const Hero = () => {
   const [signUpOpen, setSignUpOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const scrollToFeatures = () => {
     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
@@ -75,7 +77,16 @@ const Hero = () => {
       {/* Decorative elements */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-10" />
       
-      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
+      <SignUpDialog 
+        open={signUpOpen} 
+        onOpenChange={setSignUpOpen}
+        onSwitchToSignIn={() => setSignInOpen(true)}
+      />
+      <SignInDialog 
+        open={signInOpen} 
+        onOpenChange={setSignInOpen}
+        onSwitchToSignUp={() => setSignUpOpen(true)}
+      />
     </section>
   );
 };

@@ -2,11 +2,12 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import SignUpDialog from "./SignUpDialog";
+import SignInDialog from "./SignInDialog";
 
 const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [signUpOpen, setSignUpOpen] = useState(false);
-  const [signInMode, setSignInMode] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const navItems = [
     { label: "Features", href: "#features" },
@@ -40,10 +41,10 @@ const Navigation = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" onClick={() => { setSignInMode(true); setSignUpOpen(true); }}>
+            <Button variant="ghost" onClick={() => setSignInOpen(true)}>
               Sign In
             </Button>
-            <Button variant="hero" onClick={() => { setSignInMode(false); setSignUpOpen(true); }}>
+            <Button variant="hero" onClick={() => setSignUpOpen(true)}>
               Start Free
             </Button>
           </div>
@@ -77,10 +78,24 @@ const Navigation = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="ghost" className="w-full" onClick={() => { setSignInMode(true); setSignUpOpen(true); setMobileMenuOpen(false); }}>
+                <Button 
+                  variant="ghost" 
+                  className="w-full" 
+                  onClick={() => { 
+                    setSignInOpen(true); 
+                    setMobileMenuOpen(false); 
+                  }}
+                >
                   Sign In
                 </Button>
-                <Button variant="hero" className="w-full" onClick={() => { setSignInMode(false); setSignUpOpen(true); setMobileMenuOpen(false); }}>
+                <Button 
+                  variant="hero" 
+                  className="w-full" 
+                  onClick={() => { 
+                    setSignUpOpen(true); 
+                    setMobileMenuOpen(false); 
+                  }}
+                >
                   Start Free
                 </Button>
               </div>
@@ -92,6 +107,12 @@ const Navigation = () => {
       <SignUpDialog 
         open={signUpOpen} 
         onOpenChange={setSignUpOpen}
+        onSwitchToSignIn={() => setSignInOpen(true)}
+      />
+      <SignInDialog 
+        open={signInOpen} 
+        onOpenChange={setSignInOpen}
+        onSwitchToSignUp={() => setSignUpOpen(true)}
       />
     </nav>
   );

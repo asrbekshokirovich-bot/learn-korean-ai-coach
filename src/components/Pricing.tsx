@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useState } from "react";
 import SignUpDialog from "./SignUpDialog";
+import SignInDialog from "./SignInDialog";
 import { useToast } from "@/hooks/use-toast";
 
 const plans = [
@@ -55,6 +56,7 @@ const plans = [
 
 const Pricing = () => {
   const [signUpOpen, setSignUpOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   const { toast } = useToast();
   return (
     <section className="py-20 md:py-32 bg-gradient-subtle">
@@ -136,7 +138,16 @@ const Pricing = () => {
         </p>
       </div>
       
-      <SignUpDialog open={signUpOpen} onOpenChange={setSignUpOpen} />
+      <SignUpDialog 
+        open={signUpOpen} 
+        onOpenChange={setSignUpOpen}
+        onSwitchToSignIn={() => setSignInOpen(true)}
+      />
+      <SignInDialog 
+        open={signInOpen} 
+        onOpenChange={setSignInOpen}
+        onSwitchToSignUp={() => setSignUpOpen(true)}
+      />
     </section>
   );
 };
