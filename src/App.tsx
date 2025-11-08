@@ -5,8 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
-import StudentDashboard from "./pages/StudentDashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
+import NewStudentDashboard from "./pages/NewStudentDashboard";
+import NewTeacherDashboard from "./pages/NewTeacherDashboard";
+import Courses from "./pages/Courses";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardRoute from "./components/DashboardRoute";
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/courses" element={<Courses />} />
           <Route 
             path="/admin" 
             element={
@@ -33,7 +35,7 @@ const App = () => (
             path="/student/*" 
             element={
               <DashboardRoute>
-                <StudentDashboard />
+                <NewStudentDashboard />
               </DashboardRoute>
             } 
           />
@@ -41,7 +43,7 @@ const App = () => (
             path="/teacher/*" 
             element={
               <DashboardRoute>
-                <TeacherDashboard />
+                <NewTeacherDashboard />
               </DashboardRoute>
             } 
           />

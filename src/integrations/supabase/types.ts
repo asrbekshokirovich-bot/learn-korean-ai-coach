@@ -14,6 +14,365 @@ export type Database = {
   }
   public: {
     Tables: {
+      courses: {
+        Row: {
+          course_type: string
+          created_at: string
+          description: string | null
+          duration_weeks: number | null
+          format: string
+          id: string
+          is_active: boolean | null
+          max_students: number | null
+          name: string
+          price_usd: number
+          sessions_count: number | null
+          teacher_payout_percentage: number | null
+          updated_at: string
+        }
+        Insert: {
+          course_type: string
+          created_at?: string
+          description?: string | null
+          duration_weeks?: number | null
+          format: string
+          id?: string
+          is_active?: boolean | null
+          max_students?: number | null
+          name: string
+          price_usd: number
+          sessions_count?: number | null
+          teacher_payout_percentage?: number | null
+          updated_at?: string
+        }
+        Update: {
+          course_type?: string
+          created_at?: string
+          description?: string | null
+          duration_weeks?: number | null
+          format?: string
+          id?: string
+          is_active?: boolean | null
+          max_students?: number | null
+          name?: string
+          price_usd?: number
+          sessions_count?: number | null
+          teacher_payout_percentage?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          course_id: string
+          created_at: string
+          end_date: string | null
+          enrollment_date: string
+          id: string
+          payment_amount: number
+          payment_status: string
+          start_date: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          end_date?: string | null
+          enrollment_date?: string
+          id?: string
+          payment_amount: number
+          payment_status?: string
+          start_date?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          end_date?: string | null
+          enrollment_date?: string
+          id?: string
+          payment_amount?: number
+          payment_status?: string
+          start_date?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      homework_assignments: {
+        Row: {
+          ai_grade: number | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          feedback: string | null
+          id: string
+          lesson_id: string
+          status: string
+          student_id: string
+          submission_text: string | null
+          submission_url: string | null
+          teacher_grade: number | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_grade?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          feedback?: string | null
+          id?: string
+          lesson_id: string
+          status?: string
+          student_id: string
+          submission_text?: string | null
+          submission_url?: string | null
+          teacher_grade?: number | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_grade?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          feedback?: string | null
+          id?: string
+          lesson_id?: string
+          status?: string
+          student_id?: string
+          submission_text?: string | null
+          submission_url?: string | null
+          teacher_grade?: number | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "homework_assignments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      lesson_reviews: {
+        Row: {
+          ai_feedback: Json | null
+          ai_score: number | null
+          created_at: string
+          cultural_accuracy_score: number | null
+          engagement_score: number | null
+          error_correction_score: number | null
+          id: string
+          lesson_id: string
+          pacing_score: number | null
+          student_comment: string | null
+          student_id: string
+          student_rating: number | null
+          teacher_id: string
+        }
+        Insert: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          created_at?: string
+          cultural_accuracy_score?: number | null
+          engagement_score?: number | null
+          error_correction_score?: number | null
+          id?: string
+          lesson_id: string
+          pacing_score?: number | null
+          student_comment?: string | null
+          student_id: string
+          student_rating?: number | null
+          teacher_id: string
+        }
+        Update: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          created_at?: string
+          cultural_accuracy_score?: number | null
+          engagement_score?: number | null
+          error_correction_score?: number | null
+          id?: string
+          lesson_id?: string
+          pacing_score?: number | null
+          student_comment?: string | null
+          student_id?: string
+          student_rating?: number | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reviews_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "lesson_reviews_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          enrollment_id: string
+          id: string
+          lesson_type: string
+          meeting_link: string | null
+          notes: string | null
+          scheduled_at: string
+          status: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          enrollment_id: string
+          id?: string
+          lesson_type: string
+          meeting_link?: string | null
+          notes?: string | null
+          scheduled_at: string
+          status?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          enrollment_id?: string
+          id?: string
+          lesson_type?: string
+          meeting_link?: string | null
+          notes?: string | null
+          scheduled_at?: string
+          status?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          enrollment_id: string
+          id: string
+          paid_at: string | null
+          payment_method: string | null
+          status: string
+          student_id: string
+          transaction_id: string | null
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          student_id: string
+          transaction_id?: string | null
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          status?: string
+          student_id?: string
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -43,6 +402,94 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      teacher_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean | null
+          start_time: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          start_time: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          start_time?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_availability_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      teacher_payouts: {
+        Row: {
+          created_at: string
+          id: string
+          lessons_count: number
+          paid_at: string | null
+          payout_amount: number
+          payout_percentage: number
+          period_end: string
+          period_start: string
+          status: string
+          teacher_id: string
+          total_revenue: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lessons_count: number
+          paid_at?: string | null
+          payout_amount: number
+          payout_percentage: number
+          period_end: string
+          period_start: string
+          status?: string
+          teacher_id: string
+          total_revenue: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lessons_count?: number
+          paid_at?: string | null
+          payout_amount?: number
+          payout_percentage?: number
+          period_end?: string
+          period_start?: string
+          status?: string
+          teacher_id?: string
+          total_revenue?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_payouts_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
