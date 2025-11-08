@@ -42,19 +42,49 @@ const BookLesson = () => {
   }, [selectedTeacher, selectedDate]);
 
   const loadTeachers = async () => {
-    const { data } = await supabase
+    const { data: roleRows, error: rolesError } = await supabase
       .from("user_roles")
-      .select("user_id, profiles!inner(user_id, full_name, email)")
+      .select("user_id")
       .eq("role", "teacher");
 
-    if (data) {
-      const teacherList = data.map((item: any) => ({
-        user_id: item.user_id,
-        full_name: item.profiles.full_name,
-        email: item.profiles.email,
-      }));
-      setTeachers(teacherList);
+    if (rolesError) {
+      toast({
+        title: "Unable to load teachers",
+        description: rolesError.message,
+        variant: "destructive",
+      });
+      setTeachers([]);
+      return;
     }
+
+    const teacherIds = (roleRows ?? []).map((r: any) => r.user_id);
+    if (teacherIds.length === 0) {
+      setTeachers([]);
+      return;
+    }
+
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", teacherIds);
+
+    if (profilesError) {
+      toast({
+        title: "Unable to load teacher profiles",
+        description: profilesError.message,
+        variant: "destructive",
+      });
+      setTeachers([]);
+      return;
+    }
+
+    const teacherList = (profilesData ?? []).map((p: any) => ({
+      user_id: p.user_id,
+      full_name: p.full_name,
+      email: p.email,
+    }));
+
+    setTeachers(teacherList);
   };
 
   const loadAvailableSlots = async () => {
@@ -155,16 +185,20 @@ const BookLesson = () => {
         <Card className="p-6">
           <h3 className="text-xl font-semibold mb-4">Select Teacher</h3>
           <div className="space-y-2">
-            {teachers.map((teacher) => (
-              <Button
-                key={teacher.user_id}
-                variant={selectedTeacher === teacher.user_id ? "default" : "outline"}
-                className="w-full justify-start"
-                onClick={() => setSelectedTeacher(teacher.user_id)}
-              >
-                {teacher.full_name || teacher.email}
-              </Button>
-            ))}
+            {teachers.length === 0 ? (
+              <p className="text-muted-foreground">No teachers available yet.</p>
+            ) : (
+              teachers.map((teacher) => (
+                <Button
+                  key={teacher.user_id}
+                  variant={selectedTeacher === teacher.user_id ? "default" : "outline"}
+                  className="w-full justify-start"
+                  onClick={() => setSelectedTeacher(teacher.user_id)}
+                >
+                  {teacher.full_name || teacher.email}
+                </Button>
+              ))
+            )}
           </div>
         </Card>
 
