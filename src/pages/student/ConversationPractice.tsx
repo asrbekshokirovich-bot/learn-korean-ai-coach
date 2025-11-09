@@ -109,9 +109,7 @@ const ConversationPractice = () => {
       };
 
       recognition.onend = () => {
-        if (isRecording) {
-          processRecording();
-        }
+        console.log('Speech recognition ended');
       };
 
       recognitionRef.current = recognition;
@@ -134,9 +132,11 @@ const ConversationPractice = () => {
   };
 
   const stopRecording = () => {
-    if (recognitionRef.current && isRecording) {
+    if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
+      // Process the recording after stopping
+      setTimeout(() => processRecording(), 100);
     }
   };
 
