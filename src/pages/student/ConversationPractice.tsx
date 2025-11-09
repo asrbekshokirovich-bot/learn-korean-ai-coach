@@ -201,12 +201,36 @@ const ConversationPractice = () => {
       if (updateError) throw updateError;
 
       // Analyze the conversation using Lovable AI
-      const { error: analysisError } = await supabase.functions.invoke(
+      const { data: analysisData, error: analysisError } = await supabase.functions.invoke(
         "analyze-conversation",
         { body: { recordingId: currentRecording.id } }
       );
 
-      if (analysisError) throw analysisError;
+      // Handle specific error cases
+      if (analysisError) {
+        // Check if it's a payment/credits error
+        if (analysisError.message?.includes('402') || analysisError.message?.includes('Payment required') || analysisError.message?.includes('credits')) {
+          toast({
+            title: "Credits required",
+            description: "Please add Lovable AI credits to continue analyzing conversations. Go to Settings → Workspace → Usage to add credits.",
+            variant: "destructive",
+          });
+          
+          // Update status to show it needs credits
+          await supabase
+            .from("conversation_recordings")
+            .update({ status: "needs_credits" })
+            .eq("id", currentRecording.id);
+          
+          loadRecordings();
+          setCurrentRecording(null);
+          setTranscription("");
+          setIsProcessing(false);
+          return;
+        }
+        
+        throw analysisError;
+      }
 
       toast({
         title: "Analysis complete!",
