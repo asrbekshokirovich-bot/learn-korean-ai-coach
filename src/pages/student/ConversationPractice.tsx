@@ -17,6 +17,7 @@ const ConversationPractice = () => {
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [transcription, setTranscription] = useState("");
   const recognitionRef = useRef<any>(null);
+  const hasProcessedRef = useRef(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,6 +64,9 @@ const ConversationPractice = () => {
         return;
       }
 
+      // Reset processed flag for this new session
+      hasProcessedRef.current = false;
+
       // Create a new recording entry
       const { data: recording, error } = await supabase
         .from("conversation_recordings")
@@ -78,6 +82,8 @@ const ConversationPractice = () => {
 
       setCurrentRecording(recording);
       setTranscription("");
+      // Show the new 'recording' entry immediately in history
+      loadRecordings();
 
       // Initialize speech recognition
       const recognition = new SpeechRecognition();
@@ -110,6 +116,10 @@ const ConversationPractice = () => {
 
       recognition.onend = () => {
         console.log('Speech recognition ended');
+        // Auto-process if recording stopped due to silence/end
+        if (!hasProcessedRef.current && currentRecording) {
+          processRecording();
+        }
       };
 
       recognitionRef.current = recognition;
@@ -135,13 +145,16 @@ const ConversationPractice = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
-      // Process the recording after stopping
-      setTimeout(() => processRecording(), 100);
+      // Process the recording after stopping (once)
+      setTimeout(() => {
+        if (!hasProcessedRef.current) processRecording();
+      }, 50);
     }
   };
 
   const processRecording = async () => {
-    if (!currentRecording) return;
+    if (!currentRecording || hasProcessedRef.current) return;
+    hasProcessedRef.current = true;
 
     setIsProcessing(true);
 
