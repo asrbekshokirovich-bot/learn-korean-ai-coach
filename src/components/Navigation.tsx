@@ -125,8 +125,8 @@ const Navigation = () => {
                 </Button>
               </>
             ) : (
-              <Button variant="outline" onClick={() => navigate("/")}>
-                {t('home')}
+              <Button variant="ghost" onClick={() => setSignInOpen(true)}>
+                {t('signIn')}
               </Button>
             )}
           </div>
