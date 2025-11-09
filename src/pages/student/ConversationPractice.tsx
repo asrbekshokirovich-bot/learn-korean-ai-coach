@@ -30,10 +30,7 @@ const ConversationPractice = () => {
 
     const { data } = await supabase
       .from("conversation_recordings")
-      .select(`
-        *,
-        conversation_analysis(*)
-      `)
+      .select("*")
       .eq("student_id", user.id)
       .order("recording_date", { ascending: false });
 
@@ -67,6 +64,18 @@ const ConversationPractice = () => {
       // Reset processed flag for this new session
       hasProcessedRef.current = false;
 
+      // Ensure microphone permission before creating a DB entry
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        toast({
+          title: "Microphone blocked",
+          description: "Please allow microphone access and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Create a new recording entry
       const { data: recording, error } = await supabase
         .from("conversation_recordings")
@@ -89,18 +98,18 @@ const ConversationPractice = () => {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'ko-KR'; // Korean language
+      // Use the browser language when available; default to Korean
+      const browserLang = (navigator.language && typeof navigator.language === 'string') ? navigator.language : 'ko-KR';
+      recognition.lang = browserLang.startsWith('ko') ? 'ko-KR' : browserLang;
+      recognition.maxAlternatives = 1;
 
+      // Aggregate both interim and final results so we never lose speech
       recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript + ' ';
-          }
+        let combined = '';
+        for (let i = 0; i < event.results.length; i++) {
+          combined += event.results[i][0].transcript + ' ';
         }
-        if (finalTranscript) {
-          setTranscription(prev => prev + finalTranscript);
-        }
+        setTranscription(combined.trim());
       };
 
       recognition.onerror = (event: any) => {
@@ -148,7 +157,7 @@ const ConversationPractice = () => {
       // Process the recording after stopping (once)
       setTimeout(() => {
         if (!hasProcessedRef.current) processRecording();
-      }, 50);
+      }, 400);
     }
   };
 
