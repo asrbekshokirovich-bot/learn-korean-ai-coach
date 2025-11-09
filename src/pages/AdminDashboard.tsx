@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -30,7 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun } from "lucide-react";
+import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun, Film, Plus } from "lucide-react";
 import { z } from "zod";
 import Finance from "@/pages/admin/Finance";
 import { LanguageSelector } from "@/components/LanguageSelector";
@@ -50,11 +51,41 @@ interface Student {
   created_at: string;
 }
 
+interface KDrama {
+  id: string;
+  title: string;
+  description: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  duration_minutes: number | null;
+  difficulty_level: string | null;
+  tags: string[];
+  is_live: boolean;
+  scheduled_at: string | null;
+  episode_number: number;
+  season_number: number;
+  created_at: string;
+}
+
 const teacherSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }).max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
   full_name: z.string().trim().min(1, { message: "Name is required" }).max(100),
   topik_level: z.string().optional(),
+});
+
+const kdramaSchema = z.object({
+  title: z.string().trim().min(1, { message: "Title is required" }).max(200),
+  description: z.string().trim().max(1000).optional(),
+  video_url: z.string().url({ message: "Please enter a valid URL" }),
+  thumbnail_url: z.string().url({ message: "Please enter a valid URL" }).optional(),
+  duration_minutes: z.number().int().positive().optional(),
+  difficulty_level: z.enum(["beginner", "intermediate", "advanced"]),
+  tags: z.string().optional(),
+  is_live: z.boolean(),
+  scheduled_at: z.string().optional(),
+  episode_number: z.number().int().positive(),
+  season_number: z.number().int().positive(),
 });
 
 const AdminDashboard = () => {
@@ -63,7 +94,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [kdramas, setKdramas] = useState<KDrama[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createDramaDialogOpen, setCreateDramaDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -72,6 +105,19 @@ const AdminDashboard = () => {
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherTopik, setTeacherTopik] = useState("");
+
+  // Create K-Drama form state
+  const [dramaTitle, setDramaTitle] = useState("");
+  const [dramaDescription, setDramaDescription] = useState("");
+  const [dramaVideoUrl, setDramaVideoUrl] = useState("");
+  const [dramaThumbnailUrl, setDramaThumbnailUrl] = useState("");
+  const [dramaDuration, setDramaDuration] = useState("");
+  const [dramaDifficulty, setDramaDifficulty] = useState<"beginner" | "intermediate" | "advanced">("beginner");
+  const [dramaTags, setDramaTags] = useState("");
+  const [dramaIsLive, setDramaIsLive] = useState(false);
+  const [dramaScheduledAt, setDramaScheduledAt] = useState("");
+  const [dramaEpisode, setDramaEpisode] = useState("1");
+  const [dramaSeason, setDramaSeason] = useState("1");
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -130,6 +176,14 @@ const AdminDashboard = () => {
 
         setStudents(studentProfiles || []);
       }
+
+      // Load K-Dramas
+      const { data: dramaData } = await supabase
+        .from("k_dramas")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      setKdramas(dramaData || []);
     } catch (error: any) {
       toast({
         title: "Error loading data",
@@ -254,6 +308,102 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCreateKDrama = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const validated = kdramaSchema.parse({
+        title: dramaTitle,
+        description: dramaDescription || undefined,
+        video_url: dramaVideoUrl,
+        thumbnail_url: dramaThumbnailUrl || undefined,
+        duration_minutes: dramaDuration ? parseInt(dramaDuration) : undefined,
+        difficulty_level: dramaDifficulty,
+        tags: dramaTags,
+        is_live: dramaIsLive,
+        scheduled_at: dramaScheduledAt || undefined,
+        episode_number: parseInt(dramaEpisode),
+        season_number: parseInt(dramaSeason),
+      });
+
+      const { error } = await supabase.from("k_dramas").insert({
+        title: validated.title,
+        description: validated.description,
+        video_url: validated.video_url,
+        thumbnail_url: validated.thumbnail_url,
+        duration_minutes: validated.duration_minutes,
+        difficulty_level: validated.difficulty_level,
+        tags: validated.tags ? validated.tags.split(",").map((t) => t.trim()) : [],
+        is_live: validated.is_live,
+        scheduled_at: validated.scheduled_at,
+        episode_number: validated.episode_number,
+        season_number: validated.season_number,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "K-Drama posted! 🎬",
+        description: `${validated.title} has been added successfully.`,
+      });
+
+      // Reset form
+      setDramaTitle("");
+      setDramaDescription("");
+      setDramaVideoUrl("");
+      setDramaThumbnailUrl("");
+      setDramaDuration("");
+      setDramaDifficulty("beginner");
+      setDramaTags("");
+      setDramaIsLive(false);
+      setDramaScheduledAt("");
+      setDramaEpisode("1");
+      setDramaSeason("1");
+      setCreateDramaDialogOpen(false);
+      loadData();
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation error",
+          description: error.issues[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create K-Drama",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteKDrama = async (dramaId: string) => {
+    if (!confirm("Are you sure you want to delete this K-Drama?")) return;
+
+    try {
+      const { error } = await supabase.from("k_dramas").delete().eq("id", dramaId);
+
+      if (error) throw error;
+
+      toast({
+        title: "K-Drama deleted",
+        description: "The K-Drama has been removed.",
+      });
+
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
@@ -300,6 +450,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="students">
               <Users className="w-4 h-4 mr-2" />
               Students ({students.length})
+            </TabsTrigger>
+            <TabsTrigger value="kdramas">
+              <Film className="w-4 h-4 mr-2" />
+              K-Dramas ({kdramas.length})
             </TabsTrigger>
             <TabsTrigger value="finance">
               <DollarSign className="w-4 h-4 mr-2" />
@@ -429,6 +583,80 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* K-Dramas Tab */}
+          <TabsContent value="kdramas" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">K-Drama Management</h2>
+              <Button onClick={() => setCreateDramaDialogOpen(true)} variant="hero">
+                <Plus className="w-4 h-4 mr-2" />
+                Post New K-Drama
+              </Button>
+            </div>
+
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Episode</TableHead>
+                    <TableHead>Difficulty</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : kdramas.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No K-Dramas posted yet. Add your first one!
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    kdramas.map((drama) => (
+                      <TableRow key={drama.id}>
+                        <TableCell className="font-medium">{drama.title}</TableCell>
+                        <TableCell>
+                          S{drama.season_number} E{drama.episode_number}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{drama.difficulty_level || "—"}</Badge>
+                        </TableCell>
+                        <TableCell>{drama.duration_minutes ? `${drama.duration_minutes} min` : "—"}</TableCell>
+                        <TableCell>
+                          {drama.is_live ? (
+                            <Badge variant="destructive">Live</Badge>
+                          ) : (
+                            <Badge>On-Demand</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(drama.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteKDrama(drama.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
           {/* Finance Tab */}
           <TabsContent value="finance">
             <Finance />
@@ -522,6 +750,192 @@ const AdminDashboard = () => {
                   </>
                 ) : (
                   "Create Teacher"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create K-Drama Dialog */}
+      <Dialog open={createDramaDialogOpen} onOpenChange={setCreateDramaDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Post New K-Drama</DialogTitle>
+            <DialogDescription>
+              Add a new K-Drama episode for students to watch
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateKDrama} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="drama-title">Title *</Label>
+              <Input
+                id="drama-title"
+                placeholder="Episode title"
+                value={dramaTitle}
+                onChange={(e) => setDramaTitle(e.target.value)}
+                required
+                disabled={loading}
+                maxLength={200}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="drama-season">Season *</Label>
+                <Input
+                  id="drama-season"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  value={dramaSeason}
+                  onChange={(e) => setDramaSeason(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="drama-episode">Episode *</Label>
+                <Input
+                  id="drama-episode"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  value={dramaEpisode}
+                  onChange={(e) => setDramaEpisode(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="drama-description">Description</Label>
+              <Textarea
+                id="drama-description"
+                placeholder="Brief description of the episode"
+                value={dramaDescription}
+                onChange={(e) => setDramaDescription(e.target.value)}
+                disabled={loading}
+                maxLength={1000}
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="drama-video-url">Video URL *</Label>
+              <Input
+                id="drama-video-url"
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                value={dramaVideoUrl}
+                onChange={(e) => setDramaVideoUrl(e.target.value)}
+                required
+                disabled={loading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="drama-thumbnail">Thumbnail URL</Label>
+              <Input
+                id="drama-thumbnail"
+                type="url"
+                placeholder="https://example.com/thumbnail.jpg"
+                value={dramaThumbnailUrl}
+                onChange={(e) => setDramaThumbnailUrl(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="drama-duration">Duration (minutes)</Label>
+                <Input
+                  id="drama-duration"
+                  type="number"
+                  min="1"
+                  placeholder="45"
+                  value={dramaDuration}
+                  onChange={(e) => setDramaDuration(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="drama-difficulty">Difficulty Level *</Label>
+                <Select
+                  value={dramaDifficulty}
+                  onValueChange={(value: "beginner" | "intermediate" | "advanced") => setDramaDifficulty(value)}
+                  disabled={loading}
+                >
+                  <SelectTrigger id="drama-difficulty">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="drama-tags">Tags (comma-separated)</Label>
+              <Input
+                id="drama-tags"
+                placeholder="romance, comedy, slice-of-life"
+                value={dramaTags}
+                onChange={(e) => setDramaTags(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="drama-is-live"
+                checked={dramaIsLive}
+                onChange={(e) => setDramaIsLive(e.target.checked)}
+                disabled={loading}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="drama-is-live" className="cursor-pointer">
+                Is this a live streaming event?
+              </Label>
+            </div>
+
+            {dramaIsLive && (
+              <div className="space-y-2">
+                <Label htmlFor="drama-scheduled">Scheduled Date/Time</Label>
+                <Input
+                  id="drama-scheduled"
+                  type="datetime-local"
+                  value={dramaScheduledAt}
+                  onChange={(e) => setDramaScheduledAt(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCreateDramaDialogOpen(false)}
+                disabled={loading}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="hero" disabled={loading} className="flex-1">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Posting...
+                  </>
+                ) : (
+                  "Post K-Drama"
                 )}
               </Button>
             </div>
