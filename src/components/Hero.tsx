@@ -40,7 +40,7 @@ const Hero = () => {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
             <span className="text-primary-foreground">{t('masterKoreanWith')}</span>
             <br />
-            <span className="bg-gradient-accent bg-clip-text text-transparent">
+            <span className="text-secondary drop-shadow-lg">
               {t('humanTeachersAI')}
             </span>
           </h1>
