@@ -631,6 +631,7 @@ export type Database = {
           duration_minutes: number
           enrollment_id: string | null
           id: string
+          is_video_lesson: boolean | null
           lesson_type: string
           meeting_link: string | null
           notes: string | null
@@ -647,6 +648,7 @@ export type Database = {
           duration_minutes?: number
           enrollment_id?: string | null
           id?: string
+          is_video_lesson?: boolean | null
           lesson_type: string
           meeting_link?: string | null
           notes?: string | null
@@ -663,6 +665,7 @@ export type Database = {
           duration_minutes?: number
           enrollment_id?: string | null
           id?: string
+          is_video_lesson?: boolean | null
           lesson_type?: string
           meeting_link?: string | null
           notes?: string | null
@@ -937,6 +940,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      video_lessons: {
+        Row: {
+          ai_insights: Json | null
+          ai_transcript: Json | null
+          created_at: string | null
+          end_time: string | null
+          id: string
+          lesson_id: string
+          start_time: string | null
+          status: string
+          student_id: string
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_insights?: Json | null
+          ai_transcript?: Json | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          lesson_id: string
+          start_time?: string | null
+          status?: string
+          student_id: string
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_insights?: Json | null
+          ai_transcript?: Json | null
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          lesson_id?: string
+          start_time?: string | null
+          status?: string
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_lessons_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vocabulary_notes: {
         Row: {
