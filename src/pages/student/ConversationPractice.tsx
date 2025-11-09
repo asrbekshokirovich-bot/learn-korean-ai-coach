@@ -159,11 +159,32 @@ const ConversationPractice = () => {
     setIsProcessing(true);
 
     try {
+      // Check if we have any transcription
+      if (!transcription || transcription.trim() === "") {
+        toast({
+          title: "No speech detected",
+          description: "Please speak during the recording to capture your conversation",
+          variant: "destructive",
+        });
+        
+        // Delete the empty recording
+        await supabase
+          .from("conversation_recordings")
+          .delete()
+          .eq("id", currentRecording.id);
+        
+        loadRecordings();
+        setCurrentRecording(null);
+        setTranscription("");
+        setIsProcessing(false);
+        return;
+      }
+
       // Update recording with transcription from browser's Speech Recognition
       const { error: updateError } = await supabase
         .from("conversation_recordings")
         .update({
-          transcription: transcription,
+          transcription: transcription.trim(),
           status: "processing",
         })
         .eq("id", currentRecording.id);
