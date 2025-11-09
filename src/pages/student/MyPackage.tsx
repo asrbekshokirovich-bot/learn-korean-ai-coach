@@ -14,7 +14,7 @@ const MyPackage = () => {
   const { t } = useLanguage();
   const [currentPackage, setCurrentPackage] = useState<any>(null);
   const [lessonsCount, setLessonsCount] = useState(4);
-  const [pricePerLesson] = useState(20); // $20 per 50-min lesson
+  const [pricePerLesson] = useState(10000); // ₩10,000 per 50-min lesson
   const { toast } = useToast();
 
   useEffect(() => {
@@ -174,7 +174,7 @@ const MyPackage = () => {
 
           <div className="mt-4 p-4 bg-card rounded-lg">
             <p className="text-sm text-muted-foreground">{t('totalPaid')}</p>
-            <p className="text-xl font-bold">${currentPackage.total_amount_paid}</p>
+            <p className="text-xl font-bold">₩{currentPackage.total_amount_paid.toLocaleString()}</p>
           </div>
         </Card>
       )}
@@ -201,7 +201,7 @@ const MyPackage = () => {
           <div className="p-4 bg-muted rounded-lg">
             <div className="flex justify-between mb-2">
               <span>{t('pricePerLesson')}</span>
-              <span className="font-semibold">${pricePerLesson}</span>
+              <span className="font-semibold">₩{pricePerLesson.toLocaleString()}</span>
             </div>
             <div className="flex justify-between mb-2">
               <span>{t('numberOfLessons')}:</span>
@@ -209,12 +209,12 @@ const MyPackage = () => {
             </div>
             <div className="border-t pt-2 mt-2 flex justify-between">
               <span className="font-bold">{t('total')}:</span>
-              <span className="font-bold text-xl">${totalCost}</span>
+              <span className="font-bold text-xl">₩{totalCost.toLocaleString()}</span>
             </div>
           </div>
 
           <Button className="w-full" size="lg" onClick={handlePurchasePackage}>
-            {t('purchasePackage')} - ${totalCost}
+            {t('purchasePackage')} - ₩{totalCost.toLocaleString()}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">

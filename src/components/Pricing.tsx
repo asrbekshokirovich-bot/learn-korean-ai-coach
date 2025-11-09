@@ -29,7 +29,7 @@ const Pricing = () => {
     },
     {
       name: t('monthlyUnlimited'),
-      price: "249",
+      price: "2,490,000",
       description: t('seriousLearners'),
       features: [
         t('unlimitedGroupClasses'),
@@ -45,7 +45,7 @@ const Pricing = () => {
     },
     {
       name: t('topikBootcamp'),
-      price: "899",
+      price: "8,990,000",
       description: t('intensivePrep'),
       features: [
         t('twelveWeekProgram'),
@@ -93,7 +93,7 @@ const Pricing = () => {
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold">${plan.price}</span>
+                  <span className="text-4xl font-bold">₩{plan.price}</span>
                   <span className="text-muted-foreground">{t('perMonth')}</span>
                 </div>
               </div>
