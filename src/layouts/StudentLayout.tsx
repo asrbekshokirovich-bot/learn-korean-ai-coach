@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
-import lingoLogo from "@/assets/lingo-logo.png";
+import lingoLogo from "@/assets/lingo-logo-transparent.png";
 import Dashboard from "@/pages/student/Dashboard";
 import MyPackage from "@/pages/student/MyPackage";
 import BookLesson from "@/pages/student/BookLesson";
