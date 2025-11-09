@@ -117,7 +117,7 @@ const NewStudentDashboard = () => {
           <header className="h-16 border-b bg-card flex items-center px-4 sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <div className="flex-1">
-              <h1 className="text-xl font-bold">TOPIK CLUB Student Portal</h1>
+              <h1 className="text-xl font-bold">Lingo Student Portal</h1>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
@@ -140,7 +140,7 @@ const NewStudentDashboard = () => {
                   Welcome back, {profile?.full_name || "Student"}! 👋
                 </h2>
                 <p className="text-muted-foreground">
-                  Your Korean mastery journey with TOPIK CLUB
+                  Your Korean mastery journey with Lingo
                 </p>
               </div>
 

@@ -108,7 +108,7 @@ export const translations = {
     teacherPortal: "O'qituvchi portali",
     teacherPayout: "O'qituvchi (70% to'lov)",
     welcome: "Xush kelibsiz",
-    yourTeachingDashboard: "TOPIK CLUB dagi o'qitish panelingiz",
+    yourTeachingDashboard: "Lingo dagi o'qitish panelingiz",
     activeStudents: "Faol o'quvchilar",
     todayLessons: "Bugungi darslar",
     currentPayout: "Joriy to'lov (70%)",
@@ -125,7 +125,7 @@ export const translations = {
     yourPayout: "Sizning to'lovingiz (70%)",
     lessonsTaught: "O'tilgan darslar",
     noPayoutData: "Hali to'lov ma'lumotlari yo'q",
-    revenueNote: "Barcha daromadlar TOPIK CLUB orqali o'tadi. Siz ikki haftada 70% olasiz.",
+    revenueNote: "Barcha daromadlar Lingo orqali o'tadi. Siz ikki haftada 70% olasiz.",
     
     // Hybrid Model Section
     chooseYourLearningStyle: "O'rganish uslubingizni tanlang",
@@ -402,7 +402,7 @@ export const translations = {
     teacherPortal: "Teacher Portal",
     teacherPayout: "Teacher (70% Payout)",
     welcome: "Welcome",
-    yourTeachingDashboard: "Your teaching dashboard at TOPIK CLUB",
+    yourTeachingDashboard: "Your teaching dashboard at Lingo",
     activeStudents: "Active Students",
     todayLessons: "Today's Lessons",
     currentPayout: "Current Payout (70%)",
@@ -419,7 +419,7 @@ export const translations = {
     yourPayout: "Your Payout (70%)",
     lessonsTaught: "Lessons Taught",
     noPayoutData: "No payout data available yet",
-    revenueNote: "All revenue flows through TOPIK CLUB. You receive 70% bi-weekly.",
+    revenueNote: "All revenue flows through Lingo. You receive 70% bi-weekly.",
     
     // Hybrid Model Section
     chooseYourLearningStyle: "Choose Your Learning Style",
@@ -608,7 +608,7 @@ export const translations = {
     teacherPortal: "교사 포털",
     teacherPayout: "교사 (70% 지급)",
     welcome: "환영합니다",
-    yourTeachingDashboard: "TOPIK CLUB의 교육 대시보드",
+    yourTeachingDashboard: "Lingo의 교육 대시보드",
     activeStudents: "활성 학생",
     todayLessons: "오늘의 수업",
     currentPayout: "현재 지급액 (70%)",
@@ -625,7 +625,7 @@ export const translations = {
     yourPayout: "지급액 (70%)",
     lessonsTaught: "진행한 수업",
     noPayoutData: "아직 지급 데이터 없음",
-    revenueNote: "모든 수익은 TOPIK CLUB을 통해 이루어집니다. 격주로 70%를 받습니다.",
+    revenueNote: "모든 수익은 Lingo를 통해 이루어집니다. 격주로 70%를 받습니다.",
     
     // Hybrid Model Section
     chooseYourLearningStyle: "학습 스타일 선택",
@@ -810,7 +810,7 @@ export const translations = {
     teacherPortal: "Портал учителя",
     teacherPayout: "Учитель (70% выплата)",
     welcome: "Добро пожаловать",
-    yourTeachingDashboard: "Ваша панель преподавания в TOPIK CLUB",
+    yourTeachingDashboard: "Ваша панель преподавания в Lingo",
     activeStudents: "Активные студенты",
     todayLessons: "Сегодняшние уроки",
     currentPayout: "Текущая выплата (70%)",
@@ -827,7 +827,7 @@ export const translations = {
     yourPayout: "Ваша выплата (70%)",
     lessonsTaught: "Проведенные уроки",
     noPayoutData: "Данные о выплатах пока недоступны",
-    revenueNote: "Все доходы проходят через TOPIK CLUB. Вы получаете 70% раз в две недели.",
+    revenueNote: "Все доходы проходят через Lingo. Вы получаете 70% раз в две недели.",
     
     // Hybrid Model Section
     chooseYourLearningStyle: "Выберите стиль обучения",

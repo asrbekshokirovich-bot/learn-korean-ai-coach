@@ -83,7 +83,7 @@ const Navigation = () => {
       <div className="container px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <img src={topikClubLogo} alt="TOPIK Club" className="h-10 w-auto" />
+            <img src={topikClubLogo} alt="Lingo" className="h-10 w-auto" />
           </div>
 
           {/* Desktop Navigation */}

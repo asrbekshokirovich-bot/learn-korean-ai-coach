@@ -100,7 +100,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
 
       toast({
         title: "Account created! 🎉",
-        description: "Welcome to Korean AI! You can now start learning.",
+        description: "Welcome to Lingo! You can now start learning.",
       });
 
       // Reset form
@@ -172,7 +172,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
 
       toast({
         title: "Teacher account created! 🎉",
-        description: "Welcome to Korean AI! Your teacher dashboard is ready.",
+        description: "Welcome to Lingo! Your teacher dashboard is ready.",
       });
 
       // Reset form

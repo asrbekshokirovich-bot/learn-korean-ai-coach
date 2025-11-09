@@ -81,7 +81,7 @@ const StudentLayout = () => {
           <header className="h-16 border-b bg-card flex items-center px-4 sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <div className="flex-1">
-              <h1 className="text-xl font-bold">TOPIK CLUB {t('studentPortal')}</h1>
+              <h1 className="text-xl font-bold">LINGO {t('studentPortal')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <Button
