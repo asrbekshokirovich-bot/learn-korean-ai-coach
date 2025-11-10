@@ -39,11 +39,36 @@ const BookLesson = () => {
     if (!selectedLevel || !selectedDate) return;
 
     const dayOfWeek = selectedDate.getDay();
+    
+    // Get teachers who can teach the selected level
+    const { data: teacherProfiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .contains("teacher_levels", [selectedLevel]);
+
+    if (profileError) {
+      toast({
+        title: "Error loading teachers",
+        description: profileError.message,
+        variant: "destructive",
+      });
+      setAvailableSlots([]);
+      return;
+    }
+
+    if (!teacherProfiles || teacherProfiles.length === 0) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    const teacherIds = teacherProfiles.map(p => p.user_id);
+
+    // Get availability for these teachers
     const { data, error } = await supabase
       .from("teacher_availability")
       .select("id, teacher_id, start_time, end_time")
       .eq("day_of_week", dayOfWeek)
-      .eq("level", selectedLevel)
+      .in("teacher_id", teacherIds)
       .eq("is_available", true);
 
     if (error) {

@@ -41,6 +41,7 @@ interface Teacher {
   email: string;
   full_name: string | null;
   topik_level: string | null;
+  teacher_levels: string[];
   created_at: string;
 }
 
@@ -97,6 +98,9 @@ const AdminDashboard = () => {
   const [kdramas, setKdramas] = useState<KDrama[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createDramaDialogOpen, setCreateDramaDialogOpen] = useState(false);
+  const [editLevelsDialogOpen, setEditLevelsDialogOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -404,6 +408,47 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleOpenEditLevels = (teacher: Teacher) => {
+    setSelectedTeacher(teacher);
+    setSelectedLevels(teacher.teacher_levels || []);
+    setEditLevelsDialogOpen(true);
+  };
+
+  const handleToggleLevel = (level: string) => {
+    setSelectedLevels(prev => 
+      prev.includes(level) 
+        ? prev.filter(l => l !== level)
+        : [...prev, level]
+    );
+  };
+
+  const handleSaveTeacherLevels = async () => {
+    if (!selectedTeacher) return;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ teacher_levels: selectedLevels })
+        .eq("user_id", selectedTeacher.user_id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Teacher levels updated",
+        description: `${selectedTeacher.full_name}'s teaching levels have been updated.`,
+      });
+
+      setEditLevelsDialogOpen(false);
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
@@ -477,6 +522,7 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Teaching Levels</TableHead>
                     <TableHead>TOPIK Level</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -485,13 +531,13 @@ const AdminDashboard = () => {
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : teachers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                         No teachers yet. Create your first teacher account.
                       </TableCell>
                     </TableRow>
@@ -503,6 +549,19 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>{teacher.email}</TableCell>
                         <TableCell>
+                          {teacher.teacher_levels && teacher.teacher_levels.length > 0 ? (
+                            <div className="flex gap-1 flex-wrap">
+                              {teacher.teacher_levels.map((level) => (
+                                <Badge key={level} variant="outline" className="text-xs">
+                                  {level}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">No levels set</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           {teacher.topik_level ? (
                             <Badge variant="secondary">{teacher.topik_level}</Badge>
                           ) : (
@@ -512,13 +571,20 @@ const AdminDashboard = () => {
                         <TableCell>
                           {new Date(teacher.created_at).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right space-x-2">
                           <Button
-                            variant="ghost"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditLevels(teacher)}
+                          >
+                            Edit Levels
+                          </Button>
+                          <Button
+                            variant="destructive"
                             size="sm"
                             onClick={() => handleDeleteUser(teacher.user_id, "teacher")}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -940,6 +1006,56 @@ const AdminDashboard = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Teacher Levels Dialog */}
+      <Dialog open={editLevelsDialogOpen} onOpenChange={setEditLevelsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Teaching Levels</DialogTitle>
+            <DialogDescription>
+              Select the levels that {selectedTeacher?.full_name} can teach
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              {['beginner', 'intermediate', 'advanced'].map((level) => (
+                <div key={level} className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id={`level-${level}`}
+                    checked={selectedLevels.includes(level)}
+                    onChange={() => handleToggleLevel(level)}
+                    className="w-4 h-4 rounded border-border"
+                  />
+                  <Label 
+                    htmlFor={`level-${level}`} 
+                    className="cursor-pointer capitalize font-medium"
+                  >
+                    {level}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditLevelsDialogOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveTeacherLevels}
+                className="flex-1"
+                disabled={selectedLevels.length === 0}
+              >
+                Save Levels
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
