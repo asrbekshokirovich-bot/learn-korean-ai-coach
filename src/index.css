@@ -8,97 +8,97 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 215 25% 15%;
+    --background: 220 45% 98%;
+    --foreground: 220 30% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 220 30% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 220 30% 12%;
 
-    /* Natural Blue Primary */
-    --primary: 215 75% 45%;
+    /* Vibrant Royal Blue Primary - Matching Logo */
+    --primary: 220 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    /* Sky Blue Secondary */
-    --secondary: 210 60% 55%;
+    /* Lighter Blue Secondary */
+    --secondary: 220 85% 65%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 95%;
-    --muted-foreground: 215 15% 45%;
+    --muted: 220 40% 96%;
+    --muted-foreground: 220 15% 45%;
 
     /* Bright Blue Accent */
-    --accent: 215 85% 60%;
+    --accent: 220 95% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 20% 88%;
-    --input: 215 20% 88%;
-    --ring: 215 75% 45%;
+    --border: 220 25% 90%;
+    --input: 220 25% 90%;
+    --ring: 220 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom design tokens - Modern AI Style */
-    --gradient-hero: linear-gradient(135deg, hsl(215 75% 45%), hsl(270 70% 55%), hsl(210 60% 55%));
-    --gradient-accent: linear-gradient(135deg, hsl(215 85% 60%), hsl(260 75% 65%), hsl(210 70% 65%));
-    --gradient-subtle: linear-gradient(180deg, hsl(210 40% 98%), hsl(220 35% 96%));
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(215 75% 85%) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(270 70% 85%) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(210 60% 88%) 0px, transparent 50%);
+    /* Custom design tokens - Matching Logo Blue */
+    --gradient-hero: linear-gradient(135deg, hsl(220 100% 50%), hsl(220 85% 65%), hsl(220 70% 75%));
+    --gradient-accent: linear-gradient(135deg, hsl(220 95% 60%), hsl(220 80% 70%), hsl(220 65% 80%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 45% 98%), hsl(220 40% 96%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(220 100% 85%) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(220 85% 88%) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(220 70% 90%) 0px, transparent 50%);
     
-    --shadow-elegant: 0 10px 40px -10px hsl(215 75% 45% / 0.2);
-    --shadow-glow: 0 0 60px hsl(215 75% 55% / 0.4), 0 0 100px hsl(270 70% 55% / 0.2);
-    --shadow-ai: 0 8px 32px 0 hsl(215 75% 45% / 0.15);
+    --shadow-elegant: 0 10px 40px -10px hsl(220 100% 50% / 0.25);
+    --shadow-glow: 0 0 60px hsl(220 100% 60% / 0.5), 0 0 100px hsl(220 80% 70% / 0.3);
+    --shadow-ai: 0 8px 32px 0 hsl(220 100% 50% / 0.2);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --background: 220 50% 8%;
+    --foreground: 220 40% 98%;
 
-    --card: 222 47% 15%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 45% 12%;
+    --card-foreground: 220 40% 98%;
 
-    --popover: 222 47% 15%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 45% 12%;
+    --popover-foreground: 220 40% 98%;
 
-    /* Bright Blue for dark mode */
-    --primary: 215 75% 55%;
-    --primary-foreground: 222 47% 11%;
+    /* Vibrant Royal Blue for dark mode - Matching Logo */
+    --primary: 220 100% 60%;
+    --primary-foreground: 220 50% 8%;
 
-    /* Sky Blue Secondary */
-    --secondary: 210 65% 60%;
-    --secondary-foreground: 222 47% 11%;
+    /* Lighter Blue Secondary */
+    --secondary: 220 80% 70%;
+    --secondary-foreground: 220 50% 8%;
 
-    --muted: 217 32% 20%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 35% 18%;
+    --muted-foreground: 220 20% 65%;
 
-    /* Vibrant Blue Accent */
-    --accent: 215 80% 65%;
-    --accent-foreground: 222 47% 11%;
+    /* Bright Blue Accent */
+    --accent: 220 90% 65%;
+    --accent-foreground: 220 50% 8%;
 
     --destructive: 0 63% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 220 40% 98%;
 
-    --border: 217 32% 20%;
-    --input: 217 32% 20%;
-    --ring: 215 75% 55%;
+    --border: 220 35% 18%;
+    --input: 220 35% 18%;
+    --ring: 220 100% 60%;
     
-    --gradient-hero: linear-gradient(135deg, hsl(215 75% 55%), hsl(270 70% 60%), hsl(210 65% 60%));
-    --gradient-accent: linear-gradient(135deg, hsl(215 80% 65%), hsl(260 75% 70%), hsl(210 70% 70%));
-    --gradient-subtle: linear-gradient(180deg, hsl(222 47% 15%), hsl(217 40% 20%));
-    --gradient-mesh: radial-gradient(at 40% 20%, hsl(215 75% 25%) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(270 70% 20%) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, hsl(210 60% 18%) 0px, transparent 50%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 100% 60%), hsl(220 85% 70%), hsl(220 70% 80%));
+    --gradient-accent: linear-gradient(135deg, hsl(220 90% 65%), hsl(220 80% 75%), hsl(220 70% 85%));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 45% 12%), hsl(220 40% 16%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(220 100% 20%) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(220 85% 18%) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(220 70% 15%) 0px, transparent 50%);
     
-    --shadow-elegant: 0 10px 40px -10px hsl(215 75% 55% / 0.3);
-    --shadow-glow: 0 0 60px hsl(215 75% 60% / 0.5), 0 0 100px hsl(270 70% 60% / 0.3);
-    --shadow-ai: 0 8px 32px 0 hsl(215 75% 55% / 0.2);
+    --shadow-elegant: 0 10px 40px -10px hsl(220 100% 60% / 0.35);
+    --shadow-glow: 0 0 60px hsl(220 100% 65% / 0.6), 0 0 100px hsl(220 85% 75% / 0.4);
+    --shadow-ai: 0 8px 32px 0 hsl(220 100% 60% / 0.25);
   }
 }
 
