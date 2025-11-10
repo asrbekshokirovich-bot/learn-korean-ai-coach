@@ -39,8 +39,8 @@ const BookLesson = () => {
     if (!selectedLevel || !selectedDate) return;
 
     const dayOfWeek = selectedDate.getDay();
-    
-    // Get teachers who can teach the selected level
+
+    // 1) Teachers whose profile includes the selected level
     const { data: teacherProfiles, error: profileError } = await supabase
       .from("profiles")
       .select("user_id")
@@ -56,30 +56,49 @@ const BookLesson = () => {
       return;
     }
 
-    if (!teacherProfiles || teacherProfiles.length === 0) {
-      setAvailableSlots([]);
-      return;
+    const teacherIds = (teacherProfiles || []).map((p) => p.user_id);
+    console.log('[BookLesson] teacherIds', teacherIds, 'level', selectedLevel, 'day', dayOfWeek);
+
+    // 2) Fetch availability by (A) teacherIds and (B) legacy level column, then merge
+    let dataA: any[] = [];
+    let dataB: any[] = [];
+
+    if (teacherIds.length > 0) {
+      const { data: aData, error: aErr } = await supabase
+        .from("teacher_availability")
+        .select("id, teacher_id, start_time, end_time")
+        .eq("day_of_week", dayOfWeek)
+        .in("teacher_id", teacherIds)
+        .eq("is_available", true);
+      if (aErr) {
+        toast({ title: "Error loading slots", description: aErr.message, variant: "destructive" });
+        setAvailableSlots([]);
+        return;
+      }
+      dataA = aData || [];
     }
 
-    const teacherIds = teacherProfiles.map(p => p.user_id);
-
-    // Get availability for these teachers
-    const { data, error } = await supabase
-      .from("teacher_availability")
-      .select("id, teacher_id, start_time, end_time")
-      .eq("day_of_week", dayOfWeek)
-      .in("teacher_id", teacherIds)
-      .eq("is_available", true);
-
-    if (error) {
-      toast({
-        title: "Error loading slots",
-        description: error.message,
-        variant: "destructive",
-      });
-      setAvailableSlots([]);
-      return;
+    // Fallback for legacy data: use availability.level only if no teacherIds matched
+    if (teacherIds.length === 0) {
+      const { data: bData, error: bErr } = await supabase
+        .from("teacher_availability")
+        .select("id, teacher_id, start_time, end_time")
+        .eq("day_of_week", dayOfWeek)
+        .eq("level", selectedLevel)
+        .eq("is_available", true);
+      if (bErr) {
+        toast({ title: "Error loading slots", description: bErr.message, variant: "destructive" });
+        setAvailableSlots([]);
+        return;
+      }
+      dataB = bData || [];
     }
+
+    // Merge rows uniquely by availability id
+    const rows = [...dataA, ...dataB];
+    const byId = new Map<string, any>();
+    rows.forEach((row) => byId.set(row.id, row));
+    const data = Array.from(byId.values());
 
     if (data && data.length > 0) {
       const slots: TimeSlot[] = [];
