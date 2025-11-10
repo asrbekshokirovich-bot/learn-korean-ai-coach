@@ -220,9 +220,34 @@ const BookLesson = () => {
         <Card className="p-6">
           <h3 className="text-xl font-semibold mb-4">{t('availableTimeSlots')}</h3>
           {availableSlots.length === 0 ? (
-            <p className="text-muted-foreground">
-              {t('noAvailableSlots', { level: t(selectedLevel as any) })}
-            </p>
+            <div className="space-y-4">
+              <div className="bg-muted/50 border border-border rounded-lg p-6 text-center">
+                <p className="text-muted-foreground mb-2">
+                  {t('noAvailableSlots', { level: t(selectedLevel as any) })}
+                </p>
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium">Try:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Select a different date (Mon-Wed have more availability)</li>
+                    <li>• Choose a different level below</li>
+                    <li>• Contact admin if no slots appear</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-center">
+                {['beginner', 'intermediate', 'advanced'].map((level) => (
+                  level !== selectedLevel && (
+                    <Button
+                      key={level}
+                      variant="outline"
+                      onClick={() => setSelectedLevel(level)}
+                    >
+                      Try {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </Button>
+                  )
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-4 gap-2">
               {availableSlots.map((slot) => (
