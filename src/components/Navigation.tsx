@@ -82,8 +82,11 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <img src={lingoLogo} alt="Lingo" className="h-10 w-auto" />
+          <div 
+            className="flex items-center gap-3 cursor-pointer px-3 py-2 rounded-lg bg-white dark:bg-white/10 border border-border/50 hover:border-primary/50 transition-all hover:shadow-elegant" 
+            onClick={() => navigate("/")}
+          >
+            <img src={lingoLogo} alt="Lingo" className="h-8 w-auto drop-shadow-sm" />
           </div>
 
           {/* Desktop Navigation */}
