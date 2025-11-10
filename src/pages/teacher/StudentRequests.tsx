@@ -59,28 +59,50 @@ const StudentRequests = () => {
   }, []);
 
   const loadRequests = async () => {
-    const { data, error } = await supabase
+    // Fetch requests first
+    const { data: requestsData, error: requestsError } = await supabase
       .from("student_availability")
-      .select(`
-        *,
-        profiles!student_availability_student_id_fkey (
-          full_name,
-          email
-        )
-      `)
+      .select("*")
       .order("preferred_date", { ascending: true })
       .order("preferred_time", { ascending: true });
 
-    if (error) {
-      console.error("Error loading requests:", error);
+    if (requestsError) {
+      console.error("Error loading requests:", requestsError);
       toast({
         title: "Error",
-        description: error.message,
+        description: requestsError.message,
         variant: "destructive",
       });
-    } else {
-      setRequests(data as any || []);
+      return;
     }
+
+    if (!requestsData || requestsData.length === 0) {
+      setRequests([]);
+      return;
+    }
+
+    // Fetch student profiles
+    const studentIds = [...new Set(requestsData.map(r => r.student_id))];
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", studentIds);
+
+    if (profilesError) {
+      console.error("Error loading profiles:", profilesError);
+    }
+
+    // Merge data
+    const profilesMap = new Map(
+      (profilesData || []).map(p => [p.user_id, p])
+    );
+
+    const enrichedRequests = requestsData.map(request => ({
+      ...request,
+      profiles: profilesMap.get(request.student_id) || null
+    }));
+
+    setRequests(enrichedRequests as any);
   };
 
   const handleAccept = async (request: StudentRequest) => {
