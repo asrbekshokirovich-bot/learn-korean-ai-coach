@@ -1,1 +1,25 @@
 project_id = "nslcxuwzivyjjsothprw"
+
+[functions.ai-conversation]
+verify_jwt = false
+
+[functions.ai-live-assist]
+verify_jwt = false
+
+[functions.ai-post-lesson-summary]
+verify_jwt = false
+
+[functions.analyze-conversation]
+verify_jwt = false
+
+[functions.auto-assign-lesson]
+verify_jwt = false
+
+[functions.grammar-drill]
+verify_jwt = false
+
+[functions.pronunciation-check]
+verify_jwt = false
+
+[functions.vocabulary-builder]
+verify_jwt = false

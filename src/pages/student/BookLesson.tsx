@@ -91,35 +91,71 @@ const BookLesson = () => {
 
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    const { error } = await supabase
-      .from("student_availability")
-      .insert({
-        student_id: user.id,
-        preferred_level: selectedLevel,
-        preferred_date: selectedDate.toISOString().split('T')[0],
-        preferred_time: selectedTime,
-        duration_minutes: 50,
-        notes: notes || null,
-        status: 'pending'
-      });
+    try {
+      // First, insert the availability request
+      const { data: availabilityData, error: insertError } = await supabase
+        .from("student_availability")
+        .insert({
+          student_id: user.id,
+          preferred_level: selectedLevel,
+          preferred_date: selectedDate.toISOString().split('T')[0],
+          preferred_time: selectedTime,
+          duration_minutes: 50,
+          notes: notes || null,
+          status: 'pending'
+        })
+        .select()
+        .single();
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Request Submitted!",
-        description: "Your availability has been sent to teachers",
-      });
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Trigger AI auto-assignment
+      const { data: assignmentResult, error: assignmentError } = await supabase.functions.invoke(
+        'auto-assign-lesson',
+        {
+          body: { availabilityId: availabilityData.id }
+        }
+      );
+
+      if (assignmentError) {
+        console.error('Assignment error:', assignmentError);
+        toast({
+          title: "Request Submitted",
+          description: "Your request was saved but auto-assignment failed. An admin will help assign a teacher.",
+          variant: "default",
+        });
+      } else if (assignmentResult?.error) {
+        toast({
+          title: "Request Submitted",
+          description: assignmentResult.error,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "✨ Lesson Booked!",
+          description: "AI has automatically assigned a teacher and created your lesson!",
+        });
+      }
+
       setNotes("");
       loadMyRequests();
+    } catch (error: any) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit request",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDeleteRequest = async (id: string) => {
@@ -146,7 +182,7 @@ const BookLesson = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'secondary';
-      case 'accepted': return 'default';
+      case 'matched': return 'default';
       case 'rejected': return 'destructive';
       default: return 'outline';
     }
@@ -160,16 +196,16 @@ const BookLesson = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Set Your Availability</h2>
+        <h2 className="text-3xl font-bold mb-2">Book a Lesson with AI</h2>
         <p className="text-muted-foreground">
-          Choose your preferred times and teachers will book with you
+          Select your availability and AI will automatically assign a teacher and create your lesson
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Request Form */}
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">New Availability Request</h3>
+          <h3 className="text-xl font-semibold mb-4">New Lesson Request</h3>
           
           <div className="space-y-4">
             <div>
@@ -232,7 +268,7 @@ const BookLesson = () => {
               size="lg"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Submit Availability Request
+              {loading ? 'Creating Lesson...' : 'Book Lesson with AI'}
             </Button>
           </div>
         </Card>
@@ -243,7 +279,7 @@ const BookLesson = () => {
           
           {myRequests.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No availability requests yet.</p>
+              <p>No lesson requests yet.</p>
               <p className="text-sm mt-2">Submit your first request to get started!</p>
             </div>
           ) : (
