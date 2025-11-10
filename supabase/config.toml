@@ -18,6 +18,9 @@ verify_jwt = false
 [functions.grammar-drill]
 verify_jwt = false
 
+[functions.instant-lesson]
+verify_jwt = false
+
 [functions.pronunciation-check]
 verify_jwt = false
 

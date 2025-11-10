@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Trash2, Plus } from "lucide-react";
+import { Clock, Trash2, Plus, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -30,12 +31,14 @@ interface StudentAvailability {
 }
 
 const BookLesson = () => {
+  const navigate = useNavigate();
   const [selectedLevel, setSelectedLevel] = useState<string>("beginner");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("09:00");
   const [notes, setNotes] = useState<string>("");
   const [myRequests, setMyRequests] = useState<StudentAvailability[]>([]);
   const [loading, setLoading] = useState(false);
+  const [instantLoading, setInstantLoading] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -158,6 +161,55 @@ const BookLesson = () => {
     }
   };
 
+  const handleInstantLesson = async () => {
+    setInstantLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setInstantLoading(false);
+      return;
+    }
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke(
+        'instant-lesson',
+        {
+          body: { 
+            studentId: user.id,
+            level: selectedLevel
+          }
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      if (result?.error) {
+        toast({
+          title: "Not Available",
+          description: result.error,
+          variant: "default",
+        });
+      } else if (result?.available && result?.videoLesson) {
+        toast({
+          title: "⚡ Instant Lesson Started!",
+          description: "Connecting you to your teacher...",
+        });
+        // Navigate to the video lesson
+        navigate(`/student/video-lesson?id=${result.videoLesson.id}`);
+      }
+    } catch (error: any) {
+      console.error('Instant lesson error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start instant lesson",
+        variant: "destructive",
+      });
+    } finally {
+      setInstantLoading(false);
+    }
+  };
+
   const handleDeleteRequest = async (id: string) => {
     const { error } = await supabase
       .from("student_availability")
@@ -196,16 +248,40 @@ const BookLesson = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">Book a Lesson with AI</h2>
+        <h2 className="text-3xl font-bold mb-2">Book a Lesson</h2>
         <p className="text-muted-foreground">
-          Select your availability and AI will automatically assign a teacher and create your lesson
+          Start instantly or schedule for later - AI will match you with the perfect teacher
         </p>
       </div>
+
+      {/* Instant Lesson Card */}
+      <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-5 h-5 text-primary" />
+              <h3 className="text-xl font-semibold">Start Instant Lesson</h3>
+            </div>
+            <p className="text-muted-foreground">
+              Connect with an available teacher right now for your {selectedLevel} lesson
+            </p>
+          </div>
+          <Button 
+            onClick={handleInstantLesson}
+            disabled={instantLoading}
+            size="lg"
+            className="whitespace-nowrap"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            {instantLoading ? 'Finding Teacher...' : 'Start Now'}
+          </Button>
+        </div>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Request Form */}
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">New Lesson Request</h3>
+          <h3 className="text-xl font-semibold mb-4">Schedule for Later</h3>
           
           <div className="space-y-4">
             <div>
