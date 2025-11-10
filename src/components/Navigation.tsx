@@ -6,7 +6,7 @@ import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelector } from "./LanguageSelector";
-import lingoLogo from "@/assets/lingo-logo-transparent.png";
+import lingoLogo from "@/assets/lingo-logo-new.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navigation = () => {
