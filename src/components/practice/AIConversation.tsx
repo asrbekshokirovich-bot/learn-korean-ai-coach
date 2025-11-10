@@ -46,17 +46,42 @@ const AIConversation = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+
+      // Check if the response contains an error (e.g., 402 payment required)
+      if (data?.error) {
+        if (data.error.includes("Payment required") || data.error.includes("credits")) {
+          toast({
+            title: "Credits Required",
+            description: "Your workspace has run out of AI credits. Please add credits in Settings → Workspace → Usage to continue.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "AI Service Error",
+            description: data.error,
+            variant: "destructive",
+          });
+        }
+        // Remove the user message since we couldn't get a response
+        setMessages(prev => prev.slice(0, -1));
+        return;
+      }
 
       const assistantMessage = { role: "assistant", content: data.message };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
+        title: "Connection Error",
+        description: "Failed to connect to AI service. Please try again.",
         variant: "destructive",
       });
+      // Remove the user message since we couldn't get a response
+      setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }
