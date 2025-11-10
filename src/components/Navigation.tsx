@@ -6,7 +6,6 @@ import SignUpDialog from "./SignUpDialog";
 import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelector } from "./LanguageSelector";
-import lingoLogo from "@/assets/lingo-logo-new.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navigation = () => {
@@ -83,7 +82,7 @@ const Navigation = () => {
       <div className="container px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <img src={lingoLogo} alt="Lingo" className="h-14 w-auto" />
+            <span className="text-2xl font-bold text-primary">LINGO.UZ</span>
           </div>
 
           {/* Desktop Navigation */}

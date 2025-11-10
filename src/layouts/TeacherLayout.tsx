@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
-import lingoLogo from "@/assets/lingo-logo-new.png";
 import NewTeacherDashboard from "@/pages/NewTeacherDashboard";
 import Availability from "@/pages/teacher/Availability";
 
@@ -76,7 +75,6 @@ const TeacherLayout = () => {
           <header className="h-16 border-b bg-card flex items-center px-4 sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <div className="flex-1 flex items-center gap-3">
-              <img src={lingoLogo} alt="Lingo" className="h-12 w-auto" />
               <h1 className="text-xl font-bold">{t('teacherPortal')}</h1>
             </div>
             <div className="flex items-center gap-4">
