@@ -76,9 +76,7 @@ const TeacherLayout = () => {
           <header className="h-16 border-b bg-card flex items-center px-4 sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <div className="flex-1 flex items-center gap-3">
-              <div className="px-3 py-2 rounded-lg bg-white dark:bg-white/10 border border-border/50">
-                <img src={lingoLogo} alt="Lingo" className="h-7 w-auto drop-shadow-sm" />
-              </div>
+              <img src={lingoLogo} alt="Lingo" className="h-8 w-auto" />
               <h1 className="text-xl font-bold">{t('teacherPortal')}</h1>
             </div>
             <div className="flex items-center gap-4">
