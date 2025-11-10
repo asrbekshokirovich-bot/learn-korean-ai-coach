@@ -832,6 +832,45 @@ export type Database = {
         }
         Relationships: []
       }
+      student_availability: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          notes: string | null
+          preferred_date: string
+          preferred_level: string
+          preferred_time: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          preferred_date: string
+          preferred_level: string
+          preferred_time: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          preferred_date?: string
+          preferred_level?: string
+          preferred_time?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       teacher_availability: {
         Row: {
           created_at: string

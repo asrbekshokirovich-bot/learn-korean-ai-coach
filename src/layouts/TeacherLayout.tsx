@@ -9,7 +9,9 @@ import { LogOut, Moon, Sun } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import NewTeacherDashboard from "@/pages/NewTeacherDashboard";
-import Availability from "@/pages/teacher/Availability";
+import MyAvailability from "@/pages/teacher/MyAvailability";
+import StudentRequests from "@/pages/teacher/StudentRequests";
+import VideoLesson from "@/pages/teacher/VideoLesson";
 
 const TeacherLayout = () => {
   const navigate = useNavigate();
@@ -103,7 +105,9 @@ const TeacherLayout = () => {
             <div className="max-w-7xl mx-auto">
               <Routes>
                 <Route index element={<NewTeacherDashboard />} />
-                <Route path="availability" element={<Availability />} />
+                <Route path="requests" element={<StudentRequests />} />
+                <Route path="availability" element={<MyAvailability />} />
+                <Route path="video-lesson/:lessonId" element={<VideoLesson />} />
               </Routes>
             </div>
           </main>

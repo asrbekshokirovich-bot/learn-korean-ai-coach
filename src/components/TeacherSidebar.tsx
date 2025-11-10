@@ -24,8 +24,8 @@ export function TeacherSidebar() {
 
   const items = [
     { title: t('dashboard'), url: '/teacher', icon: Home },
+    { title: 'Student Requests', url: '/teacher/requests', icon: Users },
     { title: t('availability'), url: '/teacher/availability', icon: Calendar },
-    { title: t('teacherStudents'), url: '/teacher/students', icon: Users },
     { title: t('earnings'), url: '/teacher/earnings', icon: DollarSign },
     { title: t('homework'), url: '/teacher/homework', icon: BookOpen },
   ];

@@ -4,8 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { Clock } from "lucide-react";
-import { setHours, setMinutes } from "date-fns";
+import { Clock, Trash2, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -15,263 +18,284 @@ import {
 } from "@/components/ui/select";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface TimeSlot {
-  time: string;
-  teacher_id: string;
-  availability_id: string;
+interface StudentAvailability {
+  id: string;
+  preferred_level: string;
+  preferred_date: string;
+  preferred_time: string;
+  duration_minutes: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
 }
 
 const BookLesson = () => {
-  const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("beginner");
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string>("09:00");
+  const [notes, setNotes] = useState<string>("");
+  const [myRequests, setMyRequests] = useState<StudentAvailability[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (selectedLevel && selectedDate) {
-      loadAvailableSlots();
-    }
-  }, [selectedLevel, selectedDate]);
+    loadMyRequests();
+    
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('student-availability-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'student_availability'
+        },
+        () => loadMyRequests()
+      )
+      .subscribe();
 
-  const loadAvailableSlots = async () => {
-    if (!selectedLevel || !selectedDate) return;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
-    const dayOfWeek = selectedDate.getDay();
-
-    // 1) Teachers whose profile includes the selected level
-    const { data: teacherProfiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .contains("teacher_levels", [selectedLevel]);
-
-    if (profileError) {
-      toast({
-        title: "Error loading teachers",
-        description: profileError.message,
-        variant: "destructive",
-      });
-      setAvailableSlots([]);
-      return;
-    }
-
-    const teacherIds = (teacherProfiles || []).map((p) => p.user_id);
-    console.log('[BookLesson] teacherIds', teacherIds, 'level', selectedLevel, 'day', dayOfWeek);
-
-    // 2) Fetch availability by (A) teacherIds and (B) legacy level column, then merge
-    let dataA: any[] = [];
-    let dataB: any[] = [];
-
-    if (teacherIds.length > 0) {
-      const { data: aData, error: aErr } = await supabase
-        .from("teacher_availability")
-        .select("id, teacher_id, start_time, end_time")
-        .eq("day_of_week", dayOfWeek)
-        .in("teacher_id", teacherIds)
-        .eq("is_available", true);
-      if (aErr) {
-        toast({ title: "Error loading slots", description: aErr.message, variant: "destructive" });
-        setAvailableSlots([]);
-        return;
-      }
-      dataA = aData || [];
-    }
-
-    // Fallback for legacy data: use availability.level only if no teacherIds matched
-    if (teacherIds.length === 0) {
-      const { data: bData, error: bErr } = await supabase
-        .from("teacher_availability")
-        .select("id, teacher_id, start_time, end_time")
-        .eq("day_of_week", dayOfWeek)
-        .eq("level", selectedLevel)
-        .eq("is_available", true);
-      if (bErr) {
-        toast({ title: "Error loading slots", description: bErr.message, variant: "destructive" });
-        setAvailableSlots([]);
-        return;
-      }
-      dataB = bData || [];
-    }
-
-    // Merge rows uniquely by availability id
-    const rows = [...dataA, ...dataB];
-    const byId = new Map<string, any>();
-    rows.forEach((row) => byId.set(row.id, row));
-    const data = Array.from(byId.values());
-
-    if (data && data.length > 0) {
-      const slots: TimeSlot[] = [];
-      data.forEach((slot) => {
-        const [startHour] = slot.start_time.split(":");
-        const [endHour] = slot.end_time.split(":");
-        for (let hour = parseInt(startHour); hour < parseInt(endHour); hour++) {
-          slots.push({
-            time: `${hour.toString().padStart(2, "0")}:00`,
-            teacher_id: slot.teacher_id,
-            availability_id: slot.id,
-          });
-        }
-      });
-      setAvailableSlots(slots);
-    } else {
-      setAvailableSlots([]);
-    }
-  };
-
-
-  const handleBookLesson = async () => {
-    if (!selectedSlot || !selectedDate || !selectedLevel) {
-      toast({
-        title: t('missingInformation'),
-        description: t('selectLevelDateAndTime'),
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const loadMyRequests = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Check if student has active package with remaining lessons
-    const currentMonth = new Date(selectedDate).toISOString().split('T')[0].slice(0, 7) + '-01';
-    const { data: activePackage } = await supabase
-      .from("lesson_packages")
+    const { data, error } = await supabase
+      .from("student_availability")
       .select("*")
       .eq("student_id", user.id)
-      .eq("status", "active")
-      .gt("lessons_remaining", 0)
-      .maybeSingle();
+      .order("preferred_date", { ascending: true })
+      .order("preferred_time", { ascending: true });
 
-    if (!activePackage) {
+    if (error) {
+      console.error("Error loading requests:", error);
+    } else {
+      setMyRequests(data || []);
+    }
+  };
+
+  const handleSubmitRequest = async () => {
+    if (!selectedDate) {
       toast({
-        title: t('noActivePackage'),
-        description: t('purchasePackageFirst'),
+        title: "Missing Information",
+        description: "Please select a date",
         variant: "destructive",
       });
       return;
     }
 
-    const [hour, minute] = selectedSlot.time.split(":");
-    const scheduledAt = setMinutes(setHours(selectedDate, parseInt(hour)), parseInt(minute));
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    const { error } = await supabase.from("lessons").insert({
-      teacher_id: selectedSlot.teacher_id,
-      student_id: user.id,
-      package_id: activePackage.id,
-      scheduled_at: scheduledAt.toISOString(),
-      lesson_type: "individual",
-      status: "scheduled",
-      duration_minutes: 50,
-      price_usd: activePackage.price_per_lesson,
-    });
+    const { error } = await supabase
+      .from("student_availability")
+      .insert({
+        student_id: user.id,
+        preferred_level: selectedLevel,
+        preferred_date: selectedDate.toISOString().split('T')[0],
+        preferred_time: selectedTime,
+        duration_minutes: 50,
+        notes: notes || null,
+        status: 'pending'
+      });
 
     if (error) {
       toast({
-        title: t('bookingFailed'),
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: t('lessonBooked'),
-        description: t('lessonScheduledSuccess'),
+        title: "Request Submitted!",
+        description: "Your availability has been sent to teachers",
       });
-      setSelectedSlot(null);
-      setAvailableSlots([]);
+      setNotes("");
+      loadMyRequests();
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteRequest = async (id: string) => {
+    const { error } = await supabase
+      .from("student_availability")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Deleted",
+        description: "Request removed",
+      });
+      loadMyRequests();
     }
   };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'secondary';
+      case 'accepted': return 'default';
+      case 'rejected': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+  const timeSlots = Array.from({ length: 10 }, (_, i) => {
+    const hour = 9 + i;
+    return `${hour.toString().padStart(2, '0')}:00`;
+  });
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold mb-2">{t('bookALesson')}</h2>
-        <p className="text-muted-foreground">{t('selectYourLevel')}</p>
+        <h2 className="text-3xl font-bold mb-2">Set Your Availability</h2>
+        <p className="text-muted-foreground">
+          Choose your preferred times and teachers will book with you
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Request Form */}
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">{t('chooseYourLevel')}</h3>
-          <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-            <SelectTrigger className="bg-background">
-              <SelectValue placeholder={t('chooseYourLevel')} />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              <SelectItem value="beginner">{t('beginner')}</SelectItem>
-              <SelectItem value="intermediate">{t('intermediate')}</SelectItem>
-              <SelectItem value="advanced">{t('advanced')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <h3 className="text-xl font-semibold mb-4">New Availability Request</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Your Level</Label>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="beginner">Beginner</SelectItem>
+                  <SelectItem value="intermediate">Intermediate</SelectItem>
+                  <SelectItem value="advanced">Advanced</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Preferred Date</Label>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                disabled={(date) => date < new Date()}
+                className="rounded-md border"
+              />
+            </div>
+
+            <div>
+              <Label>Preferred Time</Label>
+              <Select value={selectedTime} onValueChange={setSelectedTime}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50 max-h-60">
+                  {timeSlots.map((time) => (
+                    <SelectItem key={time} value={time}>
+                      <Clock className="w-4 h-4 inline mr-2" />
+                      {time}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Notes (Optional)</Label>
+              <Textarea
+                placeholder="Any special requests or topics you'd like to focus on..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="bg-background"
+                rows={3}
+              />
+            </div>
+
+            <Button 
+              onClick={handleSubmitRequest} 
+              disabled={loading || !selectedDate}
+              className="w-full"
+              size="lg"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Submit Availability Request
+            </Button>
+          </div>
         </Card>
 
+        {/* My Requests */}
         <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">{t('selectDate')}</h3>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            disabled={(date) => date < new Date()}
-            className="rounded-md border"
-          />
-        </Card>
-      </div>
-
-      {selectedLevel && selectedDate && (
-        <Card className="p-6">
-          <h3 className="text-xl font-semibold mb-4">{t('availableTimeSlots')}</h3>
-          {availableSlots.length === 0 ? (
-            <div className="space-y-4">
-              <div className="bg-muted/50 border border-border rounded-lg p-6 text-center">
-                <p className="text-muted-foreground mb-2">
-                  {t('noAvailableSlots', { level: t(selectedLevel as any) })}
-                </p>
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Try:</p>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Select a different date (Mon-Wed have more availability)</li>
-                    <li>• Choose a different level below</li>
-                    <li>• Contact admin if no slots appear</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="flex gap-2 justify-center">
-                {['beginner', 'intermediate', 'advanced'].map((level) => (
-                  level !== selectedLevel && (
-                    <Button
-                      key={level}
-                      variant="outline"
-                      onClick={() => setSelectedLevel(level)}
-                    >
-                      Try {level.charAt(0).toUpperCase() + level.slice(1)}
-                    </Button>
-                  )
-                ))}
-              </div>
+          <h3 className="text-xl font-semibold mb-4">My Requests</h3>
+          
+          {myRequests.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No availability requests yet.</p>
+              <p className="text-sm mt-2">Submit your first request to get started!</p>
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-2">
-              {availableSlots.map((slot) => (
-                <Button
-                  key={`${slot.teacher_id}-${slot.time}`}
-                  variant={selectedSlot?.time === slot.time ? "default" : "outline"}
-                  onClick={() => setSelectedSlot(slot)}
-                >
-                  <Clock className="w-4 h-4 mr-2" />
-                  {slot.time}
-                </Button>
+            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              {myRequests.map((request) => (
+                <Card key={request.id} className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={getStatusColor(request.status)}>
+                          {request.status}
+                        </Badge>
+                        <Badge variant="outline" className="capitalize">
+                          {request.preferred_level}
+                        </Badge>
+                      </div>
+                      <div className="space-y-1 text-sm">
+                        <p className="font-medium">
+                          {new Date(request.preferred_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        <p className="text-muted-foreground">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {request.preferred_time} ({request.duration_minutes} min)
+                        </p>
+                        {request.notes && (
+                          <p className="text-muted-foreground italic text-xs mt-2">
+                            "{request.notes}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {request.status === 'pending' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteRequest(request.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                </Card>
               ))}
             </div>
           )}
         </Card>
-      )}
-
-      {selectedSlot && (
-        <div className="flex justify-end">
-          <Button size="lg" onClick={handleBookLesson}>
-            {t('bookLessonButton')}
-          </Button>
-        </div>
-      )}
+      </div>
     </div>
   );
 };
