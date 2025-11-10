@@ -54,70 +54,63 @@ serve(async (req) => {
       });
     }
 
-    // Use AI to select best teacher
+    // Try to use AI to select best teacher, but fallback if unavailable
+    let selectedTeacherId;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
+    
+    if (LOVABLE_API_KEY) {
+      try {
+        const teachersList = teachers.map((t: any) => ({
+          teacher_id: t.teacher_id,
+          name: t.profiles?.full_name || 'Unknown',
+          levels: t.profiles?.teacher_levels || []
+        }));
 
-    const teachersList = teachers.map((t: any) => ({
-      teacher_id: t.teacher_id,
-      name: t.profiles?.full_name || 'Unknown',
-      levels: t.profiles?.teacher_levels || []
-    }));
-
-    const systemPrompt = `You are an instant lesson matching system. Select the best available teacher for an immediate lesson.
+        const systemPrompt = `You are an instant lesson matching system. Select the best available teacher for an immediate lesson.
 Return ONLY a JSON object with the teacher_id.`;
 
-    const userPrompt = `Student needs an INSTANT ${level} level lesson right now.
+        const userPrompt = `Student needs an INSTANT ${level} level lesson right now.
 Available teachers: ${JSON.stringify(teachersList)}`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      
-      if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+          }),
         });
-      }
-      if (aiResponse.status === 402) {
-        return new Response(JSON.stringify({ error: 'Payment required. Please add credits.' }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      throw new Error('AI teacher selection failed');
-    }
 
-    const aiData = await aiResponse.json();
-    let selectedTeacherId;
-    
-    try {
-      const aiContent = aiData.choices[0].message.content;
-      const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : aiContent);
-      selectedTeacherId = parsed.teacher_id;
-    } catch (e) {
-      console.error('AI response parsing failed:', e);
-      selectedTeacherId = teachersList[0].teacher_id;
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          try {
+            const aiContent = aiData.choices[0].message.content;
+            const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+            const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : aiContent);
+            selectedTeacherId = parsed.teacher_id;
+            console.log('AI selected teacher:', selectedTeacherId);
+          } catch (e) {
+            console.error('AI response parsing failed, using first teacher:', e);
+            selectedTeacherId = teachersList[0].teacher_id;
+          }
+        } else {
+          const errorText = await aiResponse.text();
+          console.warn('AI unavailable (status:', aiResponse.status, '), selecting first available teacher:', errorText);
+          selectedTeacherId = teachers[0].teacher_id;
+        }
+      } catch (e) {
+        console.error('AI selection error, using first teacher:', e);
+        selectedTeacherId = teachers[0].teacher_id;
+      }
+    } else {
+      console.log('No AI key, selecting first available teacher');
+      selectedTeacherId = teachers[0].teacher_id;
     }
 
     console.log('Selected teacher:', selectedTeacherId);
