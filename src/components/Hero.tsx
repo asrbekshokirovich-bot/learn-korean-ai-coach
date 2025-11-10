@@ -38,14 +38,14 @@ const Hero = () => {
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            <span className="text-primary-foreground">{t('masterKoreanWith')}</span>
+            <span className="text-white drop-shadow-lg">{t('masterKoreanWith')}</span>
             <br />
-            <span className="text-secondary drop-shadow-lg">
+            <span className="text-white drop-shadow-lg font-extrabold">
               {t('humanTeachersAI')}
             </span>
           </h1>
 
-          <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto drop-shadow-md">
             {t('futureOfLearning')}
           </p>
 
@@ -61,16 +61,16 @@ const Hero = () => {
 
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-12">
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">50+</div>
-              <div className="text-sm text-primary-foreground/70">{t('aiPersonas')}</div>
+              <div className="text-3xl md:text-4xl font-bold text-white drop-shadow-md">50+</div>
+              <div className="text-sm text-white/80">{t('aiPersonas')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">90%</div>
-              <div className="text-sm text-primary-foreground/70">{t('topikPassRate')}</div>
+              <div className="text-3xl md:text-4xl font-bold text-white drop-shadow-md">90%</div>
+              <div className="text-sm text-white/80">{t('topikPassRate')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">24/7</div>
-              <div className="text-sm text-primary-foreground/70">{t('aiPractice')}</div>
+              <div className="text-3xl md:text-4xl font-bold text-white drop-shadow-md">24/7</div>
+              <div className="text-sm text-white/80">{t('aiPractice')}</div>
             </div>
           </div>
         </div>
