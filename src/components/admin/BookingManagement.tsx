@@ -146,7 +146,8 @@ const BookingManagement = () => {
 
     setLoading(true);
     try {
-      const scheduledDateTime = `${selectedRequest.preferred_date}T${selectedRequest.preferred_time}:00`;
+      // Format: "2025-11-10T17:00:00" (time already includes seconds from DB)
+      const scheduledDateTime = `${selectedRequest.preferred_date}T${selectedRequest.preferred_time}`;
 
       const { error: lessonError } = await supabase
         .from("lessons")
