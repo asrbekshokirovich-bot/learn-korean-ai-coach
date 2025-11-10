@@ -31,9 +31,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun, Film, Plus } from "lucide-react";
+import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun, Film, Plus, Calendar } from "lucide-react";
 import { z } from "zod";
 import Finance from "@/pages/admin/Finance";
+import BookingManagement from "@/components/admin/BookingManagement";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface Teacher {
@@ -486,8 +487,12 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="teachers" className="space-y-6">
+        <Tabs defaultValue="bookings" className="space-y-6">
           <TabsList>
+            <TabsTrigger value="bookings">
+              <Calendar className="w-4 h-4 mr-2" />
+              Bookings
+            </TabsTrigger>
             <TabsTrigger value="teachers">
               <GraduationCap className="w-4 h-4 mr-2" />
               Teachers ({teachers.length})
@@ -505,6 +510,11 @@ const AdminDashboard = () => {
               Finance
             </TabsTrigger>
           </TabsList>
+
+          {/* Bookings Tab */}
+          <TabsContent value="bookings">
+            <BookingManagement />
+          </TabsContent>
 
           {/* Teachers Tab */}
           <TabsContent value="teachers" className="space-y-4">
