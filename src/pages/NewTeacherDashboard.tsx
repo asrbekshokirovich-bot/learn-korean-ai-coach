@@ -71,13 +71,41 @@ const NewTeacherDashboard = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Get all students from groups where this teacher teaches
+    const { data: groupData } = await supabase
+      .from("groups")
+      .select("id")
+      .eq("teacher_id", user.id)
+      .eq("status", "active");
+
+    if (!groupData || groupData.length === 0) {
+      setPendingHomework([]);
+      return;
+    }
+
+    const groupIds = groupData.map(g => g.id);
+
+    const { data: enrollmentData } = await supabase
+      .from("group_enrollments")
+      .select("student_id")
+      .in("group_id", groupIds)
+      .eq("status", "active");
+
+    if (!enrollmentData || enrollmentData.length === 0) {
+      setPendingHomework([]);
+      return;
+    }
+
+    const studentIds = enrollmentData.map(e => e.student_id);
+
+    // Get homework for these students
     const { data } = await supabase
       .from("homework_assignments")
       .select(`
         *,
         profiles!homework_assignments_student_id_fkey (full_name)
       `)
-      .eq("teacher_id", user.id)
+      .in("student_id", studentIds)
       .eq("status", "submitted")
       .order("created_at", { ascending: false })
       .limit(10);
@@ -95,7 +123,7 @@ const NewTeacherDashboard = () => {
       .eq("teacher_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     setEarnings(data);
   };
@@ -104,14 +132,28 @@ const NewTeacherDashboard = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data } = await supabase
-      .from("lessons")
-      .select("enrollments (student_id)")
+    // Get unique students from group enrollments where teacher teaches
+    const { data: groupData } = await supabase
+      .from("groups")
+      .select("id")
       .eq("teacher_id", user.id)
-      .eq("status", "completed");
+      .eq("status", "active");
 
-    if (data) {
-      const uniqueStudents = new Set(data.map((l: any) => l.enrollments?.student_id));
+    if (!groupData || groupData.length === 0) {
+      setStudentCount(0);
+      return;
+    }
+
+    const groupIds = groupData.map(g => g.id);
+
+    const { data: enrollmentData } = await supabase
+      .from("group_enrollments")
+      .select("student_id")
+      .in("group_id", groupIds)
+      .eq("status", "active");
+
+    if (enrollmentData) {
+      const uniqueStudents = new Set(enrollmentData.map(e => e.student_id));
       setStudentCount(uniqueStudents.size);
     }
   };
