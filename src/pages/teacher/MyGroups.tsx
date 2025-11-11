@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -29,6 +30,8 @@ const MyGroups = () => {
   const [homeworkDueDate, setHomeworkDueDate] = useState("");
   const [homeworkFile, setHomeworkFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedLessonId, setSelectedLessonId] = useState<string>("");
+  const [groupLessons, setGroupLessons] = useState<any[]>([]);
 
   useEffect(() => {
     loadGroups();
@@ -123,6 +126,22 @@ const MyGroups = () => {
     navigate(`/teacher/video-lesson?groupId=${group.id}&groupName=${encodeURIComponent(group.name)}`);
   };
 
+  const loadGroupLessons = async (groupId: string) => {
+    try {
+      const { data, error }: { data: any[] | null; error: any } = await supabase
+        .from("lessons")
+        .select("id, scheduled_at, lesson_type")
+        .eq("group_id", groupId)
+        .order("scheduled_at", { ascending: false });
+
+      if (error) throw error;
+      setGroupLessons(data || []);
+    } catch (error: any) {
+      console.error("Error loading lessons:", error);
+      toast.error("Failed to load lessons");
+    }
+  };
+
   const handleAssignHomework = async () => {
     if (!selectedGroupForCalendar || !homeworkTitle.trim()) {
       toast.error("Please fill in all required fields");
@@ -174,7 +193,7 @@ const MyGroups = () => {
         description: homeworkDescription || null,
         due_date: homeworkDueDate ? new Date(homeworkDueDate).toISOString() : null,
         status: "assigned",
-        lesson_id: selectedGroupForCalendar.id,
+        lesson_id: selectedLessonId || null,
         attachment_url: attachmentUrl,
         attachment_name: attachmentName,
         attachment_size: attachmentSize
@@ -192,6 +211,8 @@ const MyGroups = () => {
       setHomeworkDescription("");
       setHomeworkDueDate("");
       setHomeworkFile(null);
+      setSelectedLessonId("");
+      setGroupLessons([]);
     } catch (error: any) {
       console.error("Error assigning homework:", error);
       toast.error("Failed to assign homework");
@@ -285,14 +306,19 @@ const MyGroups = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Dialog open={homeworkDialogOpen} onOpenChange={setHomeworkDialogOpen}>
+            <Dialog open={homeworkDialogOpen} onOpenChange={(open) => {
+              setHomeworkDialogOpen(open);
+              if (open) {
+                loadGroupLessons(selectedGroupForCalendar.id);
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button className="w-full">
                   <Plus className="w-4 h-4 mr-2" />
                   Assign Homework
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Assign Homework to {selectedGroupForCalendar.name}</DialogTitle>
                 </DialogHeader>
@@ -315,6 +341,22 @@ const MyGroups = () => {
                       placeholder="Enter homework description"
                       rows={4}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lesson">Related Lesson (optional)</Label>
+                    <Select value={selectedLessonId} onValueChange={setSelectedLessonId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a lesson" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No specific lesson</SelectItem>
+                        {groupLessons.map((lesson) => (
+                          <SelectItem key={lesson.id} value={lesson.id}>
+                            {format(new Date(lesson.scheduled_at), "MMM d, yyyy")} - {lesson.lesson_type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dueDate">Due Date</Label>

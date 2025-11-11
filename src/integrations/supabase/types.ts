@@ -898,6 +898,7 @@ export type Database = {
           created_at: string
           duration_minutes: number
           enrollment_id: string | null
+          group_id: string | null
           id: string
           is_video_lesson: boolean | null
           lesson_type: string
@@ -915,6 +916,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           enrollment_id?: string | null
+          group_id?: string | null
           id?: string
           is_video_lesson?: boolean | null
           lesson_type: string
@@ -932,6 +934,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           enrollment_id?: string | null
+          group_id?: string | null
           id?: string
           is_video_lesson?: boolean | null
           lesson_type?: string
@@ -951,6 +954,13 @@ export type Database = {
             columns: ["enrollment_id"]
             isOneToOne: false
             referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
             referencedColumns: ["id"]
           },
           {
