@@ -1,314 +1,438 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-// Helper to bypass strict typing when backend tables are not yet available
-const from = (table: string) => (supabase as any).from(table);
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Plus, Edit, Trash2, Users } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { toast } from "sonner";
-import { Users, Plus, Edit, Trash2 } from "lucide-react";
 
-interface LessonGroup {
-  id: string;
-  name: string;
-  level: string;
-  teacher_id: string;
-  max_students: number;
-  current_students: number;
-  duration_minutes: number;
-  schedule_day: number;
-  schedule_time: string;
-  is_active: boolean;
-  teacher: {
-    full_name: string;
-  };
-}
+const groupSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters"),
+  level: z.string().min(1, "Level is required"),
+  description: z.string().optional(),
+  max_students: z.string().min(1, "Max students is required"),
+  teacher_id: z.string().optional(),
+  day_of_week: z.string().min(1, "Day of week is required"),
+  start_time: z.string().min(1, "Start time is required"),
+  duration_minutes: z.string().min(1, "Duration is required"),
+});
 
-interface Teacher {
-  user_id: string;
-  full_name: string;
-  teacher_levels: string[];
-}
+type GroupFormValues = z.infer<typeof groupSchema>;
+
+const DAYS_OF_WEEK = [
+  { value: "0", label: "Sunday" },
+  { value: "1", label: "Monday" },
+  { value: "2", label: "Tuesday" },
+  { value: "3", label: "Wednesday" },
+  { value: "4", label: "Thursday" },
+  { value: "5", label: "Friday" },
+  { value: "6", label: "Saturday" },
+];
 
 const GroupManagement = () => {
-  const [groups, setGroups] = useState<LessonGroup[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    level: "beginner",
-    teacher_id: "",
-    max_students: 18,
-    schedule_day: 0,
-    schedule_time: "09:00"
+  const [editingGroup, setEditingGroup] = useState<any>(null);
+
+  const form = useForm<GroupFormValues>({
+    resolver: zodResolver(groupSchema),
+    defaultValues: {
+      name: "",
+      level: "",
+      description: "",
+      max_students: "18",
+      teacher_id: "",
+      day_of_week: "",
+      start_time: "",
+      duration_minutes: "90",
+    },
   });
 
   useEffect(() => {
-    loadData();
+    loadGroups();
+    loadTeachers();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const [groupsRes, teachersRes] = await Promise.all([
-        from('lesson_groups')
-          .select(`
-            *,
-            teacher:profiles!lesson_groups_teacher_id_fkey(full_name)
-          `)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('profiles')
-          .select('user_id, full_name, teacher_levels')
-          .not('teacher_levels', 'is', null)
-      ]);
+  const loadGroups = async () => {
+    const { data, error } = await supabase
+      .from("groups")
+      .select(`
+        *,
+        profiles!groups_teacher_id_fkey(full_name, email)
+      `)
+      .order("created_at", { ascending: false });
 
-      if (groupsRes.error) throw groupsRes.error;
-      if (teachersRes.error) throw teachersRes.error;
-
-      setGroups(groupsRes.data || []);
-      setTeachers(teachersRes.data || []);
-    } catch (error: any) {
-      toast.error("Failed to load data");
-      console.error(error);
-    } finally {
-      setLoading(false);
+    if (error) {
+      toast.error("Failed to load groups");
+      return;
     }
+
+    setGroups(data || []);
   };
 
-  const handleCreateGroup = async () => {
+  const loadTeachers = async () => {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select(`
+        user_id,
+        profiles!user_roles_user_id_fkey(user_id, full_name, email)
+      `)
+      .eq("role", "teacher");
+
+    if (error) {
+      toast.error("Failed to load teachers");
+      return;
+    }
+
+    const teacherProfiles = data?.map(d => d.profiles).filter(Boolean) || [];
+    setTeachers(teacherProfiles as any);
+  };
+
+  const onSubmit = async (values: GroupFormValues) => {
     try {
-      const { error } = await from('lesson_groups')
-        .insert({
-          ...formData,
-          duration_minutes: 90 // Will be auto-adjusted by trigger
-        });
+      const groupData = {
+        name: values.name,
+        level: values.level,
+        description: values.description || null,
+        max_students: parseInt(values.max_students),
+        teacher_id: values.teacher_id || null,
+        day_of_week: parseInt(values.day_of_week),
+        start_time: values.start_time,
+        duration_minutes: parseInt(values.duration_minutes),
+      };
 
-      if (error) throw error;
+      if (editingGroup) {
+        const { error } = await supabase
+          .from("groups")
+          .update(groupData)
+          .eq("id", editingGroup.id);
 
-      toast.success("Group created successfully!");
+        if (error) throw error;
+        toast.success("Group updated successfully");
+      } else {
+        const { error } = await supabase.from("groups").insert(groupData);
+
+        if (error) throw error;
+        toast.success("Group created successfully");
+      }
+
       setDialogOpen(false);
-      setFormData({
-        name: "",
-        level: "beginner",
-        teacher_id: "",
-        max_students: 18,
-        schedule_day: 0,
-        schedule_time: "09:00"
-      });
-      loadData();
+      setEditingGroup(null);
+      form.reset();
+      loadGroups();
     } catch (error: any) {
-      toast.error("Failed to create group");
-      console.error(error);
+      toast.error(error.message || "Failed to save group");
     }
   };
 
-  const handleToggleActive = async (groupId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await from('lesson_groups')
-        .update({ is_active: !currentStatus })
-        .eq('id', groupId);
+  const handleEdit = (group: any) => {
+    setEditingGroup(group);
+    form.reset({
+      name: group.name,
+      level: group.level,
+      description: group.description || "",
+      max_students: group.max_students.toString(),
+      teacher_id: group.teacher_id || "",
+      day_of_week: group.day_of_week.toString(),
+      start_time: group.start_time,
+      duration_minutes: group.duration_minutes.toString(),
+    });
+    setDialogOpen(true);
+  };
 
-      if (error) throw error;
+  const handleDelete = async (groupId: string) => {
+    if (!confirm("Are you sure you want to delete this group?")) return;
 
-      toast.success(currentStatus ? "Group deactivated" : "Group activated");
-      loadData();
-    } catch (error: any) {
-      toast.error("Failed to update group");
-      console.error(error);
+    const { error } = await supabase.from("groups").delete().eq("id", groupId);
+
+    if (error) {
+      toast.error("Failed to delete group");
+      return;
+    }
+
+    toast.success("Group deleted successfully");
+    loadGroups();
+  };
+
+  const handleDialogChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingGroup(null);
+      form.reset();
     }
   };
-
-  const getDayName = (day: number) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[day];
-  };
-
-  const getCapacityBadge = (current: number, max: number) => {
-    const percentage = (current / max) * 100;
-    if (percentage >= 90) return <Badge variant="destructive">{current}/{max}</Badge>;
-    if (percentage >= 70) return <Badge variant="secondary">{current}/{max}</Badge>;
-    return <Badge variant="default">{current}/{max}</Badge>;
-  };
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
-  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Group Management</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <div>
+          <h2 className="text-3xl font-bold">Group Management</h2>
+          <p className="text-muted-foreground">Create and manage student groups</p>
+        </div>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Create Group
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Group</DialogTitle>
+              <DialogTitle>{editingGroup ? "Edit Group" : "Create New Group"}</DialogTitle>
+              <DialogDescription>
+                {editingGroup ? "Update group details" : "Add a new group to the system"}
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Group Name</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Beginner Morning Group A"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Group Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Beginner Korean A" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="level"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Level</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="beginner">Beginner</SelectItem>
+                            <SelectItem value="elementary">Elementary</SelectItem>
+                            <SelectItem value="intermediate">Intermediate</SelectItem>
+                            <SelectItem value="advanced">Advanced</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Group description..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <Label>Level</Label>
-                <Select
-                  value={formData.level}
-                  onValueChange={(value) => setFormData({ ...formData, level: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="elementary">Elementary</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="advanced">Advanced</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="max_students"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Students</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="2" max="18" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="teacher_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Teacher (Optional)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select teacher" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">No teacher assigned</SelectItem>
+                            {teachers.map((teacher) => (
+                              <SelectItem key={teacher.user_id} value={teacher.user_id}>
+                                {teacher.full_name || teacher.email}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <div>
-                <Label>Teacher</Label>
-                <Select
-                  value={formData.teacher_id}
-                  onValueChange={(value) => setFormData({ ...formData, teacher_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select teacher" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((teacher) => (
-                      <SelectItem key={teacher.user_id} value={teacher.user_id}>
-                        {teacher.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="day_of_week"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Day</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select day" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {DAYS_OF_WEEK.map((day) => (
+                              <SelectItem key={day.value} value={day.value}>
+                                {day.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="start_time"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="duration_minutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration (min)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="60" max="180" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <div>
-                <Label>Max Students (up to 18)</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="18"
-                  value={formData.max_students}
-                  onChange={(e) => setFormData({ ...formData, max_students: parseInt(e.target.value) })}
-                />
-              </div>
-
-              <div>
-                <Label>Schedule Day</Label>
-                <Select
-                  value={formData.schedule_day.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, schedule_day: parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                      <SelectItem key={day} value={day.toString()}>
-                        {getDayName(day)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Schedule Time</Label>
-                <Input
-                  type="time"
-                  value={formData.schedule_time}
-                  onChange={(e) => setFormData({ ...formData, schedule_time: e.target.value })}
-                />
-              </div>
-
-              <Button onClick={handleCreateGroup} className="w-full">
-                Create Group
-              </Button>
-            </div>
+                <Button type="submit" className="w-full">
+                  {editingGroup ? "Update Group" : "Create Group"}
+                </Button>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid gap-4">
-        {groups.map((group) => (
-          <Card key={group.id} className={!group.is_active ? "opacity-60" : ""}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  {group.name}
-                </CardTitle>
-                <div className="flex gap-2">
-                  {getCapacityBadge(group.current_students, group.max_students)}
-                  <Badge variant={group.is_active ? "default" : "secondary"}>
-                    {group.is_active ? "Active" : "Inactive"}
+      <Card className="p-6">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Level</TableHead>
+              <TableHead>Schedule</TableHead>
+              <TableHead>Teacher</TableHead>
+              <TableHead>Students</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {groups.map((group) => (
+              <TableRow key={group.id}>
+                <TableCell className="font-medium">{group.name}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{group.level}</Badge>
+                </TableCell>
+                <TableCell>
+                  {DAYS_OF_WEEK.find(d => d.value === group.day_of_week.toString())?.label} {group.start_time} ({group.duration_minutes}min)
+                </TableCell>
+                <TableCell>{group.profiles?.full_name || "Not assigned"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    {group.current_students_count} / {group.max_students}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={group.status === "active" ? "default" : "secondary"}>
+                    {group.status}
                   </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Level</p>
-                  <p className="font-medium capitalize">{group.level}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Teacher</p>
-                  <p className="font-medium">{group.teacher.full_name}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Schedule</p>
-                  <p className="font-medium">
-                    {getDayName(group.schedule_day)} {group.schedule_time}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Duration</p>
-                  <p className="font-medium">{group.duration_minutes} minutes</p>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleToggleActive(group.id, group.is_active)}
-                >
-                  {group.is_active ? "Deactivate" : "Activate"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {groups.length === 0 && (
-        <Card>
-          <CardContent className="flex items-center justify-center h-32 text-muted-foreground">
-            No groups created yet
-          </CardContent>
-        </Card>
-      )}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(group)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(group.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {groups.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            No groups created yet. Click "Create Group" to add your first group.
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

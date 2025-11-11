@@ -350,6 +350,86 @@ export type Database = {
           },
         ]
       }
+      group_enrollments: {
+        Row: {
+          enrolled_at: string
+          group_id: string
+          id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          enrolled_at?: string
+          group_id: string
+          id?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          enrolled_at?: string
+          group_id?: string
+          id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_enrollments_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          current_students_count: number
+          day_of_week: number
+          description: string | null
+          duration_minutes: number
+          id: string
+          level: string
+          max_students: number
+          name: string
+          start_time: string
+          status: string
+          teacher_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_students_count?: number
+          day_of_week: number
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          level: string
+          max_students?: number
+          name: string
+          start_time: string
+          status?: string
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_students_count?: number
+          day_of_week?: number
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          level?: string
+          max_students?: number
+          name?: string
+          start_time?: string
+          status?: string
+          teacher_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       homework_assignments: {
         Row: {
           ai_grade: number | null
