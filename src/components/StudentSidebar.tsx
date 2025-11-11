@@ -24,10 +24,10 @@ export function StudentSidebar() {
 
   const items = [
     { title: t('dashboard'), url: '/student', icon: Home },
-    { title: 'My Groups', url: '/student/groups', icon: Users },
-    { title: 'Recordings', url: '/student/recordings', icon: Video },
+    { title: t('myGroups'), url: '/student/groups', icon: Users },
+    { title: t('recordings'), url: '/student/recordings', icon: Video },
     { title: t('practice'), url: '/student/practice', icon: Brain },
-    { title: 'K-Drama Hub', url: '/student/kdrama', icon: Film },
+    { title: t('kDramaHub'), url: '/student/kdrama', icon: Film },
     { title: t('conversationPractice'), url: '/student/conversations', icon: MessageSquare },
   ];
 

@@ -232,9 +232,9 @@ const Dashboard = () => {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <Sparkles className="w-8 h-8" />
-            <h1 className="text-4xl font-bold">Welcome Back!</h1>
+            <h1 className="text-4xl font-bold">{t('welcomeBackTitle')}</h1>
           </div>
-          <p className="text-lg opacity-90">Continue your Korean learning journey</p>
+          <p className="text-lg opacity-90">{t('continueYourKoreanLearning')}</p>
         </div>
       </div>
 
@@ -244,7 +244,7 @@ const Dashboard = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Groups</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('activeGroups')}</p>
                 <p className="text-3xl font-bold mt-2">{stats.enrollments}</p>
               </div>
               <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -258,7 +258,7 @@ const Dashboard = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Completed Lessons</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('lessonsCompletedCount')}</p>
                 <p className="text-3xl font-bold mt-2">{stats.completedLessons}</p>
               </div>
               <div className="h-14 w-14 rounded-full bg-accent/10 flex items-center justify-center">
@@ -272,7 +272,7 @@ const Dashboard = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Goals</p>
+                <p className="text-sm font-medium text-muted-foreground">{t('activeGoals')}</p>
                 <p className="text-3xl font-bold mt-2">{stats.goalsInProgress}</p>
               </div>
               <div className="h-14 w-14 rounded-full bg-secondary/10 flex items-center justify-center">
@@ -291,11 +291,11 @@ const Dashboard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl font-bold flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-primary" />
-                Your Learning Goals
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">AI-personalized goals based on your performance</p>
+            <h3 className="text-2xl font-bold flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              {t('yourLearningGoals')}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">{t('aiPersonalizedGoals')}</p>
             </div>
           </div>
 
@@ -331,7 +331,7 @@ const Dashboard = () => {
                         </span>
                         {goal.end_date && (
                           <span className="text-muted-foreground">
-                            Due: {format(new Date(goal.end_date), "MMM d, yyyy")}
+                            {t('due')}: {format(new Date(goal.end_date), "MMM d, yyyy")}
                           </span>
                         )}
                       </div>
@@ -398,8 +398,8 @@ const Dashboard = () => {
       {groupEnrollments.length > 0 && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-2xl font-bold">My Group Lessons</h3>
-            <p className="text-sm text-muted-foreground mt-1">Your enrolled group classes</p>
+            <h3 className="text-2xl font-bold">{t('myGroupLessons')}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{t('yourEnrolledGroupClasses')}</p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {groupEnrollments.map((enrollment) => {
@@ -438,7 +438,7 @@ const Dashboard = () => {
                         className="w-full shadow-ai"
                         onClick={() => navigate('/student/groups')}
                       >
-                        View Details
+                        {t('viewDetails')}
                       </Button>
                     </div>
                   </CardContent>

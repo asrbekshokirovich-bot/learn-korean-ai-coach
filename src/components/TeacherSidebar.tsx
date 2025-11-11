@@ -24,9 +24,9 @@ export function TeacherSidebar() {
 
   const items = [
     { title: t('dashboard'), url: '/teacher', icon: Home },
-    { title: 'My Groups', url: '/teacher/groups', icon: Users },
-    { title: 'Recordings', url: '/teacher/recordings', icon: Video },
-    { title: 'K-Drama Hub', url: '/student/kdrama', icon: Tv },
+    { title: t('myGroups'), url: '/teacher/groups', icon: Users },
+    { title: t('recordings'), url: '/teacher/recordings', icon: Video },
+    { title: t('kDramaHub'), url: '/teacher/kdrama', icon: Tv },
     { title: t('availability'), url: '/teacher/availability', icon: Calendar },
     { title: t('earnings'), url: '/teacher/earnings', icon: DollarSign },
   ];
