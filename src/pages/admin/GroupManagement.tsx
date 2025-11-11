@@ -47,7 +47,7 @@ const groupSchema = z.object({
   level: z.string().min(1, "Level is required"),
   description: z.string().optional(),
   max_students: z.string().min(1, "Max students is required"),
-  teacher_id: z.string().optional(),
+  teacher_id: z.string().transform(val => val === "" ? undefined : val).optional(),
   day_of_week: z.string().min(1, "Day of week is required"),
   start_time: z.string().min(1, "Start time is required"),
   duration_minutes: z.string().min(1, "Duration is required"),
@@ -127,6 +127,8 @@ const GroupManagement = () => {
 
   const onSubmit = async (values: GroupFormValues) => {
     try {
+      console.log("Form submitted with values:", values);
+      
       const groupData = {
         name: values.name,
         level: values.level,
@@ -138,18 +140,26 @@ const GroupManagement = () => {
         duration_minutes: parseInt(values.duration_minutes),
       };
 
+      console.log("Prepared group data:", groupData);
+
       if (editingGroup) {
         const { error } = await supabase
           .from("groups")
           .update(groupData)
           .eq("id", editingGroup.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
         toast.success("Group updated successfully");
       } else {
         const { error } = await supabase.from("groups").insert(groupData);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         toast.success("Group created successfully");
       }
 
@@ -158,6 +168,7 @@ const GroupManagement = () => {
       form.reset();
       loadGroups();
     } catch (error: any) {
+      console.error("Form submission error:", error);
       toast.error(error.message || "Failed to save group");
     }
   };
@@ -369,7 +380,15 @@ const GroupManagement = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  onClick={() => {
+                    console.log("Create Group button clicked");
+                    console.log("Form errors:", form.formState.errors);
+                    console.log("Form values:", form.getValues());
+                  }}
+                >
                   {editingGroup ? "Update Group" : "Create Group"}
                 </Button>
               </form>
