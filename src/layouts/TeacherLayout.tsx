@@ -10,7 +10,6 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import NewTeacherDashboard from "@/pages/NewTeacherDashboard";
 import MyAvailability from "@/pages/teacher/MyAvailability";
-import StudentRequests from "@/pages/teacher/StudentRequests";
 import VideoLesson from "@/pages/teacher/VideoLesson";
 import MyGroups from "@/pages/teacher/MyGroups";
 
@@ -106,7 +105,6 @@ const TeacherLayout = () => {
             <div className="max-w-7xl mx-auto">
               <Routes>
                 <Route index element={<NewTeacherDashboard />} />
-                <Route path="requests" element={<StudentRequests />} />
                 <Route path="availability" element={<MyAvailability />} />
                 <Route path="groups" element={<MyGroups />} />
                 <Route path="video-lesson/:lessonId" element={<VideoLesson />} />
