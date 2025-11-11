@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, Users, UserCircle } from "lucide-react";
+import { Send, Users, UserCircle, Paperclip, Download, FileText, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -23,7 +23,10 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
   const [newMessage, setNewMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("group");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadCurrentUser();
@@ -137,39 +140,83 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
     };
   };
 
+  const uploadFile = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${groupId}/${currentUserId}/${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError, data } = await supabase.storage
+      .from('chat-files')
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    return {
+      file_url: fileName,
+      file_name: file.name,
+      file_type: file.type,
+      file_size: file.size,
+    };
+  };
+
   const sendGroupMessage = async () => {
-    if (!newMessage.trim() || !currentUserId) return;
+    if ((!newMessage.trim() && !selectedFile) || !currentUserId) return;
 
-    const { error } = await supabase.from("group_messages").insert({
-      group_id: groupId,
-      sender_id: currentUserId,
-      message: newMessage.trim(),
-    });
+    try {
+      setUploading(true);
+      let fileData = null;
 
-    if (error) {
+      if (selectedFile) {
+        fileData = await uploadFile(selectedFile);
+      }
+
+      const { error } = await supabase.from("group_messages").insert({
+        group_id: groupId,
+        sender_id: currentUserId,
+        message: newMessage.trim() || (selectedFile ? `Sent a file: ${selectedFile.name}` : ''),
+        ...fileData,
+      });
+
+      if (error) throw error;
+
+      setNewMessage("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (error: any) {
       toast.error("Failed to send message");
-      return;
+    } finally {
+      setUploading(false);
     }
-
-    setNewMessage("");
   };
 
   const sendDirectMessage = async () => {
-    if (!newMessage.trim() || !currentUserId || !teacherId) return;
+    if ((!newMessage.trim() && !selectedFile) || !currentUserId || !teacherId) return;
 
-    const { error } = await supabase.from("group_direct_messages").insert({
-      group_id: groupId,
-      sender_id: currentUserId,
-      recipient_id: teacherId,
-      message: newMessage.trim(),
-    });
+    try {
+      setUploading(true);
+      let fileData = null;
 
-    if (error) {
+      if (selectedFile) {
+        fileData = await uploadFile(selectedFile);
+      }
+
+      const { error } = await supabase.from("group_direct_messages").insert({
+        group_id: groupId,
+        sender_id: currentUserId,
+        recipient_id: teacherId,
+        message: newMessage.trim() || (selectedFile ? `Sent a file: ${selectedFile.name}` : ''),
+        ...fileData,
+      });
+
+      if (error) throw error;
+
+      setNewMessage("");
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (error: any) {
       toast.error("Failed to send message");
-      return;
+    } finally {
+      setUploading(false);
     }
-
-    setNewMessage("");
   };
 
   const handleSendMessage = () => {
@@ -186,6 +233,47 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
       handleSendMessage();
     }
   };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File size must be less than 20MB");
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const downloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('chat-files')
+        .download(fileUrl);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast.error("Failed to download file");
+    }
+  };
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return <ImageIcon className="w-4 h-4" />;
+    return <FileText className="w-4 h-4" />;
+  };
+
+  const isImageFile = (fileType: string) => fileType?.startsWith('image/');
 
   const renderMessage = (msg: any, isGroupMessage: boolean) => {
     const isOwnMessage = msg.sender_id === currentUserId;
@@ -217,6 +305,44 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
             }`}
           >
             <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+            
+            {msg.file_url && (
+              <div className="mt-2 pt-2 border-t border-current/20">
+                {isImageFile(msg.file_type) ? (
+                  <div className="space-y-2">
+                    <img
+                      src={`${supabase.storage.from('chat-files').getPublicUrl(msg.file_url).data.publicUrl}`}
+                      alt={msg.file_name}
+                      className="max-w-full rounded cursor-pointer"
+                      onClick={() => window.open(supabase.storage.from('chat-files').getPublicUrl(msg.file_url).data.publicUrl, '_blank')}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => downloadFile(msg.file_url, msg.file_name)}
+                      className="w-full"
+                    >
+                      <Download className="w-3 h-3 mr-2" />
+                      Download {msg.file_name}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadFile(msg.file_url, msg.file_name)}
+                    className="w-full"
+                  >
+                    {getFileIcon(msg.file_type)}
+                    <span className="ml-2 truncate">{msg.file_name}</span>
+                    <Download className="w-3 h-3 ml-2" />
+                  </Button>
+                )}
+                <p className="text-xs opacity-70 mt-1">
+                  {(msg.file_size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -267,8 +393,42 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
         </TabsContent>
       </Tabs>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t space-y-2">
+        {selectedFile && (
+          <div className="flex items-center gap-2 p-2 bg-muted rounded">
+            {getFileIcon(selectedFile.type)}
+            <span className="text-sm flex-1 truncate">{selectedFile.name}</span>
+            <span className="text-xs text-muted-foreground">
+              {(selectedFile.size / 1024).toFixed(1)} KB
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+            >
+              ×
+            </Button>
+          </div>
+        )}
         <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileSelect}
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx,.txt"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -279,9 +439,13 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
                 : "Type a message to your teacher..."
             }
             className="flex-1"
+            disabled={uploading}
           />
-          <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
-            <Send className="w-4 h-4" />
+          <Button
+            onClick={handleSendMessage}
+            disabled={(!newMessage.trim() && !selectedFile) || uploading}
+          >
+            {uploading ? "..." : <Send className="w-4 h-4" />}
           </Button>
         </div>
       </div>
