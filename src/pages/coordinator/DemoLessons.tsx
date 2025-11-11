@@ -129,8 +129,7 @@ const DemoLessons = () => {
       if (demoError) throw demoError;
 
       // Enroll student in the group
-      const { error: enrollError } = await supabase
-        .from('group_enrollments')
+      const { error: enrollError } = await from('group_enrollments')
         .insert({
           group_id: groupId,
           student_id: selectedLesson.student_id,
