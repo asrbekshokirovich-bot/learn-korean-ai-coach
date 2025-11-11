@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.vocabulary-builder]
 verify_jwt = false
+
+[functions.recommend-group]
+verify_jwt = false
