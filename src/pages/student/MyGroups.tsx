@@ -28,10 +28,7 @@ const MyGroups = () => {
         .from("group_enrollments")
         .select(`
           *,
-          groups!group_enrollments_group_id_fkey(
-            *,
-            profiles!groups_teacher_id_fkey(full_name, email)
-          )
+          groups:groups!group_enrollments_group_id_fkey(*)
         `)
         .eq("student_id", user.id)
         .eq("status", "active");
@@ -109,7 +106,7 @@ const MyGroups = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <span>{DAYS_OF_WEEK[group.day_of_week]}</span>
+                        <span>{Array.isArray(group.day_of_week) ? group.day_of_week.map((d: number) => DAYS_OF_WEEK[d]).join(', ') : DAYS_OF_WEEK[group.day_of_week]}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-muted-foreground" />

@@ -177,15 +177,29 @@ const GroupManagement = () => {
     
     if (groupIds.length > 0) {
       const { data: enrollmentsData, error: enrollmentsError } = await supabase
-        .from("group_enrollments")
-        .select("group_id, student_id, profiles!inner(user_id, full_name, email)")
-        .in("group_id", groupIds)
-        .eq("status", "active");
+        .from('group_enrollments')
+        .select('group_id, student_id')
+        .in('group_id', groupIds)
+        .eq('status', 'active');
 
       if (!enrollmentsError && enrollmentsData) {
-        enrollmentsMap = enrollmentsData.reduce((acc: Record<string, any[]>, enrollment: any) => {
-          if (!acc[enrollment.group_id]) acc[enrollment.group_id] = [];
-          acc[enrollment.group_id].push(enrollment.profiles);
+        const studentIds = Array.from(new Set(enrollmentsData.map((e: any) => e.student_id)));
+        let profilesById: Record<string, any> = {};
+        if (studentIds.length > 0) {
+          const { data: studentProfiles, error: studentProfilesError } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, email')
+            .in('user_id', studentIds);
+
+          if (!studentProfilesError && studentProfiles) {
+            profilesById = Object.fromEntries(studentProfiles.map((p: any) => [p.user_id, p]));
+          }
+        }
+
+        enrollmentsMap = enrollmentsData.reduce((acc: Record<string, any[]>, e: any) => {
+          if (!acc[e.group_id]) acc[e.group_id] = [];
+          const profile = profilesById[e.student_id];
+          if (profile) acc[e.group_id].push(profile);
           return acc;
         }, {});
       }
