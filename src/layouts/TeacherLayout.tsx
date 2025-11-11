@@ -12,6 +12,7 @@ import NewTeacherDashboard from "@/pages/NewTeacherDashboard";
 import MyAvailability from "@/pages/teacher/MyAvailability";
 import VideoLesson from "@/pages/teacher/VideoLesson";
 import MyGroups from "@/pages/teacher/MyGroups";
+import Recordings from "@/pages/teacher/Recordings";
 
 const TeacherLayout = () => {
   const navigate = useNavigate();
@@ -113,7 +114,8 @@ const TeacherLayout = () => {
                 <Route index element={<NewTeacherDashboard />} />
                 <Route path="availability" element={<MyAvailability />} />
                 <Route path="groups" element={<MyGroups />} />
-                <Route path="video-lesson/:lessonId" element={<VideoLesson />} />
+                <Route path="recordings" element={<Recordings />} />
+                <Route path="video-lesson" element={<VideoLesson />} />
               </Routes>
             </div>
           </main>
