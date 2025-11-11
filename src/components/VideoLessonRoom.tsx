@@ -178,26 +178,36 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           })
           .eq('id', videoLesson.id);
 
-        // Generate AI summary
-        await supabase.functions.invoke('ai-post-lesson-summary', {
-          body: {
-            videoLessonId: videoLesson.id,
-            liveTips: liveFeedback,
-            transcriptSnippets: videoLesson.ai_transcript || []
-          }
-        });
+        // Try to generate AI summary, but don't block on failure
+        try {
+          await supabase.functions.invoke('ai-post-lesson-summary', {
+            body: {
+              videoLessonId: videoLesson.id,
+              liveTips: liveFeedback,
+              transcriptSnippets: videoLesson.ai_transcript || []
+            }
+          });
+        } catch (aiError) {
+          console.error('AI summary generation failed:', aiError);
+          // Continue without AI summary
+        }
       }
 
       cleanup();
       
       toast({
         title: isGroupLesson ? "Left Group Lesson" : "Lesson Ended",
-        description: isGroupLesson ? "You have left the group lesson" : "Generating AI summary...",
+        description: isGroupLesson ? "You have left the group lesson" : "Thank you for the lesson!",
       });
 
       navigate(userRole === 'student' ? '/student/my-groups' : '/teacher');
     } catch (error) {
       console.error('Error ending lesson:', error);
+      toast({
+        title: "Error",
+        description: "There was an issue ending the lesson.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -223,10 +233,28 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error cases
+        if (error.message?.includes('402') || error.message?.includes('credits')) {
+          toast({
+            title: "AI Assistant Unavailable",
+            description: "AI credits exhausted. Video lesson continues without AI assistance.",
+            variant: "destructive",
+          });
+        } else if (error.message?.includes('429')) {
+          toast({
+            title: "AI Assistant Busy",
+            description: "Rate limit reached. Please try again in a moment.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       // Broadcast to all participants
-      if (realtimeChannelRef.current) {
+      if (realtimeChannelRef.current && data) {
         realtimeChannelRef.current.send({
           type: 'broadcast',
           event: 'ai_feedback',
@@ -235,6 +263,11 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       }
     } catch (error) {
       console.error('Error requesting AI help:', error);
+      toast({
+        title: "AI Error",
+        description: "Unable to get AI assistance at this time.",
+        variant: "destructive",
+      });
     }
   };
 
