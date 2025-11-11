@@ -230,7 +230,7 @@ const Finance = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} so'm</p>
             </div>
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
@@ -240,7 +240,7 @@ const Finance = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">This Month</p>
-              <p className="text-2xl font-bold">${stats.monthlyRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{stats.monthlyRevenue.toLocaleString()} so'm</p>
             </div>
             <TrendingUp className="w-8 h-8 text-blue-500" />
           </div>
@@ -292,7 +292,7 @@ const Finance = () => {
                   <TableRow key={payment.id}>
                     <TableCell>{format(new Date(payment.payment_date), "MMM dd, yyyy")}</TableCell>
                     <TableCell>{payment.profiles?.full_name || payment.profiles?.email}</TableCell>
-                    <TableCell className="font-semibold">${Number(payment.amount_paid).toFixed(2)}</TableCell>
+                    <TableCell className="font-semibold">{Number(payment.amount_paid).toLocaleString()} so'm</TableCell>
                     <TableCell>{format(new Date(payment.month_period), "MMMM yyyy")}</TableCell>
                     <TableCell>
                       <Badge variant={payment.payment_status === "completed" ? "default" : "secondary"}>
@@ -329,7 +329,7 @@ const Finance = () => {
                     <TableCell>{pkg.lessons_purchased}</TableCell>
                     <TableCell>{pkg.lessons_used}</TableCell>
                     <TableCell>{pkg.lessons_remaining}</TableCell>
-                    <TableCell>${Number(pkg.total_amount_paid).toFixed(2)}</TableCell>
+                    <TableCell>{Number(pkg.total_amount_paid).toLocaleString()} so'm</TableCell>
                     <TableCell>
                       <Badge variant={pkg.status === "active" ? "default" : "secondary"}>
                         {pkg.status}
@@ -390,9 +390,9 @@ const Finance = () => {
                         name="amount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Amount ($)</FormLabel>
+                            <FormLabel>Amount (so'm)</FormLabel>
                             <FormControl>
-                              <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                              <Input type="number" step="1" placeholder="0" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -469,7 +469,7 @@ const Finance = () => {
                       <Badge variant="outline">{record.record_type}</Badge>
                     </TableCell>
                     <TableCell>{record.description}</TableCell>
-                    <TableCell className="font-semibold">${Number(record.amount).toFixed(2)}</TableCell>
+                    <TableCell className="font-semibold">{Number(record.amount).toLocaleString()} so'm</TableCell>
                     <TableCell>{format(new Date(record.month_period), "MMM yyyy")}</TableCell>
                     <TableCell>
                       {record.cheque_file_path ? (
