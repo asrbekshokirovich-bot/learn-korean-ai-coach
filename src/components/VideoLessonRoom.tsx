@@ -3,11 +3,13 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle, Calendar, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 import { AIAssistancePanel } from "./video-lesson/AIAssistancePanel";
 import { LessonChat } from "./video-lesson/LessonChat";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format, addDays, getDay } from "date-fns";
 
 interface VideoLessonRoomProps {
   userRole: 'student' | 'teacher';
@@ -34,6 +36,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [liveFeedback, setLiveFeedback] = useState<any[]>([]);
+  const [showNextLesson, setShowNextLesson] = useState(false);
+  const [nextLessonInfo, setNextLessonInfo] = useState<any>(null);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -195,9 +199,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
   const endLesson = async () => {
     try {
-      // Stop recording if active
+      // Stop recording if active and wait for upload to complete
       if (isRecording && userRole === 'teacher' && isGroupLesson) {
+        toast.info("Saving recording...");
         await stopRecording();
+        // Give a moment for upload to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
       if (!isGroupLesson && videoLesson?.id) {
@@ -225,14 +232,19 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         }
       }
 
-      cleanup();
-      
-      toastUI({
-        title: isGroupLesson ? "Left Group Lesson" : "Lesson Ended",
-        description: isGroupLesson ? "You have left the group lesson" : "Thank you for the lesson!",
-      });
+      // For group lessons, fetch next lesson info
+      if (isGroupLesson && groupId) {
+        const nextLesson = await getNextLessonInfo(groupId);
+        if (nextLesson) {
+          setNextLessonInfo(nextLesson);
+          setShowNextLesson(true);
+        } else {
+          finishAndNavigate();
+        }
+      } else {
+        finishAndNavigate();
+      }
 
-      navigate(userRole === 'student' ? '/student/my-groups' : '/teacher');
     } catch (error) {
       console.error('Error ending lesson:', error);
       toastUI({
@@ -241,6 +253,67 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         variant: "destructive",
       });
     }
+  };
+
+  const getNextLessonInfo = async (currentGroupId: string) => {
+    try {
+      const { data: group } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('id', currentGroupId)
+        .single();
+
+      if (!group) return null;
+
+      const now = new Date();
+      const today = getDay(now);
+      const groupDays = Array.isArray(group.day_of_week) ? group.day_of_week : [group.day_of_week];
+      
+      let daysUntilNext = 7;
+      let nextDay = -1;
+      
+      for (const day of groupDays) {
+        const diff = (day - today + 7) % 7;
+        if (diff < daysUntilNext || (diff === 0 && daysUntilNext === 7)) {
+          if (diff === 0) {
+            const [hours, minutes] = group.start_time.split(":").map(Number);
+            const lessonStart = new Date();
+            lessonStart.setHours(hours, minutes, 0, 0);
+            if (now > lessonStart) continue;
+          }
+          daysUntilNext = diff === 0 ? 0 : diff;
+          nextDay = day;
+        }
+      }
+      
+      if (nextDay === -1) {
+        nextDay = Math.min(...groupDays);
+        daysUntilNext = (nextDay - today + 7) % 7 || 7;
+      }
+      
+      const nextDate = addDays(now, daysUntilNext);
+      
+      return {
+        groupName: group.name,
+        nextDate,
+        startTime: group.start_time,
+        durationMinutes: group.duration_minutes
+      };
+    } catch (error) {
+      console.error('Error getting next lesson:', error);
+      return null;
+    }
+  };
+
+  const finishAndNavigate = () => {
+    cleanup();
+    
+    toastUI({
+      title: isGroupLesson ? "Left Group Lesson" : "Lesson Ended",
+      description: isGroupLesson ? "You have left the group lesson" : "Thank you for the lesson!",
+    });
+
+    navigate(userRole === 'student' ? '/student/groups' : '/teacher/groups');
   };
 
   const cleanup = () => {
@@ -302,17 +375,20 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunks.push(event.data);
+          setRecordedChunks(prev => [...prev, event.data]);
         }
       };
 
       recorder.onstop = async () => {
+        console.log('Recording stopped, chunks collected:', chunks.length);
         const blob = new Blob(chunks, { type: 'video/webm' });
+        console.log('Recording blob size:', blob.size);
         await uploadRecording(blob);
       };
 
       recorder.start(1000); // Collect data every second
       setMediaRecorder(recorder);
-      setRecordedChunks(chunks);
+      setRecordedChunks([]);
       setIsRecording(true);
       
       toast.success("Recording started");
@@ -340,36 +416,62 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   const uploadRecording = async (blob: Blob) => {
-    if (!isGroupLesson || !groupId) return;
+    if (!isGroupLesson || !groupId) {
+      console.log('Not a group lesson or no groupId, skipping upload');
+      return;
+    }
 
     try {
+      console.log('Starting upload for recording, blob size:', blob.size);
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.error('No user found');
+        return;
+      }
 
       const fileName = `${groupId}/${Date.now()}.webm`;
       
       // Upload to storage
-      const { error: uploadError } = await supabase
+      console.log('Uploading to storage:', fileName);
+      const { error: uploadError, data: uploadData } = await supabase
         .storage
         .from('lesson-recordings')
-        .upload(fileName, blob);
-
-      if (uploadError) throw uploadError;
-
-      // Create recording metadata
-      const { error: metadataError } = await supabase
-        .from('lesson_recordings')
-        .insert({
-          group_id: groupId,
-          lesson_date: new Date().toISOString().split('T')[0],
-          recording_url: fileName,
-          created_by: user.id,
-          title: `${groupName || 'Group Lesson'} - ${new Date().toLocaleDateString()}`,
-          file_size: blob.size
+        .upload(fileName, blob, {
+          contentType: 'video/webm',
+          cacheControl: '3600'
         });
 
-      if (metadataError) throw metadataError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
+      console.log('Upload successful:', uploadData);
+
+      // Create recording metadata
+      const recordingData = {
+        group_id: groupId,
+        lesson_date: new Date().toISOString().split('T')[0],
+        recording_url: fileName,
+        created_by: user.id,
+        title: `${groupName || 'Group Lesson'} - ${new Date().toLocaleDateString()}`,
+        file_size: blob.size
+      };
+      
+      console.log('Creating metadata:', recordingData);
+      
+      const { error: metadataError, data: metadataData } = await supabase
+        .from('lesson_recordings')
+        .insert(recordingData)
+        .select();
+
+      if (metadataError) {
+        console.error('Metadata error:', metadataError);
+        throw metadataError;
+      }
+
+      console.log('Metadata created successfully:', metadataData);
       toast.success("Recording saved successfully");
     } catch (error) {
       console.error("Error uploading recording:", error);
@@ -426,7 +528,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col">
+    <>
+      <div className="h-screen bg-background flex flex-col">
       {/* Video Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 min-h-0">
         {/* Main Video (Remote) */}
@@ -542,5 +645,46 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         </div>
       </div>
     </div>
+
+    {/* Next Lesson Dialog */}
+    <Dialog open={showNextLesson} onOpenChange={(open) => {
+      if (!open) {
+        finishAndNavigate();
+      }
+    }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Lesson Complete!</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <p className="text-muted-foreground">Great job! Here's your next lesson:</p>
+          {nextLessonInfo && (
+            <div className="space-y-3 p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-semibold">{nextLessonInfo.groupName}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {format(nextLessonInfo.nextDate, "EEEE, MMMM d, yyyy")}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                <span className="text-sm">
+                  {nextLessonInfo.startTime} ({nextLessonInfo.durationMinutes} minutes)
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button onClick={finishAndNavigate} className="w-full">
+            Back to Dashboard
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };

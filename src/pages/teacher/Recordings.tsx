@@ -30,6 +30,7 @@ const Recordings = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [playingRecording, setPlayingRecording] = useState<Recording | null>(null);
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
 
   useEffect(() => {
     loadRecordings();
@@ -99,6 +100,23 @@ const Recordings = () => {
     return `${mb.toFixed(2)} MB`;
   };
 
+  const handlePlayRecording = async (recording: Recording) => {
+    try {
+      const { data, error } = await supabase
+        .storage
+        .from('lesson-recordings')
+        .createSignedUrl(recording.recording_url, 3600); // 1 hour
+
+      if (error) throw error;
+      
+      setPlayingRecording(recording);
+      setPlayingUrl(data.signedUrl);
+    } catch (error) {
+      console.error("Error loading recording:", error);
+      toast.error("Failed to load recording");
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading recordings...</div>;
   }
@@ -135,12 +153,15 @@ const Recordings = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <video
-              src={playingRecording.recording_url}
-              controls
-              className="w-full rounded-lg"
-              autoPlay
-            />
+            {playingUrl && (
+              <video
+                src={playingUrl}
+                controls
+                className="w-full rounded-lg"
+                autoPlay
+              />
+            )}
+            {!playingUrl && <p className="text-center py-4">Loading video...</p>}
             <div className="mt-4">
               <h3 className="font-semibold text-lg">
                 {playingRecording.title || "Untitled Recording"}
@@ -206,7 +227,7 @@ const Recordings = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPlayingRecording(recording)}
+                      onClick={() => handlePlayRecording(recording)}
                     >
                       <Play className="w-4 h-4 mr-2" />
                       Play
@@ -214,11 +235,22 @@ const Recordings = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        const a = document.createElement("a");
-                        a.href = recording.recording_url;
-                        a.download = `recording-${recording.lesson_date}.webm`;
-                        a.click();
+                      onClick={async () => {
+                        try {
+                          const { data, error } = await supabase
+                            .storage
+                            .from('lesson-recordings')
+                            .createSignedUrl(recording.recording_url, 3600);
+                          
+                          if (error) throw error;
+                          
+                          const a = document.createElement("a");
+                          a.href = data.signedUrl;
+                          a.download = `recording-${recording.lesson_date}.webm`;
+                          a.click();
+                        } catch (error) {
+                          toast.error("Failed to download recording");
+                        }
                       }}
                     >
                       <Download className="w-4 h-4" />
