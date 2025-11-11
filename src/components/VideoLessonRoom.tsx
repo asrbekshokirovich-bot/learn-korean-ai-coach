@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { AIAssistancePanel } from "./video-lesson/AIAssistancePanel";
+import { LessonChat } from "./video-lesson/LessonChat";
 
 interface VideoLessonRoomProps {
   userRole: 'student' | 'teacher';
@@ -27,6 +28,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(true);
   const [liveFeedback, setLiveFeedback] = useState<any[]>([]);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -274,7 +276,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   return (
     <div className="h-screen bg-background flex flex-col">
       {/* Video Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 p-4">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 min-h-0">
         {/* Main Video (Remote) */}
         <div className="lg:col-span-2 relative bg-muted rounded-lg overflow-hidden">
           <video
@@ -297,10 +299,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           )}
         </div>
 
-        {/* Sidebar: Local Video + AI Panel */}
-        <div className="space-y-4">
+        {/* Left Sidebar: Local Video + AI Panel */}
+        <div className="space-y-4 flex flex-col min-h-0">
           {/* Local Video (PiP) */}
-          <Card className="relative aspect-video overflow-hidden">
+          <Card className="relative aspect-video overflow-hidden flex-shrink-0">
             <video
               ref={localVideoRef}
               autoPlay
@@ -317,12 +319,24 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
           {/* AI Assistance Panel */}
           {aiPanelOpen && (
-            <AIAssistancePanel 
-              liveFeedback={liveFeedback}
-              onRequestHelp={requestAIHelp}
-            />
+            <div className="flex-1 min-h-0">
+              <AIAssistancePanel 
+                liveFeedback={liveFeedback}
+                onRequestHelp={requestAIHelp}
+              />
+            </div>
           )}
         </div>
+
+        {/* Right Sidebar: Chat */}
+        {isGroupLesson && chatOpen && (
+          <div className="flex flex-col min-h-0">
+            <LessonChat 
+              groupId={groupId!}
+              userRole={userRole}
+            />
+          </div>
+        )}
       </div>
 
       {/* Controls */}
@@ -344,13 +358,15 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
           </Button>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setAiPanelOpen(!aiPanelOpen)}
-          >
-            <MessageSquare className="w-5 h-5" />
-          </Button>
+          {isGroupLesson && (
+            <Button
+              variant={chatOpen ? "secondary" : "outline"}
+              size="lg"
+              onClick={() => setChatOpen(!chatOpen)}
+            >
+              <MessageSquare className="w-5 h-5" />
+            </Button>
+          )}
 
           <Button
             variant="destructive"

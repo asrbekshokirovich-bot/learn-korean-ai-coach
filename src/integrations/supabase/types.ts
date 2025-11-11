@@ -475,6 +475,7 @@ export type Database = {
       }
       groups: {
         Row: {
+          chat_locked: boolean | null
           created_at: string
           current_students_count: number
           day_of_week: number[]
@@ -490,6 +491,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          chat_locked?: boolean | null
           created_at?: string
           current_students_count?: number
           day_of_week?: number[]
@@ -505,6 +507,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          chat_locked?: boolean | null
           created_at?: string
           current_students_count?: number
           day_of_week?: number[]
@@ -650,6 +653,38 @@ export type Database = {
           view_count?: number | null
         }
         Relationships: []
+      }
+      lesson_chat_messages: {
+        Row: {
+          created_at: string | null
+          group_id: string | null
+          id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_chat_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_conversations: {
         Row: {
