@@ -47,24 +47,24 @@ const NewTeacherDashboard = () => {
     if (!user) return;
 
     const today = new Date();
-    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    const { data } = await supabase
-      .from("lessons")
-      .select(`
-        *,
-        enrollments (
-          profiles!enrollments_student_id_fkey (full_name),
-          courses (name)
-        )
-      `)
+    // Load group lessons for today
+    const { data: groupData } = await supabase
+      .from("groups")
+      .select("*")
       .eq("teacher_id", user.id)
-      .gte("scheduled_at", startOfDay)
-      .lte("scheduled_at", endOfDay)
-      .order("scheduled_at", { ascending: true });
+      .eq("status", "active");
 
-    setTodayLessons(data || []);
+    // Filter groups that have lessons today
+    const todayGroups = (groupData || []).filter((group) => {
+      if (Array.isArray(group.day_of_week)) {
+        return group.day_of_week.includes(dayOfWeek);
+      }
+      return group.day_of_week === dayOfWeek;
+    });
+
+    setTodayLessons(todayGroups);
   };
 
   const loadPendingHomework = async () => {
@@ -170,21 +170,19 @@ const NewTeacherDashboard = () => {
                     <p className="text-sm text-muted-foreground">{t('noLessonsToday')}</p>
                   ) : (
                     <div className="space-y-3">
-                      {todayLessons.map((lesson) => (
-                        <div key={lesson.id} className="p-3 bg-muted rounded-lg">
+                      {todayLessons.map((group) => (
+                        <div key={group.id} className="p-3 bg-muted rounded-lg">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <p className="font-medium">
-                                {lesson.enrollments?.profiles?.full_name || "Student"}
-                              </p>
+                              <p className="font-medium">{group.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                {lesson.enrollments?.courses?.name}
+                                {group.current_students_count} / {group.max_students} students
                               </p>
                             </div>
-                            <Badge variant="secondary">{lesson.lesson_type}</Badge>
+                            <Badge variant="secondary">{group.level}</Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(lesson.scheduled_at), "h:mm a")} • {lesson.duration_minutes} min
+                            {group.start_time} • {group.duration_minutes} min
                           </p>
                         </div>
                       ))}
