@@ -9,6 +9,7 @@ import { Calendar, Clock, Video, Users, AlertCircle, TrendingUp, Target, BookOpe
 import { format, getDay, addDays } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { LearningAnalyticsCharts } from "@/components/student/LearningAnalyticsCharts";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -281,6 +282,9 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Learning Analytics Charts */}
+      <LearningAnalyticsCharts />
 
       {/* Goal Progress Section */}
       {goalProgress.length > 0 && (
