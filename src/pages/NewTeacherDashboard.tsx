@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calendar, DollarSign, BookOpen } from "lucide-react";
+import { Users, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,14 +15,12 @@ const NewTeacherDashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [todayLessons, setTodayLessons] = useState<any[]>([]);
-  const [pendingHomework, setPendingHomework] = useState<any[]>([]);
   const [earnings, setEarnings] = useState<any>(null);
   const [studentCount, setStudentCount] = useState(0);
 
   useEffect(() => {
     loadUserData();
     loadTodayLessons();
-    loadPendingHomework();
     loadEarnings();
     loadStudentCount();
   }, []);
@@ -67,51 +65,6 @@ const NewTeacherDashboard = () => {
     setTodayLessons(todayGroups);
   };
 
-  const loadPendingHomework = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Get all students from groups where this teacher teaches
-    const { data: groupData } = await supabase
-      .from("groups")
-      .select("id")
-      .eq("teacher_id", user.id)
-      .eq("status", "active");
-
-    if (!groupData || groupData.length === 0) {
-      setPendingHomework([]);
-      return;
-    }
-
-    const groupIds = groupData.map(g => g.id);
-
-    const { data: enrollmentData } = await supabase
-      .from("group_enrollments")
-      .select("student_id")
-      .in("group_id", groupIds)
-      .eq("status", "active");
-
-    if (!enrollmentData || enrollmentData.length === 0) {
-      setPendingHomework([]);
-      return;
-    }
-
-    const studentIds = enrollmentData.map(e => e.student_id);
-
-    // Get homework for these students
-    const { data } = await supabase
-      .from("homework_assignments")
-      .select(`
-        *,
-        profiles!homework_assignments_student_id_fkey (full_name)
-      `)
-      .in("student_id", studentIds)
-      .eq("status", "submitted")
-      .order("created_at", { ascending: false })
-      .limit(10);
-
-    setPendingHomework(data || []);
-  };
 
   const loadEarnings = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -167,7 +120,6 @@ const NewTeacherDashboard = () => {
     { label: t('activeStudents'), value: studentCount.toString(), icon: Users, color: "text-blue-500" },
     { label: t('todayLessons'), value: todayLessons.length.toString(), icon: Calendar, color: "text-purple-500" },
     { label: t('currentPayout'), value: `$${earnings?.payout_amount || 0}`, icon: DollarSign, color: "text-green-500" },
-    { label: t('pendingReviews'), value: pendingHomework.length.toString(), icon: BookOpen, color: "text-orange-500" },
   ];
 
   return (
@@ -187,7 +139,7 @@ const NewTeacherDashboard = () => {
             </div>
 
               {/* Stats Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 {stats.map((stat, index) => (
                   <Card key={index} className="p-6">
                     <div className="flex items-start justify-between">
@@ -201,66 +153,35 @@ const NewTeacherDashboard = () => {
                 ))}
               </div>
 
-              {/* Today's Schedule & Pending Homework */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    {t('todaySchedule')}
-                  </h3>
-                  {todayLessons.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t('noLessonsToday')}</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {todayLessons.map((group) => (
-                        <div key={group.id} className="p-3 bg-muted rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <p className="font-medium">{group.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {group.current_students_count} / {group.max_students} students
-                              </p>
-                            </div>
-                            <Badge variant="secondary">{group.level}</Badge>
+              {/* Today's Schedule */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  {t('todaySchedule')}
+                </h3>
+                {todayLessons.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t('noLessonsToday')}</p>
+                ) : (
+                  <div className="space-y-3">
+                    {todayLessons.map((group) => (
+                      <div key={group.id} className="p-3 bg-muted rounded-lg">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium">{group.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {group.current_students_count} / {group.max_students} students
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {group.start_time} • {group.duration_minutes} min
-                          </p>
+                          <Badge variant="secondary">{group.level}</Badge>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-orange-500" />
-                    {t('pendingHomeworkReviews')}
-                  </h3>
-                  {pendingHomework.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t('noPendingHomework')}</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {pendingHomework.slice(0, 5).map((hw) => (
-                        <div key={hw.id} className="p-3 bg-muted rounded-lg">
-                          <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <p className="font-medium">{hw.title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Student: {hw.profiles?.full_name || "Unknown"}
-                              </p>
-                            </div>
-                            <Badge variant="destructive">{t('review')}</Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {t('submitted')}: {format(new Date(hw.created_at), "PPp")}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </div>
+                        <p className="text-xs text-muted-foreground">
+                          {group.start_time} • {group.duration_minutes} min
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
 
               {/* Earnings Overview */}
               <Card className="p-6">

@@ -5,9 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GroupChat } from "@/components/GroupChat";
-import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle } from "lucide-react";
+import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle, BookOpen, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { format, getDay, addDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -19,6 +23,10 @@ const MyGroups = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [homeworkDialogOpen, setHomeworkDialogOpen] = useState(false);
+  const [homeworkTitle, setHomeworkTitle] = useState("");
+  const [homeworkDescription, setHomeworkDescription] = useState("");
+  const [homeworkDueDate, setHomeworkDueDate] = useState("");
 
   useEffect(() => {
     loadGroups();
@@ -113,6 +121,53 @@ const MyGroups = () => {
     navigate(`/teacher/video-lesson?groupId=${group.id}&groupName=${encodeURIComponent(group.name)}`);
   };
 
+  const handleAssignHomework = async () => {
+    if (!selectedGroupForCalendar || !homeworkTitle.trim()) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get all students in this group
+      const { data: enrollments, error: enrollError } = await supabase
+        .from("group_enrollments")
+        .select("student_id")
+        .eq("group_id", selectedGroupForCalendar.id)
+        .eq("status", "active");
+
+      if (enrollError) throw enrollError;
+
+      // Create homework assignments for each student
+      const homeworkData = enrollments.map((enrollment: any) => ({
+        teacher_id: user.id,
+        student_id: enrollment.student_id,
+        title: homeworkTitle,
+        description: homeworkDescription || null,
+        due_date: homeworkDueDate ? new Date(homeworkDueDate).toISOString() : null,
+        status: "assigned",
+        lesson_id: selectedGroupForCalendar.id // Using group_id as lesson_id for reference
+      }));
+
+      const { error: insertError } = await supabase
+        .from("homework_assignments")
+        .insert(homeworkData);
+
+      if (insertError) throw insertError;
+
+      toast.success(`Homework assigned to ${enrollments.length} student(s)`);
+      setHomeworkDialogOpen(false);
+      setHomeworkTitle("");
+      setHomeworkDescription("");
+      setHomeworkDueDate("");
+    } catch (error: any) {
+      console.error("Error assigning homework:", error);
+      toast.error("Failed to assign homework");
+    }
+  };
+
   if (selectedGroup) {
     return (
       <div className="space-y-4">
@@ -148,14 +203,15 @@ const MyGroups = () => {
           </div>
         </div>
 
-        <Card className="bg-primary/5 border-primary">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-primary" />
-              Next Lesson
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="flex gap-4">
+          <Card className="bg-primary/5 border-primary flex-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-primary" />
+                Next Lesson
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -188,6 +244,64 @@ const MyGroups = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-primary/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Homework
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Dialog open={homeworkDialogOpen} onOpenChange={setHomeworkDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Assign Homework
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Assign Homework to {selectedGroupForCalendar.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={homeworkTitle}
+                      onChange={(e) => setHomeworkTitle(e.target.value)}
+                      placeholder="Enter homework title"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={homeworkDescription}
+                      onChange={(e) => setHomeworkDescription(e.target.value)}
+                      placeholder="Enter homework description"
+                      rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dueDate">Due Date</Label>
+                    <Input
+                      id="dueDate"
+                      type="datetime-local"
+                      value={homeworkDueDate}
+                      onChange={(e) => setHomeworkDueDate(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={handleAssignHomework} className="w-full">
+                    Assign Homework
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      </div>
 
         <Card>
           <CardHeader>
