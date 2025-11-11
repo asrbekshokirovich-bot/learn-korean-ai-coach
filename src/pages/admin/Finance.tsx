@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, TrendingUp, Users, Calendar, Plus } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Calendar, Plus, Download, FileText } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import {
   Table,
@@ -52,6 +52,8 @@ const transactionSchema = z.object({
   month_period: z.string().min(1, "Month period is required"),
 });
 
+type TransactionFormValues = z.infer<typeof transactionSchema>;
+
 const Finance = () => {
   const [stats, setStats] = useState({
     totalRevenue: 0,
@@ -63,6 +65,8 @@ const Finance = () => {
   const [packages, setPackages] = useState<any[]>([]);
   const [financeRecords, setFinanceRecords] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const form = useForm<z.infer<typeof transactionSchema>>({
     resolver: zodResolver(transactionSchema),
@@ -135,24 +139,80 @@ const Finance = () => {
     });
   };
 
-  const onSubmit = async (values: z.infer<typeof transactionSchema>) => {
+  const onSubmit = async (values: TransactionFormValues) => {
     try {
+      setUploadingFile(true);
+      let chequeFilePath = null;
+
+      // Upload file if selected
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('cheque-files')
+          .upload(filePath, selectedFile);
+
+        if (uploadError) throw uploadError;
+        chequeFilePath = filePath;
+      }
+
+      // Insert transaction record
       const { error } = await supabase.from("finance_records").insert({
         record_type: values.record_type,
         amount: parseFloat(values.amount),
         description: values.description,
         record_date: values.record_date,
         month_period: values.month_period,
+        cheque_file_path: chequeFilePath,
       });
 
       if (error) throw error;
 
       toast.success("Transaction added successfully");
       setDialogOpen(false);
+      setSelectedFile(null);
       form.reset();
       loadFinanceData();
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 20MB)
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error("File size must be less than 20MB");
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const downloadChequeFile = async (filePath: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('cheque-files')
+        .download(filePath);
+
+      if (error) throw error;
+
+      // Create download link
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filePath.split('/').pop() || 'cheque';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast.error("Failed to download file: " + error.message);
     }
   };
 
@@ -375,7 +435,27 @@ const Finance = () => {
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full">Add Transaction</Button>
+                      <FormItem>
+                        <FormLabel>Cheque File (Optional)</FormLabel>
+                        <FormControl>
+                          <div className="space-y-2">
+                            <Input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={handleFileChange}
+                              disabled={uploadingFile}
+                            />
+                            {selectedFile && (
+                              <p className="text-sm text-muted-foreground">
+                                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                              </p>
+                            )}
+                          </div>
+                        </FormControl>
+                      </FormItem>
+                      <Button type="submit" className="w-full" disabled={uploadingFile}>
+                        {uploadingFile ? "Uploading..." : "Add Transaction"}
+                      </Button>
                     </form>
                   </Form>
                 </DialogContent>
@@ -389,6 +469,7 @@ const Finance = () => {
                   <TableHead>Description</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Month</TableHead>
+                  <TableHead>Cheque</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -401,6 +482,20 @@ const Finance = () => {
                     <TableCell>{record.description}</TableCell>
                     <TableCell className="font-semibold">${Number(record.amount).toFixed(2)}</TableCell>
                     <TableCell>{format(new Date(record.month_period), "MMM yyyy")}</TableCell>
+                    <TableCell>
+                      {record.cheque_file_path ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => downloadChequeFile(record.cheque_file_path)}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Download
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

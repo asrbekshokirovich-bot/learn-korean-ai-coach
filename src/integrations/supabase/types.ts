@@ -290,6 +290,7 @@ export type Database = {
       finance_records: {
         Row: {
           amount: number
+          cheque_file_path: string | null
           created_at: string
           description: string | null
           id: string
@@ -303,6 +304,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          cheque_file_path?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -316,6 +318,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          cheque_file_path?: string | null
           created_at?: string
           description?: string | null
           id?: string
