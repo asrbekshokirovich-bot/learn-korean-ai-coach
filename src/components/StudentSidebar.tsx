@@ -28,7 +28,6 @@ export function StudentSidebar() {
     { title: t('bookLesson'), url: '/student/book', icon: BookOpen },
     { title: t('lessons'), url: '/student/lessons', icon: BookOpen },
     { title: 'My Groups', url: '/student/groups', icon: Users },
-    { title: 'Group Schedule', url: '/student/schedule', icon: Calendar },
     { title: t('practice'), url: '/student/practice', icon: Brain },
     { title: 'K-Drama Hub', url: '/student/kdrama', icon: Film },
     { title: t('topikPrep'), url: '/student/topik', icon: Trophy },
