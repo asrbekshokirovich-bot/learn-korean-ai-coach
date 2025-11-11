@@ -17,6 +17,7 @@ import KDrama from "@/pages/student/KDrama";
 import MyGroups from "@/pages/student/MyGroups";
 import GroupSchedule from "@/pages/student/GroupSchedule";
 import VideoLesson from "@/pages/student/VideoLesson";
+import Recordings from "@/pages/student/Recordings";
 
 const StudentLayout = () => {
   const navigate = useNavigate();
@@ -111,6 +112,7 @@ const StudentLayout = () => {
             <Routes>
               <Route index element={<Dashboard />} />
               <Route path="groups" element={<MyGroups />} />
+              <Route path="recordings" element={<Recordings />} />
               <Route path="schedule" element={<GroupSchedule />} />
               <Route path="video-lesson" element={<VideoLesson />} />
               <Route path="practice" element={<Practice />} />

@@ -3,8 +3,9 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { AIAssistancePanel } from "./video-lesson/AIAssistancePanel";
 import { LessonChat } from "./video-lesson/LessonChat";
 
@@ -16,7 +17,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const { lessonId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: toastUI } = useToast();
 
   const groupId = searchParams.get('groupId');
   const groupName = searchParams.get('groupName');
@@ -29,6 +30,9 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [liveFeedback, setLiveFeedback] = useState<any[]>([]);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -92,14 +96,16 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       // Setup realtime channel for AI feedback
       setupRealtimeChannel(isGroupLesson ? `group_${groupId}` : sessionData.id);
 
-      toast({
-        title: isGroupLesson ? "Joined Group Lesson" : "Lesson Started",
-        description: "Video connection established",
-      });
+      // Auto-start recording for teachers in group lessons
+      if (userRole === 'teacher' && isGroupLesson) {
+        setTimeout(() => startRecording(), 2000);
+      }
+
+      toast.success(isGroupLesson ? "Joined Group Lesson" : "Lesson Started");
 
     } catch (error) {
       console.error('Error initializing video lesson:', error);
-      toast({
+      toastUI({
         title: "Connection Error",
         description: "Failed to start video lesson",
         variant: "destructive",
@@ -170,6 +176,11 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
   const endLesson = async () => {
     try {
+      // Stop recording if active
+      if (isRecording && userRole === 'teacher' && isGroupLesson) {
+        await stopRecording();
+      }
+
       if (!isGroupLesson && videoLesson?.id) {
         // Update lesson status for individual lessons
         await supabase
@@ -197,7 +208,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
       cleanup();
       
-      toast({
+      toastUI({
         title: isGroupLesson ? "Left Group Lesson" : "Lesson Ended",
         description: isGroupLesson ? "You have left the group lesson" : "Thank you for the lesson!",
       });
@@ -205,7 +216,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       navigate(userRole === 'student' ? '/student/my-groups' : '/teacher');
     } catch (error) {
       console.error('Error ending lesson:', error);
-      toast({
+      toastUI({
         title: "Error",
         description: "There was an issue ending the lesson.",
         variant: "destructive",
@@ -214,6 +225,9 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   const cleanup = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+    }
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop());
     }
@@ -222,6 +236,92 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     }
     if (realtimeChannelRef.current) {
       supabase.removeChannel(realtimeChannelRef.current);
+    }
+  };
+
+  const startRecording = async () => {
+    if (!localStream || isRecording) return;
+
+    try {
+      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      const recorder = new MediaRecorder(localStream, options);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        await uploadRecording(blob);
+      };
+
+      recorder.start(1000); // Collect data every second
+      setMediaRecorder(recorder);
+      setRecordedChunks(chunks);
+      setIsRecording(true);
+      
+      toast.success("Recording started");
+    } catch (error) {
+      console.error("Error starting recording:", error);
+      toast.error("Failed to start recording");
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!mediaRecorder || !isRecording) return;
+
+    return new Promise<void>((resolve) => {
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        await uploadRecording(blob);
+        setIsRecording(false);
+        setMediaRecorder(null);
+        setRecordedChunks([]);
+        resolve();
+      };
+
+      mediaRecorder.stop();
+    });
+  };
+
+  const uploadRecording = async (blob: Blob) => {
+    if (!isGroupLesson || !groupId) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const fileName = `${groupId}/${Date.now()}.webm`;
+      
+      // Upload to storage
+      const { error: uploadError } = await supabase
+        .storage
+        .from('lesson-recordings')
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      // Create recording metadata
+      const { error: metadataError } = await supabase
+        .from('lesson_recordings')
+        .insert({
+          group_id: groupId,
+          lesson_date: new Date().toISOString().split('T')[0],
+          recording_url: fileName,
+          created_by: user.id,
+          title: `${groupName || 'Group Lesson'} - ${new Date().toLocaleDateString()}`,
+          file_size: blob.size
+        });
+
+      if (metadataError) throw metadataError;
+
+      toast.success("Recording saved successfully");
+    } catch (error) {
+      console.error("Error uploading recording:", error);
+      toast.error("Failed to save recording");
     }
   };
 
@@ -238,13 +338,13 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       if (error) {
         // Handle specific error cases
         if (error.message?.includes('402') || error.message?.includes('credits')) {
-          toast({
+          toastUI({
             title: "AI Assistant Unavailable",
             description: "AI credits exhausted. Video lesson continues without AI assistance.",
             variant: "destructive",
           });
         } else if (error.message?.includes('429')) {
-          toast({
+          toastUI({
             title: "AI Assistant Busy",
             description: "Rate limit reached. Please try again in a moment.",
             variant: "destructive",
@@ -265,7 +365,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       }
     } catch (error) {
       console.error('Error requesting AI help:', error);
-      toast({
+      toastUI({
         title: "AI Error",
         description: "Unable to get AI assistance at this time.",
         variant: "destructive",
@@ -365,6 +465,17 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
               onClick={() => setChatOpen(!chatOpen)}
             >
               <MessageSquare className="w-5 h-5" />
+            </Button>
+          )}
+
+          {userRole === 'teacher' && isGroupLesson && (
+            <Button
+              variant={isRecording ? "destructive" : "outline"}
+              size="lg"
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={!localStream}
+            >
+              <Circle className={`w-5 h-5 ${isRecording ? 'animate-pulse' : ''}`} />
             </Button>
           )}
 

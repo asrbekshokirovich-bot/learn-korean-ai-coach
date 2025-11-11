@@ -767,6 +767,53 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_recordings: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          duration_seconds: number | null
+          file_size: number | null
+          group_id: string | null
+          id: string
+          lesson_date: string
+          recording_url: string
+          thumbnail_url: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          duration_seconds?: number | null
+          file_size?: number | null
+          group_id?: string | null
+          id?: string
+          lesson_date: string
+          recording_url: string
+          thumbnail_url?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          duration_seconds?: number | null
+          file_size?: number | null
+          group_id?: string | null
+          id?: string
+          lesson_date?: string
+          recording_url?: string
+          thumbnail_url?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_recordings_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_reviews: {
         Row: {
           ai_feedback: Json | null
