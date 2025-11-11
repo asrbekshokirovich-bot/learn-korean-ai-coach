@@ -313,7 +313,14 @@ const GroupManagement = () => {
         }
         
         // Update enrollments - remove students not in selectedStudents, add new ones
-        const currentEnrollments = editingGroup.enrolled_students?.map((s: any) => s.user_id) || [];
+        // First, get the current enrollments from the database to ensure accuracy
+        const { data: currentEnrollmentsData } = await supabase
+          .from("group_enrollments")
+          .select("student_id")
+          .eq("group_id", groupId!)
+          .eq("status", "active");
+        
+        const currentEnrollments = (currentEnrollmentsData || []).map((e: any) => e.student_id);
         const toRemove = currentEnrollments.filter((id: string) => !selectedStudents.includes(id));
         const toAdd = selectedStudents.filter((id: string) => !currentEnrollments.includes(id));
 
