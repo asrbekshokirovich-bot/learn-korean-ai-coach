@@ -712,52 +712,64 @@ export type Database = {
           created_at: string
           description: string | null
           difficulty_level: string | null
+          discovery_date: string | null
           duration_minutes: number | null
           episode_number: number | null
           id: string
+          is_ai_discovered: boolean | null
           is_live: boolean | null
           scheduled_at: string | null
           season_number: number | null
+          series_name: string | null
           tags: string[] | null
           thumbnail_url: string | null
           title: string
           updated_at: string
           video_url: string
           view_count: number | null
+          youtube_id: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           difficulty_level?: string | null
+          discovery_date?: string | null
           duration_minutes?: number | null
           episode_number?: number | null
           id?: string
+          is_ai_discovered?: boolean | null
           is_live?: boolean | null
           scheduled_at?: string | null
           season_number?: number | null
+          series_name?: string | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
           video_url: string
           view_count?: number | null
+          youtube_id?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           difficulty_level?: string | null
+          discovery_date?: string | null
           duration_minutes?: number | null
           episode_number?: number | null
           id?: string
+          is_ai_discovered?: boolean | null
           is_live?: boolean | null
           scheduled_at?: string | null
           season_number?: number | null
+          series_name?: string | null
           tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
           video_url?: string
           view_count?: number | null
+          youtube_id?: string | null
         }
         Relationships: []
       }
@@ -1205,6 +1217,27 @@ export type Database = {
           topik_level?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      shown_drama_series: {
+        Row: {
+          episode_count: number | null
+          first_shown_at: string
+          id: string
+          series_name: string
+        }
+        Insert: {
+          episode_count?: number | null
+          first_shown_at?: string
+          id?: string
+          series_name: string
+        }
+        Update: {
+          episode_count?: number | null
+          first_shown_at?: string
+          id?: string
+          series_name?: string
         }
         Relationships: []
       }

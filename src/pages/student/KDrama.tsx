@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Heart, Smile, ThumbsUp, BookOpen, MessageSquare, Play, Clock } from "lucide-react";
+import { Send, Heart, Smile, ThumbsUp, BookOpen, MessageSquare, Play, Clock, Sparkles, RefreshCw } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Drama {
@@ -46,6 +46,7 @@ const KDrama = () => {
   const [message, setMessage] = useState("");
   const [vocabularyNote, setVocabularyNote] = useState({ word: "", translation: "" });
   const [showVocabularyForm, setShowVocabularyForm] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -249,6 +250,37 @@ const KDrama = () => {
     }
   };
 
+  const discoverNewDrama = async () => {
+    setIsDiscovering(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('discover-kdrama');
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast({
+          title: "New K-Drama Discovered!",
+          description: `Added ${data.episode_count} episodes of "${data.series_name}"`,
+        });
+        fetchDramas(); // Refresh the drama list
+      } else {
+        toast({
+          title: "Info",
+          description: data?.message || "No new dramas found at this time",
+        });
+      }
+    } catch (error) {
+      console.error('Error discovering drama:', error);
+      toast({
+        title: "Error",
+        description: "Failed to discover new K-drama. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
+
   const reactionEmojis = {
     heart: "❤️",
     laugh: "😂",
@@ -263,6 +295,23 @@ const KDrama = () => {
           <h1 className="text-4xl font-bold">K-Drama Learning Hub</h1>
           <p className="text-muted-foreground mt-2">Watch, learn, and connect with fellow students</p>
         </div>
+        <Button 
+          onClick={discoverNewDrama} 
+          disabled={isDiscovering}
+          className="gap-2"
+        >
+          {isDiscovering ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Discovering...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Discover New Drama
+            </>
+          )}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
