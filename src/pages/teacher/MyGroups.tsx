@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GroupChat } from "@/components/GroupChat";
-import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle, BookOpen, Plus } from "lucide-react";
+import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle, BookOpen, Plus, Target } from "lucide-react";
 import { toast } from "sonner";
 import { format, getDay, addDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -32,6 +32,13 @@ const MyGroups = () => {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState<string>("");
   const [groupLessons, setGroupLessons] = useState<any[]>([]);
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+  const [goalTitle, setGoalTitle] = useState("");
+  const [goalDescription, setGoalDescription] = useState("");
+  const [goalTarget, setGoalTarget] = useState("");
+  const [goalUnit, setGoalUnit] = useState("lessons");
+  const [goalEndDate, setGoalEndDate] = useState("");
+  const [creatingGoal, setCreatingGoal] = useState(false);
 
   useEffect(() => {
     loadGroups();
@@ -221,6 +228,56 @@ const MyGroups = () => {
     }
   };
 
+  const handleCreateGoal = async () => {
+    if (!selectedGroupForCalendar || !goalTitle.trim() || !goalTarget || !goalEndDate) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      setCreatingGoal(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Create the group goal
+      const { data: goalData, error: goalError } = await supabase
+        .from("group_goals")
+        .insert({
+          group_id: selectedGroupForCalendar.id,
+          teacher_id: user.id,
+          title: goalTitle,
+          description: goalDescription,
+          target_value: parseFloat(goalTarget),
+          unit: goalUnit,
+          end_date: goalEndDate,
+        })
+        .select()
+        .single();
+
+      if (goalError) throw goalError;
+
+      // Call edge function to personalize the goal for each student
+      const { error: personalizeError } = await supabase.functions.invoke("personalize-goal", {
+        body: { groupGoalId: goalData.id },
+      });
+
+      if (personalizeError) throw personalizeError;
+
+      toast.success("Goal created and personalized for all students!");
+      setGoalDialogOpen(false);
+      setGoalTitle("");
+      setGoalDescription("");
+      setGoalTarget("");
+      setGoalUnit("lessons");
+      setGoalEndDate("");
+    } catch (error: any) {
+      console.error("Error creating goal:", error);
+      toast.error("Failed to create goal");
+    } finally {
+      setCreatingGoal(false);
+    }
+  };
+
   if (selectedGroup) {
     return (
       <div className="space-y-4">
@@ -388,6 +445,98 @@ const MyGroups = () => {
                   >
                     {uploadingFile ? "Uploading..." : "Assign Homework"}
                   </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary" />
+              Group Goals
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full" variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Group Goal
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Create Goal for {selectedGroupForCalendar.name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="goalTitle">Goal Title *</Label>
+                    <Input
+                      id="goalTitle"
+                      value={goalTitle}
+                      onChange={(e) => setGoalTitle(e.target.value)}
+                      placeholder="e.g., Complete 10 lessons this month"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="goalDescription">Description</Label>
+                    <Textarea
+                      id="goalDescription"
+                      value={goalDescription}
+                      onChange={(e) => setGoalDescription(e.target.value)}
+                      placeholder="Describe the goal and its purpose"
+                      rows={3}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="goalTarget">Target Value *</Label>
+                      <Input
+                        id="goalTarget"
+                        type="number"
+                        value={goalTarget}
+                        onChange={(e) => setGoalTarget(e.target.value)}
+                        placeholder="10"
+                        min="1"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="goalUnit">Unit *</Label>
+                      <Select value={goalUnit} onValueChange={setGoalUnit}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="lessons">Lessons</SelectItem>
+                          <SelectItem value="hours">Hours</SelectItem>
+                          <SelectItem value="assignments">Assignments</SelectItem>
+                          <SelectItem value="points">Points</SelectItem>
+                          <SelectItem value="words">Words</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="goalEndDate">End Date *</Label>
+                    <Input
+                      id="goalEndDate"
+                      type="date"
+                      value={goalEndDate}
+                      onChange={(e) => setGoalEndDate(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleCreateGoal} 
+                    className="w-full"
+                    disabled={creatingGoal}
+                  >
+                    {creatingGoal ? "Creating..." : "Create Goal"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    AI will personalize this goal for each student in the group.
+                  </p>
                 </div>
               </DialogContent>
             </Dialog>

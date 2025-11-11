@@ -429,6 +429,59 @@ export type Database = {
           },
         ]
       }
+      group_goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          group_id: string
+          id: string
+          start_date: string
+          status: string
+          target_value: number
+          teacher_id: string
+          title: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          group_id: string
+          id?: string
+          start_date?: string
+          status?: string
+          target_value: number
+          teacher_id: string
+          title: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          group_id?: string
+          id?: string
+          start_date?: string
+          status?: string
+          target_value?: number
+          teacher_id?: string
+          title?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_goals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_messages: {
         Row: {
           created_at: string
@@ -1148,6 +1201,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      student_goal_progress: {
+        Row: {
+          created_at: string
+          current_value: number
+          group_goal_id: string
+          id: string
+          last_updated: string
+          personalized_description: string | null
+          progress_percentage: number | null
+          student_id: string
+          target_value: number
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number
+          group_goal_id: string
+          id?: string
+          last_updated?: string
+          personalized_description?: string | null
+          progress_percentage?: number | null
+          student_id: string
+          target_value: number
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          group_goal_id?: string
+          id?: string
+          last_updated?: string
+          personalized_description?: string | null
+          progress_percentage?: number | null
+          student_id?: string
+          target_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_goal_progress_group_goal_id_fkey"
+            columns: ["group_goal_id"]
+            isOneToOne: false
+            referencedRelation: "group_goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_requests: {
         Row: {

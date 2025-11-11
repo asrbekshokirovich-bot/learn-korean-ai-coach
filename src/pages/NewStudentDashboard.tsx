@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { LogOut, Calendar, BookOpen, Trophy, Clock, DollarSign } from "lucide-react";
+import { LogOut, Calendar, BookOpen, Trophy, Clock, DollarSign, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -19,12 +19,14 @@ const NewStudentDashboard = () => {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [upcomingLessons, setUpcomingLessons] = useState<any[]>([]);
   const [homework, setHomework] = useState<any[]>([]);
+  const [goalProgress, setGoalProgress] = useState<any[]>([]);
 
   useEffect(() => {
     loadUserData();
     loadEnrollments();
     loadUpcomingLessons();
     loadHomework();
+    loadGoalProgress();
   }, []);
 
   const loadUserData = async () => {
@@ -94,6 +96,28 @@ const NewStudentDashboard = () => {
       .limit(5);
 
     setHomework(data || []);
+  };
+
+  const loadGoalProgress = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("student_goal_progress")
+      .select(`
+        *,
+        group_goals!inner (
+          title,
+          unit,
+          end_date,
+          groups!inner (name)
+        )
+      `)
+      .eq("student_id", user.id)
+      .eq("group_goals.status", "active")
+      .order("created_at", { ascending: false });
+
+    setGoalProgress(data || []);
   };
 
   const handleSignOut = async () => {
@@ -246,6 +270,57 @@ const NewStudentDashboard = () => {
                   )}
                 </Card>
               </div>
+
+              {/* Goal Progress Section */}
+              {goalProgress.length > 0 && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-primary" />
+                    Your Goals Progress
+                  </h3>
+                  <div className="space-y-4">
+                    {goalProgress.map((progress) => {
+                      const goal = progress.group_goals;
+                      const groupName = (goal.groups as any)?.name || "Group";
+                      
+                      return (
+                        <div key={progress.id} className="p-4 bg-muted rounded-lg space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{goal.title}</h4>
+                              <Badge variant="outline" className="mt-1">{groupName}</Badge>
+                            </div>
+                            <Badge variant={progress.progress_percentage >= 100 ? "default" : "secondary"}>
+                              {progress.progress_percentage.toFixed(0)}%
+                            </Badge>
+                          </div>
+                          
+                          {progress.personalized_description && (
+                            <p className="text-sm text-muted-foreground italic">
+                              "{progress.personalized_description}"
+                            </p>
+                          )}
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Progress</span>
+                              <span className="font-medium">
+                                {progress.current_value} / {progress.target_value} {goal.unit}
+                              </span>
+                            </div>
+                            <Progress value={progress.progress_percentage} className="h-2" />
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3" />
+                            <span>Due: {format(new Date(goal.end_date), "MMM d, yyyy")}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              )}
             </div>
           </main>
         </div>
