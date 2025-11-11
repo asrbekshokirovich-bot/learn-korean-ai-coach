@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,16 +8,18 @@ import { GroupChat } from "@/components/GroupChat";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format, getDay, addDays, startOfWeek } from "date-fns";
+import { format, getDay, addDays, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const MyGroups = () => {
+  const navigate = useNavigate();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   useEffect(() => {
     loadEnrollments();
@@ -87,7 +90,19 @@ const MyGroups = () => {
       return;
     }
 
+    // Navigate to video lesson page
     toast.success("Joining lesson...");
+    navigate(`/student/video-lesson?groupId=${group.id}&groupName=${encodeURIComponent(group.name)}`);
+  };
+
+  const getLessonsForDay = (day: Date) => {
+    const dayOfWeek = getDay(day);
+    return enrollments.filter((enrollment) => {
+      const group = enrollment.groups;
+      return Array.isArray(group.day_of_week)
+        ? group.day_of_week.includes(dayOfWeek)
+        : group.day_of_week === dayOfWeek;
+    });
   };
 
   const daysWithLessons = enrollments.flatMap((enrollment) => {
@@ -197,84 +212,125 @@ const MyGroups = () => {
         </div>
       )}
 
-      {/* Calendar Section */}
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Group Lesson Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border pointer-events-auto"
-              modifiers={{
-                hasLesson: daysWithLessons
-              }}
-              modifiersClassNames={{
-                hasLesson: "bg-primary/20 font-bold"
-              }}
-            />
-          </CardContent>
-        </Card>
+      {/* Big Calendar Section */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Group Lesson Calendar</span>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+              >
+                ←
+              </Button>
+              <span className="text-lg font-normal">{format(currentMonth, "MMMM yyyy")}</span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+              >
+                →
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-7 gap-2">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <div key={day} className="text-center font-semibold text-sm p-2 text-muted-foreground">
+                {day}
+              </div>
+            ))}
+            {eachDayOfInterval({
+              start: startOfMonth(currentMonth),
+              end: endOfMonth(currentMonth)
+            }).map((day, idx) => {
+              const dayLessons = getLessonsForDay(day);
+              const isToday = format(day, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+              const isSelected = selectedDate && format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
+              
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDate(day)}
+                  className={`min-h-24 p-2 border rounded-lg hover:bg-accent transition-colors ${
+                    isToday ? "border-primary" : ""
+                  } ${isSelected ? "bg-accent" : ""}`}
+                >
+                  <div className="text-right text-sm font-semibold mb-1">
+                    {format(day, "d")}
+                  </div>
+                  <div className="space-y-1">
+                    {dayLessons.map((enrollment, i) => (
+                      <div 
+                        key={i}
+                        className="text-xs bg-primary/20 text-primary px-1 py-0.5 rounded truncate"
+                        title={enrollment.groups.name}
+                      >
+                        {enrollment.groups.start_time} - {enrollment.groups.name}
+                      </div>
+                    ))}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
+      {/* Selected Day Lessons */}
+      {selectedDateLessons.length > 0 && (
+        <Card className="mt-6">
           <CardHeader>
             <CardTitle>
-              {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Select a date"}
+              Lessons for {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Selected Date"}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {selectedDateLessons.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-                <p>No lessons scheduled for this day</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {selectedDateLessons.map((enrollment) => {
-                  const group = enrollment.groups;
-                  return (
-                    <Card key={enrollment.id} className="border-2">
-                      <CardContent className="pt-6">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold text-lg">{group.name}</h3>
-                              <Badge variant="outline" className="mt-1">{group.level}</Badge>
-                            </div>
-                            <Badge>{group.duration_minutes}min</Badge>
+            <div className="grid md:grid-cols-2 gap-4">
+              {selectedDateLessons.map((enrollment) => {
+                const group = enrollment.groups;
+                return (
+                  <Card key={enrollment.id} className="border-2">
+                    <CardContent className="pt-6">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-lg">{group.name}</h3>
+                            <Badge variant="outline" className="mt-1">{group.level}</Badge>
                           </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-muted-foreground" />
-                              <span>{group.start_time}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Users className="w-4 h-4 text-muted-foreground" />
-                              <span>Teacher: {teacherNames[group.teacher_id] || "Not assigned"}</span>
-                            </div>
-                          </div>
-
-                          <Button 
-                            className="w-full" 
-                            onClick={() => handleJoinLesson(group)}
-                          >
-                            <Video className="w-4 h-4 mr-2" />
-                            Join Lesson
-                          </Button>
+                          <Badge>{group.duration_minutes}min</Badge>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+                        
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <span>{group.start_time}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                            <span>Teacher: {teacherNames[group.teacher_id] || "Not assigned"}</span>
+                          </div>
+                        </div>
+
+                        <Button 
+                          className="w-full" 
+                          onClick={() => handleJoinLesson(group)}
+                        >
+                          <Video className="w-4 h-4 mr-2" />
+                          Join Lesson
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 };
