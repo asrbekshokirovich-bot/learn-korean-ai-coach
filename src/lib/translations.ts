@@ -21,8 +21,8 @@ export const translations = {
     // Hero Section
     aiPoweredPlatform: "AI bilan jihozlangan koreys tilini o'rganish platformasi",
     masterKoreanWith: "Koreys tilini mukammal o'rganing",
-    humanTeachersAI: "Inson o'qituvchilari + AI",
-    futureOfLearning: "Til o'rganishning kelajagi. Real vaqt talaffuzi, moslashtirilgan AI dastur va sertifikatlangan ona tilida so'zlashuvchilar - hammasi bitta platformada.",
+    humanTeachersAI: "Professional o'qituvchilar + AI",
+    futureOfLearning: "Til o'rganishning kelajagi. Real vaqt talaffuzi, moslashtirilgan AI dastur va professional o'qituvchilar - hammasi bitta platformada.",
     startLearningFree: "Bepul o'rganishni boshlang",
     seeHowItWorks: "Qanday ishlashini ko'ring",
     aiPersonas: "AI shaxslar",
@@ -129,7 +129,7 @@ export const translations = {
     
     // Hybrid Model Section
     chooseYourLearningStyle: "O'rganish uslubingizni tanlang",
-    everySessionIncludesAI: "Har bir sessiya AI yordamini o'z ichiga oladi - inson o'qituvchilarini, AI avatarlarini yoki guruh darslarini tanlaysizmi",
+    everySessionIncludesAI: "Har bir sessiya AI yordamini o'z ichiga oladi - professional o'qituvchilarini, AI avatarlarini yoki guruh darslarini tanlaysizmi",
     oneOnOneNativeTeacher: "1-1 Ona tilida so'zlashuvchi o'qituvchi",
     certifiedTopikInstructors: "Sertifikatlangan TOPIK 6 o'qituvchilari",
     aiCoPilotRealTime: "Real vaqt AI yordamchisi takliflari",
@@ -399,8 +399,8 @@ export const translations = {
     // Hero Section
     aiPoweredPlatform: "AI-Powered Korean Learning Platform",
     masterKoreanWith: "Master Korean with",
-    humanTeachersAI: "Human Teachers + AI",
-    futureOfLearning: "Experience the future of language learning. Real-time pronunciation feedback, personalized AI curriculum, and certified native speakers—all in one platform.",
+    humanTeachersAI: "Professional Teachers + AI",
+    futureOfLearning: "Experience the future of language learning. Real-time pronunciation feedback, personalized AI curriculum, and professional certified teachers—all in one platform.",
     startLearningFree: "Start Learning Free",
     seeHowItWorks: "See How It Works",
     aiPersonas: "AI Personas",
@@ -507,7 +507,7 @@ export const translations = {
     
     // Hybrid Model Section
     chooseYourLearningStyle: "Choose Your Learning Style",
-    everySessionIncludesAI: "Every session includes AI assistance—whether you choose human teachers, AI avatars, or group classes",
+    everySessionIncludesAI: "Every session includes AI assistance—whether you choose professional teachers, AI avatars, or group classes",
     oneOnOneNativeTeacher: "1-on-1 with Native Teacher",
     certifiedTopikInstructors: "Certified TOPIK 6 instructors",
     aiCoPilotRealTime: "AI co-pilot suggestions in real-time",
@@ -638,8 +638,8 @@ export const translations = {
     // Hero Section
     aiPoweredPlatform: "AI 기반 한국어 학습 플랫폼",
     masterKoreanWith: "한국어 마스터하기",
-    humanTeachersAI: "인간 교사 + AI",
-    futureOfLearning: "언어 학습의 미래를 경험하세요. 실시간 발음 피드백, 맞춤형 AI 커리큘럼, 인증된 원어민—모두 하나의 플랫폼에서.",
+    humanTeachersAI: "전문 교사 + AI",
+    futureOfLearning: "언어 학습의 미래를 경험하세요. 실시간 발음 피드백, 맞춤형 AI 커리큘럼, 전문 인증 교사—모두 하나의 플랫폼에서.",
     startLearningFree: "무료로 학습 시작",
     seeHowItWorks: "작동 방식 보기",
     aiPersonas: "AI 페르소나",
@@ -746,7 +746,7 @@ export const translations = {
     
     // Hybrid Model Section
     chooseYourLearningStyle: "학습 스타일 선택",
-    everySessionIncludesAI: "모든 세션에는 AI 지원이 포함됩니다—인간 교사, AI 아바타 또는 그룹 수업 중 선택",
+    everySessionIncludesAI: "모든 세션에는 AI 지원이 포함됩니다—전문 교사, AI 아바타 또는 그룹 수업 중 선택",
     oneOnOneNativeTeacher: "1:1 원어민 교사",
     certifiedTopikInstructors: "공인 TOPIK 6 강사",
     aiCoPilotRealTime: "실시간 AI 코파일럿 제안",
@@ -847,8 +847,8 @@ export const translations = {
     // Hero Section
     aiPoweredPlatform: "Платформа для изучения корейского языка на базе ИИ",
     masterKoreanWith: "Освойте корейский с",
-    humanTeachersAI: "Человеческие учителя + ИИ",
-    futureOfLearning: "Познайте будущее изучения языков. Обратная связь по произношению в реальном времени, персонализированная учебная программа ИИ и сертифицированные носители языка — все на одной платформе.",
+    humanTeachersAI: "Профессиональные учителя + ИИ",
+    futureOfLearning: "Познайте будущее изучения языков. Обратная связь по произношению в реальном времени, персонализированная учебная программа ИИ и профессиональные сертифицированные учителя — все на одной платформе.",
     startLearningFree: "Начать обучение бесплатно",
     seeHowItWorks: "Посмотреть, как это работает",
     aiPersonas: "ИИ персоны",
@@ -955,7 +955,7 @@ export const translations = {
     
     // Hybrid Model Section
     chooseYourLearningStyle: "Выберите стиль обучения",
-    everySessionIncludesAI: "Каждая сессия включает помощь ИИ—независимо от того, выбираете ли вы учителей-людей, аватары ИИ или групповые занятия",
+    everySessionIncludesAI: "Каждая сессия включает помощь ИИ—независимо от того, выбираете ли вы профессиональных учителей, аватары ИИ или групповые занятия",
     oneOnOneNativeTeacher: "1 на 1 с носителем языка",
     certifiedTopikInstructors: "Сертифицированные инструкторы TOPIK 6",
     aiCoPilotRealTime: "Предложения ИИ-копилота в реальном времени",
