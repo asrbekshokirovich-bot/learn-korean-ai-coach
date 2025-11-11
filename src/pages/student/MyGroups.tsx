@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GroupChat } from "@/components/GroupChat";
-import { Users, Calendar, Clock, MessageCircle } from "lucide-react";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, getDay, addDays, startOfWeek } from "date-fns";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -15,6 +16,7 @@ const MyGroups = () => {
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   useEffect(() => {
     loadEnrollments();
@@ -56,6 +58,47 @@ const MyGroups = () => {
       setLoading(false);
     }
   };
+
+  const getLessonsForDate = (date: Date) => {
+    const dayOfWeek = getDay(date);
+    return enrollments.filter((enrollment) => {
+      const group = enrollment.groups;
+      return Array.isArray(group.day_of_week)
+        ? group.day_of_week.includes(dayOfWeek)
+        : group.day_of_week === dayOfWeek;
+    });
+  };
+
+  const handleJoinLesson = (group: any) => {
+    const now = new Date();
+    const [hours, minutes] = group.start_time.split(":").map(Number);
+    const lessonStart = new Date(selectedDate!);
+    lessonStart.setHours(hours, minutes, 0, 0);
+    const lessonEnd = new Date(lessonStart.getTime() + group.duration_minutes * 60000);
+
+    if (now < lessonStart) {
+      const minutesUntil = Math.floor((lessonStart.getTime() - now.getTime()) / 60000);
+      toast.error(`Lesson hasn't started yet. It will begin in ${minutesUntil} minutes.`);
+      return;
+    }
+
+    if (now > lessonEnd) {
+      toast.error("This lesson has already ended.");
+      return;
+    }
+
+    toast.success("Joining lesson...");
+  };
+
+  const daysWithLessons = enrollments.flatMap((enrollment) => {
+    const group = enrollment.groups;
+    const weekStart = startOfWeek(new Date());
+    return (Array.isArray(group.day_of_week) ? group.day_of_week : [group.day_of_week]).map(
+      (day: number) => addDays(weekStart, day)
+    );
+  });
+
+  const selectedDateLessons = selectedDate ? getLessonsForDate(selectedDate) : [];
 
   if (loading) {
     return <div className="text-center py-8">Loading your groups...</div>;
@@ -153,6 +196,85 @@ const MyGroups = () => {
           })}
         </div>
       )}
+
+      {/* Calendar Section */}
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Group Lesson Calendar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CalendarComponent
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border pointer-events-auto"
+              modifiers={{
+                hasLesson: daysWithLessons
+              }}
+              modifiersClassNames={{
+                hasLesson: "bg-primary/20 font-bold"
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Select a date"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {selectedDateLessons.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+                <p>No lessons scheduled for this day</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {selectedDateLessons.map((enrollment) => {
+                  const group = enrollment.groups;
+                  return (
+                    <Card key={enrollment.id} className="border-2">
+                      <CardContent className="pt-6">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold text-lg">{group.name}</h3>
+                              <Badge variant="outline" className="mt-1">{group.level}</Badge>
+                            </div>
+                            <Badge>{group.duration_minutes}min</Badge>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-muted-foreground" />
+                              <span>{group.start_time}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-muted-foreground" />
+                              <span>Teacher: {teacherNames[group.teacher_id] || "Not assigned"}</span>
+                            </div>
+                          </div>
+
+                          <Button 
+                            className="w-full" 
+                            onClick={() => handleJoinLesson(group)}
+                          >
+                            <Video className="w-4 h-4 mr-2" />
+                            Join Lesson
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
