@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DollarSign, TrendingUp, Users, Calendar } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Calendar, Plus } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import {
   Table,
@@ -13,6 +13,44 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { toast } from "sonner";
+
+const transactionSchema = z.object({
+  record_type: z.enum(["income", "expense", "potential_income", "potential_expense"]),
+  amount: z.string().min(1, "Amount is required"),
+  description: z.string().min(1, "Description is required"),
+  record_date: z.string().min(1, "Date is required"),
+  month_period: z.string().min(1, "Month period is required"),
+});
 
 const Finance = () => {
   const [stats, setStats] = useState({
@@ -24,6 +62,18 @@ const Finance = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [financeRecords, setFinanceRecords] = useState<any[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof transactionSchema>>({
+    resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      record_type: "income",
+      amount: "",
+      description: "",
+      record_date: format(new Date(), "yyyy-MM-dd"),
+      month_period: format(startOfMonth(new Date()), "yyyy-MM-dd"),
+    },
+  });
 
   useEffect(() => {
     loadFinanceData();
@@ -83,6 +133,27 @@ const Finance = () => {
       totalStudents: uniqueStudents,
       activePackages,
     });
+  };
+
+  const onSubmit = async (values: z.infer<typeof transactionSchema>) => {
+    try {
+      const { error } = await supabase.from("finance_records").insert({
+        record_type: values.record_type,
+        amount: parseFloat(values.amount),
+        description: values.description,
+        record_date: values.record_date,
+        month_period: values.month_period,
+      });
+
+      if (error) throw error;
+
+      toast.success("Transaction added successfully");
+      setDialogOpen(false);
+      form.reset();
+      loadFinanceData();
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   return (
@@ -211,7 +282,105 @@ const Finance = () => {
 
         <TabsContent value="records">
           <Card className="p-6">
-            <h3 className="text-xl font-semibold mb-4">All Finance Records</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">All Finance Records</h3>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Transaction
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Transaction</DialogTitle>
+                    <DialogDescription>
+                      Record a new financial transaction
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="record_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Transaction Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="income">Income</SelectItem>
+                                <SelectItem value="expense">Expense</SelectItem>
+                                <SelectItem value="potential_income">Potential Income</SelectItem>
+                                <SelectItem value="potential_expense">Potential Expense</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="amount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Amount ($)</FormLabel>
+                            <FormControl>
+                              <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="Enter description" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="record_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="month_period"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Month Period</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full">Add Transaction</Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
