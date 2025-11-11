@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, DollarSign, Video } from "lucide-react";
+import { Home, Users, Calendar, DollarSign, Video, Tv } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,6 +26,7 @@ export function TeacherSidebar() {
     { title: t('dashboard'), url: '/teacher', icon: Home },
     { title: 'My Groups', url: '/teacher/groups', icon: Users },
     { title: 'Recordings', url: '/teacher/recordings', icon: Video },
+    { title: 'K-Drama Hub', url: '/student/kdrama', icon: Tv },
     { title: t('availability'), url: '/teacher/availability', icon: Calendar },
     { title: t('earnings'), url: '/teacher/earnings', icon: DollarSign },
   ];

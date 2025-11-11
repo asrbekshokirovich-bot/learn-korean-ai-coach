@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GroupChat } from "@/components/GroupChat";
-import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle, BookOpen, Plus, Target } from "lucide-react";
+import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle, BookOpen, Plus, Target, User, TrendingUp, BarChart } from "lucide-react";
 import { toast } from "sonner";
 import { format, getDay, addDays, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -39,10 +39,21 @@ const MyGroups = () => {
   const [goalUnit, setGoalUnit] = useState("lessons");
   const [goalEndDate, setGoalEndDate] = useState("");
   const [creatingGoal, setCreatingGoal] = useState(false);
+  const [enrolledStudents, setEnrolledStudents] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [studentAnalysis, setStudentAnalysis] = useState<any>(null);
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+  const [studentDialogOpen, setStudentDialogOpen] = useState(false);
 
   useEffect(() => {
     loadGroups();
   }, []);
+
+  useEffect(() => {
+    if (selectedGroupForCalendar) {
+      loadEnrolledStudents(selectedGroupForCalendar.id);
+    }
+  }, [selectedGroupForCalendar]);
 
   const loadGroups = async () => {
     try {
@@ -63,6 +74,54 @@ const MyGroups = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadEnrolledStudents = async (groupId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("group_enrollments")
+        .select(`
+          *,
+          profiles:student_id (
+            user_id,
+            full_name,
+            email,
+            topik_level
+          )
+        `)
+        .eq("group_id", groupId)
+        .eq("status", "active");
+
+      if (error) throw error;
+      setEnrolledStudents(data || []);
+    } catch (error: any) {
+      console.error("Error loading students:", error);
+      toast.error("Failed to load enrolled students");
+    }
+  };
+
+  const loadStudentAnalysis = async (studentId: string) => {
+    setLoadingAnalysis(true);
+    try {
+      // Call the edge function to get comprehensive student analysis
+      const { data, error } = await supabase.functions.invoke("analyze-student-performance", {
+        body: { studentId },
+      });
+
+      if (error) throw error;
+      setStudentAnalysis(data);
+    } catch (error: any) {
+      console.error("Error loading student analysis:", error);
+      toast.error("Failed to load student analysis");
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
+
+  const handleStudentClick = async (student: any) => {
+    setSelectedStudent(student);
+    setStudentDialogOpen(true);
+    await loadStudentAnalysis(student.student_id);
   };
 
   if (loading) {
@@ -542,7 +601,216 @@ const MyGroups = () => {
             </Dialog>
           </CardContent>
         </Card>
+
+        <Card className="border-primary/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Enrolled Students ({enrolledStudents.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {enrolledStudents.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">No students enrolled yet</p>
+            ) : (
+              <div className="space-y-2">
+                {enrolledStudents.map((enrollment) => (
+                  <button
+                    key={enrollment.id}
+                    onClick={() => handleStudentClick(enrollment)}
+                    className="w-full p-4 border rounded-lg hover:bg-accent transition-colors text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <User className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{enrollment.profiles?.full_name || "Unknown"}</p>
+                          <p className="text-xs text-muted-foreground">{enrollment.profiles?.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{enrollment.profiles?.topik_level || "N/A"}</Badge>
+                        <BarChart className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+        <Dialog open={studentDialogOpen} onOpenChange={setStudentDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Student Analysis: {selectedStudent?.profiles?.full_name}
+              </DialogTitle>
+            </DialogHeader>
+            {loadingAnalysis ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-4">Analyzing student performance...</p>
+              </div>
+            ) : studentAnalysis ? (
+              <div className="space-y-6">
+                {/* Overall Performance Score */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      Overall Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">Performance Score</span>
+                          <span className="text-2xl font-bold text-primary">
+                            {studentAnalysis.performanceScore?.toFixed(1) || 0}/100
+                          </span>
+                        </div>
+                        <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all"
+                            style={{ width: `${studentAnalysis.performanceScore || 0}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Proficiency Level</p>
+                          <p className="font-semibold">{studentAnalysis.proficiencyLevel || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Attendance</p>
+                          <p className="font-semibold">{studentAnalysis.attendance?.rate || 0}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Homework Performance */}
+                {studentAnalysis.homework && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BookOpen className="w-5 h-5" />
+                        Homework Performance
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Completion Rate</span>
+                          <span className="font-semibold">{studentAnalysis.homework.completionRate}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Average Grade</span>
+                          <span className="font-semibold">{studentAnalysis.homework.averageGrade || "N/A"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Total Assigned</span>
+                          <span className="font-semibold">{studentAnalysis.homework.totalAssigned}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Lesson Reviews */}
+                {studentAnalysis.lessonReviews && studentAnalysis.lessonReviews.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Recent Lesson Reviews</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {studentAnalysis.lessonReviews.slice(0, 3).map((review: any, idx: number) => (
+                          <div key={idx} className="p-3 border rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-muted-foreground">
+                                {format(new Date(review.created_at), "MMM d, yyyy")}
+                              </span>
+                              <Badge>{review.ai_score || "N/A"}/100</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <span className="text-muted-foreground">Engagement:</span>
+                                <span className="ml-1 font-medium">{review.engagement_score || "N/A"}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Pacing:</span>
+                                <span className="ml-1 font-medium">{review.pacing_score || "N/A"}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Strengths & Weaknesses */}
+                {(studentAnalysis.strengths || studentAnalysis.weaknesses) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Strengths & Areas for Improvement</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {studentAnalysis.strengths && studentAnalysis.strengths.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-sm mb-2 text-green-600">Strengths</h4>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                              {studentAnalysis.strengths.map((strength: string, idx: number) => (
+                                <li key={idx} className="text-muted-foreground">{strength}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {studentAnalysis.weaknesses && studentAnalysis.weaknesses.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-sm mb-2 text-orange-600">Areas for Improvement</h4>
+                            <ul className="list-disc list-inside space-y-1 text-sm">
+                              {studentAnalysis.weaknesses.map((weakness: string, idx: number) => (
+                                <li key={idx} className="text-muted-foreground">{weakness}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* AI Recommendations */}
+                {studentAnalysis.recommendations && (
+                  <Card className="bg-primary/5">
+                    <CardHeader>
+                      <CardTitle className="text-lg">AI Recommendations</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {studentAnalysis.recommendations}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No analysis data available</p>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader>
