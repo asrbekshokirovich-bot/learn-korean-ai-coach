@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -50,7 +51,7 @@ const groupSchema = z.object({
   description: z.string().optional(),
   max_students: z.string().min(1, "Max students is required"),
   teacher_id: z.string().transform(val => val === "" ? undefined : val).optional(),
-  day_of_week: z.string().min(1, "Day of week is required"),
+  days_of_week: z.array(z.string()).min(1, "At least one day is required"),
   start_time: z.string().min(1, "Start time is required"),
   duration_minutes: z.string().min(1, "Duration is required"),
 });
@@ -85,7 +86,7 @@ const GroupManagement = () => {
       description: "",
       max_students: "18",
       teacher_id: "",
-      day_of_week: "",
+      days_of_week: [],
       start_time: "",
       duration_minutes: "90",
     },
@@ -231,7 +232,7 @@ const GroupManagement = () => {
         description: values.description || null,
         max_students: parseInt(values.max_students),
         teacher_id: (values.teacher_id && values.teacher_id !== "unassigned") ? values.teacher_id : null,
-        day_of_week: parseInt(values.day_of_week),
+        day_of_week: values.days_of_week.map(d => parseInt(d)),
         start_time: normalizedStartTime,
         duration_minutes: parseInt(values.duration_minutes),
         status: 'active',
@@ -283,7 +284,7 @@ const GroupManagement = () => {
       description: group.description || "",
       max_students: group.max_students.toString(),
       teacher_id: group.teacher_id || "unassigned",
-      day_of_week: group.day_of_week.toString(),
+      days_of_week: group.day_of_week.map((d: number) => d.toString()),
       start_time: group.start_time,
       duration_minutes: group.duration_minutes.toString(),
     });
@@ -437,31 +438,40 @@ const GroupManagement = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-3">
                   <FormField
                     control={form.control}
-                    name="day_of_week"
+                    name="days_of_week"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Day</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select day" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {DAYS_OF_WEEK.map((day) => (
-                              <SelectItem key={day.value} value={day.value}>
+                        <FormLabel>Days of Week</FormLabel>
+                        <div className="grid grid-cols-4 gap-2">
+                          {DAYS_OF_WEEK.map((day) => (
+                            <FormItem key={day.value} className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(day.value)}
+                                  onCheckedChange={(checked) => {
+                                    const updatedDays = checked
+                                      ? [...(field.value || []), day.value]
+                                      : field.value?.filter((d) => d !== day.value) || [];
+                                    field.onChange(updatedDays);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal cursor-pointer">
                                 {day.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="start_time"
@@ -528,7 +538,9 @@ const GroupManagement = () => {
                   <Badge variant="outline">{group.level}</Badge>
                 </TableCell>
                 <TableCell>
-                  {DAYS_OF_WEEK.find(d => d.value === group.day_of_week.toString())?.label} {group.start_time} ({group.duration_minutes}min)
+                  {group.day_of_week.map((day: number) => 
+                    DAYS_OF_WEEK.find(d => d.value === day.toString())?.label
+                  ).join(", ")} {group.start_time} ({group.duration_minutes}min)
                 </TableCell>
                 <TableCell>{group.teacher_profile?.full_name || "Not assigned"}</TableCell>
                 <TableCell>
