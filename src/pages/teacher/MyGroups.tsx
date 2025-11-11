@@ -68,7 +68,23 @@ const MyGroups = () => {
 
       if (error) throw error;
 
-      setGroups(data || []);
+      // Get actual enrollment counts for each group
+      const groupsWithCounts = await Promise.all(
+        (data || []).map(async (group) => {
+          const { count } = await supabase
+            .from("group_enrollments")
+            .select("*", { count: "exact", head: true })
+            .eq("group_id", group.id)
+            .eq("status", "active");
+          
+          return {
+            ...group,
+            actual_students_count: count || 0
+          };
+        })
+      );
+
+      setGroups(groupsWithCounts);
     } catch (error: any) {
       toast.error("Failed to load groups");
     } finally {
@@ -396,7 +412,7 @@ const MyGroups = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
-                    <span>{selectedGroupForCalendar.current_students_count} / {selectedGroupForCalendar.max_students} students</span>
+                    <span>{enrolledStudents.length} / {selectedGroupForCalendar.max_students} students</span>
                   </div>
                 </div>
                 <Button 
@@ -968,7 +984,7 @@ const MyGroups = () => {
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-muted-foreground" />
                         <span>
-                          {group.current_students_count} / {group.max_students} students
+                          {group.actual_students_count || 0} / {group.max_students} students
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
