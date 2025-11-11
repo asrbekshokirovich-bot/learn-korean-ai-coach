@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -71,12 +72,14 @@ const DAYS_OF_WEEK = [
 const GroupManagement = () => {
   const [groups, setGroups] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [permChecked, setPermChecked] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
@@ -136,6 +139,7 @@ const GroupManagement = () => {
     if (!authReady) return;
     loadGroups();
     loadTeachers();
+    loadStudents();
   }, [authReady]);
 
   const loadGroups = async () => {
@@ -167,9 +171,30 @@ const GroupManagement = () => {
       }
     }
 
+    // Load enrolled students for each group
+    const groupIds = (groupsData || []).map((g: any) => g.id);
+    let enrollmentsMap: Record<string, any[]> = {};
+    
+    if (groupIds.length > 0) {
+      const { data: enrollmentsData, error: enrollmentsError } = await supabase
+        .from("group_enrollments")
+        .select("group_id, student_id, profiles!inner(user_id, full_name, email)")
+        .in("group_id", groupIds)
+        .eq("status", "active");
+
+      if (!enrollmentsError && enrollmentsData) {
+        enrollmentsMap = enrollmentsData.reduce((acc: Record<string, any[]>, enrollment: any) => {
+          if (!acc[enrollment.group_id]) acc[enrollment.group_id] = [];
+          acc[enrollment.group_id].push(enrollment.profiles);
+          return acc;
+        }, {});
+      }
+    }
+
     const enriched = (groupsData || []).map((g: any) => ({
       ...g,
       teacher_profile: g.teacher_id ? teacherProfilesMap[g.teacher_id] : null,
+      enrolled_students: enrollmentsMap[g.id] || [],
     }));
 
     setGroups(enriched);
@@ -209,6 +234,40 @@ const GroupManagement = () => {
     setTeachers((profiles as any) || []);
   };
 
+  const loadStudents = async () => {
+    // Get all user ids that have the 'student' role
+    const { data: roles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "student");
+
+    if (rolesError) {
+      console.error("loadStudents roles error:", rolesError);
+      toast.error("Failed to load students");
+      return;
+    }
+
+    const ids = (roles || []).map((r: any) => r.user_id);
+    if (ids.length === 0) {
+      setStudents([]);
+      return;
+    }
+
+    // Load their profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", ids);
+
+    if (profilesError) {
+      console.error("loadStudents profiles error:", profilesError);
+      toast.error("Failed to load students");
+      return;
+    }
+
+    setStudents((profiles as any) || []);
+  };
+
   const onSubmit = async (values: GroupFormValues) => {
     try {
       console.log("Form submitted with values:", values);
@@ -240,6 +299,8 @@ const GroupManagement = () => {
 
       console.log("Prepared group data:", groupData);
 
+      let groupId = editingGroup?.id;
+
       if (editingGroup) {
         const { error } = await supabase
           .from("groups")
@@ -250,19 +311,62 @@ const GroupManagement = () => {
           console.error("Update error:", error);
           throw error;
         }
+        
+        // Update enrollments - remove students not in selectedStudents, add new ones
+        const currentEnrollments = editingGroup.enrolled_students?.map((s: any) => s.user_id) || [];
+        const toRemove = currentEnrollments.filter((id: string) => !selectedStudents.includes(id));
+        const toAdd = selectedStudents.filter((id: string) => !currentEnrollments.includes(id));
+
+        if (toRemove.length > 0) {
+          await supabase
+            .from("group_enrollments")
+            .delete()
+            .eq("group_id", groupId)
+            .in("student_id", toRemove);
+        }
+
+        if (toAdd.length > 0) {
+          await supabase
+            .from("group_enrollments")
+            .insert(toAdd.map(studentId => ({
+              group_id: groupId,
+              student_id: studentId,
+              status: 'active'
+            })));
+        }
+
         toast.success("Group updated successfully");
       } else {
-        const { error } = await supabase.from("groups").insert([groupData]);
+        const { data: newGroup, error } = await supabase
+          .from("groups")
+          .insert([groupData])
+          .select()
+          .single();
 
         if (error) {
           console.error("Insert error:", error);
           throw error;
         }
+
+        groupId = newGroup.id;
+
+        // Add selected students to the new group
+        if (selectedStudents.length > 0) {
+          await supabase
+            .from("group_enrollments")
+            .insert(selectedStudents.map(studentId => ({
+              group_id: groupId,
+              student_id: studentId,
+              status: 'active'
+            })));
+        }
+
         toast.success("Group created successfully");
       }
 
       setDialogOpen(false);
       setEditingGroup(null);
+      setSelectedStudents([]);
       form.reset();
       loadGroups();
     } catch (error: any) {
@@ -278,6 +382,8 @@ const GroupManagement = () => {
 
   const handleEdit = (group: any) => {
     setEditingGroup(group);
+    const enrolledStudentIds = group.enrolled_students?.map((s: any) => s.user_id) || [];
+    setSelectedStudents(enrolledStudentIds);
     form.reset({
       name: group.name,
       level: group.level,
@@ -309,6 +415,7 @@ const GroupManagement = () => {
     setDialogOpen(open);
     if (!open) {
       setEditingGroup(null);
+      setSelectedStudents([]);
       form.reset();
     }
   };
@@ -500,7 +607,45 @@ const GroupManagement = () => {
                   />
                 </div>
 
-                <Button 
+                <div className="space-y-4">
+                  <div>
+                    <FormLabel>Students (Optional)</FormLabel>
+                    <ScrollArea className="h-60 border rounded-lg p-4">
+                      <div className="space-y-2">
+                        {students.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No students available</p>
+                        ) : (
+                          students.map((student) => (
+                            <div key={student.user_id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`student-${student.user_id}`}
+                                checked={selectedStudents.includes(student.user_id)}
+                                onCheckedChange={(checked) => {
+                                  setSelectedStudents(prev =>
+                                    checked
+                                      ? [...prev, student.user_id]
+                                      : prev.filter(id => id !== student.user_id)
+                                  );
+                                }}
+                              />
+                              <label
+                                htmlFor={`student-${student.user_id}`}
+                                className="text-sm font-normal cursor-pointer flex-1"
+                              >
+                                {student.full_name || student.email}
+                              </label>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Selected: {selectedStudents.length} / {form.watch("max_students") || 0}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
                   type="submit" 
                   className="w-full"
                   onClick={() => {
@@ -544,9 +689,19 @@ const GroupManagement = () => {
                 </TableCell>
                 <TableCell>{group.teacher_profile?.full_name || "Not assigned"}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    {group.current_students_count} / {group.max_students}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      {group.enrolled_students?.length || 0} / {group.max_students}
+                    </div>
+                    {group.enrolled_students?.length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        {group.enrolled_students.slice(0, 2).map((s: any) => 
+                          s.full_name || s.email
+                        ).join(", ")}
+                        {group.enrolled_students.length > 2 && ` +${group.enrolled_students.length - 2} more`}
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
