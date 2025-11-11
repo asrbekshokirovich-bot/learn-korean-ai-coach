@@ -34,7 +34,6 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [chatOpen, setChatOpen] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [liveFeedback, setLiveFeedback] = useState<any[]>([]);
   const [showNextLesson, setShowNextLesson] = useState(false);
   const [nextLessonInfo, setNextLessonInfo] = useState<any>(null);
@@ -43,6 +42,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const realtimeChannelRef = useRef<any>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     initializeVideoLesson();
@@ -368,29 +368,36 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     if (!localStream || isRecording) return;
 
     try {
+      // Clear previous chunks
+      recordedChunksRef.current = [];
+      
       const options = { mimeType: 'video/webm;codecs=vp9,opus' };
       const recorder = new MediaRecorder(localStream, options);
-      const chunks: Blob[] = [];
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunks.push(event.data);
-          setRecordedChunks(prev => [...prev, event.data]);
+          console.log('Recording chunk received:', event.data.size, 'bytes');
+          recordedChunksRef.current.push(event.data);
         }
       };
 
       recorder.onstop = async () => {
-        console.log('Recording stopped, chunks collected:', chunks.length);
-        const blob = new Blob(chunks, { type: 'video/webm' });
+        console.log('Recording stopped naturally, chunks collected:', recordedChunksRef.current.length);
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
         console.log('Recording blob size:', blob.size);
-        await uploadRecording(blob);
+        if (blob.size > 0) {
+          await uploadRecording(blob);
+        } else {
+          console.error('Recording blob is empty!');
+          toast.error("Recording failed - no data captured");
+        }
       };
 
       recorder.start(1000); // Collect data every second
       setMediaRecorder(recorder);
-      setRecordedChunks([]);
       setIsRecording(true);
       
+      console.log('Recording started for group:', groupId);
       toast.success("Recording started");
     } catch (error) {
       console.error("Error starting recording:", error);
@@ -399,19 +406,48 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   const stopRecording = async () => {
-    if (!mediaRecorder || !isRecording) return;
+    if (!mediaRecorder || !isRecording) {
+      console.log('Cannot stop recording - no active recorder');
+      return;
+    }
+
+    console.log('Stopping recording manually, current chunks:', recordedChunksRef.current.length);
 
     return new Promise<void>((resolve) => {
+      // Override the onstop handler for manual stops
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        await uploadRecording(blob);
+        console.log('Recording stopped manually, total chunks:', recordedChunksRef.current.length);
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        console.log('Final recording blob size:', blob.size);
+        
+        if (blob.size > 0) {
+          await uploadRecording(blob);
+        } else {
+          console.error('Recording blob is empty after manual stop!');
+          toast.error("Recording failed - no data captured");
+        }
+        
         setIsRecording(false);
         setMediaRecorder(null);
-        setRecordedChunks([]);
+        recordedChunksRef.current = [];
         resolve();
       };
 
-      mediaRecorder.stop();
+      try {
+        // Request final data before stopping
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.requestData();
+          // Give a moment for the final chunk to be added
+          setTimeout(() => {
+            mediaRecorder.stop();
+          }, 100);
+        } else {
+          mediaRecorder.stop();
+        }
+      } catch (error) {
+        console.error('Error stopping recorder:', error);
+        resolve();
+      }
     });
   };
 
