@@ -326,15 +326,22 @@ const GroupManagement = () => {
         }
 
         if (toAdd.length > 0) {
-          await supabase
+          const { error: enrollError } = await supabase
             .from("group_enrollments")
             .insert(toAdd.map(studentId => ({
               group_id: groupId,
               student_id: studentId,
               status: 'active'
             })));
+          
+          if (enrollError) {
+            console.error("Enrollment insert error:", enrollError);
+            toast.error(`Failed to add students: ${enrollError.message}`);
+            return;
+          }
         }
 
+        await loadGroups();
         toast.success("Group updated successfully");
       } else {
         const { data: newGroup, error } = await supabase
@@ -352,15 +359,22 @@ const GroupManagement = () => {
 
         // Add selected students to the new group
         if (selectedStudents.length > 0) {
-          await supabase
+          const { error: enrollError } = await supabase
             .from("group_enrollments")
             .insert(selectedStudents.map(studentId => ({
               group_id: groupId,
               student_id: studentId,
               status: 'active'
             })));
+          
+          if (enrollError) {
+            console.error("Enrollment insert error:", enrollError);
+            toast.error(`Failed to add students: ${enrollError.message}`);
+            return;
+          }
         }
 
+        await loadGroups();
         toast.success("Group created successfully");
       }
 
@@ -368,7 +382,6 @@ const GroupManagement = () => {
       setEditingGroup(null);
       setSelectedStudents([]);
       form.reset();
-      loadGroups();
     } catch (error: any) {
       console.error("Form submission error:", error);
       const msg = error?.message || "Failed to save group";
