@@ -414,10 +414,13 @@ const Finance = () => {
                         name="record_date"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Date</FormLabel>
+                            <FormLabel>Transaction Date</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              The actual date when the transaction occurred
+                            </p>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -427,10 +430,13 @@ const Finance = () => {
                         name="month_period"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Month Period</FormLabel>
+                            <FormLabel>Accounting Month</FormLabel>
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Which month this transaction should be counted in for reports (usually the 1st of the month)
+                            </p>
                             <FormMessage />
                           </FormItem>
                         )}
