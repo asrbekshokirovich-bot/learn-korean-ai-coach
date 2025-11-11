@@ -61,19 +61,19 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           toast({
-            title: "Invalid credentials",
-            description: "Email or password is incorrect. Please try again.",
+            title: t('invalidCredentials'),
+            description: t('emailPasswordIncorrect'),
             variant: "destructive",
           });
         } else if (error.message.includes("Email not confirmed")) {
           toast({
-            title: "Email not confirmed",
-            description: "Please check your email and confirm your account.",
+            title: t('emailNotConfirmed'),
+            description: t('checkEmailConfirm'),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Sign in failed",
+            title: t('signInFailed'),
             description: error.message,
             variant: "destructive",
           });
@@ -110,14 +110,14 @@ const SignInDialog = ({ open, onOpenChange, onSwitchToSignUp }: SignInDialogProp
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
         toast({
-          title: "Validation error",
+          title: t('validationError'),
           description: firstError.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description: "An unexpected error occurred. Please try again.",
+          title: t('error'),
+          description: t('unexpectedError'),
           variant: "destructive",
         });
       }

@@ -10,6 +10,7 @@ import { AIAssistancePanel } from "./video-lesson/AIAssistancePanel";
 import { LessonChat } from "./video-lesson/LessonChat";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format, addDays, getDay } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface VideoLessonRoomProps {
   userRole: 'student' | 'teacher';
@@ -20,6 +21,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast: toastUI } = useToast();
+  const { t } = useLanguage();
 
   const groupId = searchParams.get('groupId');
   const groupName = searchParams.get('groupName');
@@ -124,13 +126,13 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         setTimeout(() => startRecording(), 2000);
       }
 
-      toast.success(isGroupLesson ? "Joined Group Lesson" : "Lesson Started");
+      toast.success(isGroupLesson ? t('joinedGroupLesson') : t('lessonStarted'));
 
     } catch (error) {
       console.error('Error initializing video lesson:', error);
       toastUI({
-        title: "Connection Error",
-        description: "Failed to start video lesson",
+        title: t('connectionError'),
+        description: t('failedToStartLesson'),
         variant: "destructive",
       });
     }
@@ -201,7 +203,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     try {
       // Stop recording if active and wait for upload to complete
       if (isRecording && userRole === 'teacher' && isGroupLesson) {
-        toast.info("Saving recording...");
+        toast.info(t('savingRecording'));
         await stopRecording();
         // Give a moment for upload to complete
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -309,8 +311,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     cleanup();
     
     toastUI({
-      title: isGroupLesson ? "Left Group Lesson" : "Lesson Ended",
-      description: isGroupLesson ? "You have left the group lesson" : "Thank you for the lesson!",
+      title: isGroupLesson ? t('leftGroupLesson') : t('lessonEnded'),
+      description: isGroupLesson ? t('youHaveLeftLesson') : t('thankYouForLesson'),
     });
 
     navigate(userRole === 'student' ? '/student/groups' : '/teacher/groups');
@@ -398,10 +400,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       setIsRecording(true);
       
       console.log('Recording started for group:', groupId);
-      toast.success("Recording started");
+      toast.success(t('recordingStarted'));
     } catch (error) {
       console.error("Error starting recording:", error);
-      toast.error("Failed to start recording");
+      toast.error(t('recordingFailed'));
     }
   };
 
@@ -508,10 +510,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       }
 
       console.log('Metadata created successfully:', metadataData);
-      toast.success("Recording saved successfully");
+      toast.success(t('recordingSaved'));
     } catch (error) {
       console.error("Error uploading recording:", error);
-      toast.error("Failed to save recording");
+      toast.error(t('recordingFailed'));
     }
   };
 
@@ -580,10 +582,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-muted-foreground mb-2">
-                  {isGroupLesson ? `${groupName || 'Group Lesson'}` : `Waiting for ${userRole === 'student' ? 'teacher' : 'student'}...`}
+                  {isGroupLesson ? `${groupName || t('groupLesson')}` : t(userRole === 'student' ? 'waitingForTeacher' : 'waitingForStudent')}
                 </p>
                 {isGroupLesson && (
-                  <p className="text-sm text-muted-foreground">Waiting for other participants to join...</p>
+                  <p className="text-sm text-muted-foreground">{t('waitingForParticipants')}</p>
                 )}
               </div>
             </div>
@@ -676,7 +678,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             onClick={endLesson}
           >
             <PhoneOff className="w-5 h-5 mr-2" />
-            End Lesson
+            {t('endLesson')}
           </Button>
         </div>
       </div>
@@ -690,10 +692,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     }}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Lesson Complete!</DialogTitle>
+          <DialogTitle>{t('lessonComplete')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <p className="text-muted-foreground">Great job! Here's your next lesson:</p>
+          <p className="text-muted-foreground">{t('greatJobNextLesson')}</p>
           {nextLessonInfo && (
             <div className="space-y-3 p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2">
@@ -716,7 +718,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         </div>
         <DialogFooter>
           <Button onClick={finishAndNavigate} className="w-full">
-            Back to Dashboard
+            {t('backToDashboard')}
           </Button>
         </DialogFooter>
       </DialogContent>

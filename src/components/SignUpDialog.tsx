@@ -84,13 +84,13 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       if (error) {
         if (error.message.includes("already registered")) {
           toast({
-            title: "Account already exists",
-            description: "This email is already registered. Please sign in instead.",
+            title: t('accountAlreadyExists'),
+            description: t('emailAlreadyRegistered'),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Sign up failed",
+            title: t('signUpFailed'),
             description: error.message,
             variant: "destructive",
           });
@@ -99,8 +99,8 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       }
 
       toast({
-        title: "Account created! 🎉",
-        description: "Welcome to Lingo! You can now start learning.",
+        title: t('accountCreated'),
+        description: t('welcomeToHanguk'),
       });
 
       // Reset form
@@ -111,14 +111,14 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
         toast({
-          title: "Validation error",
+          title: t('validationError'),
           description: firstError.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description: "An unexpected error occurred. Please try again.",
+          title: t('error'),
+          description: t('unexpectedError'),
           variant: "destructive",
         });
       }
@@ -156,13 +156,13 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       if (error) {
         if (error.message.includes("already registered")) {
           toast({
-            title: "Account already exists",
-            description: "This email is already registered. Please sign in instead.",
+            title: t('accountAlreadyExists'),
+            description: t('emailAlreadyRegistered'),
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Sign up failed",
+            title: t('signUpFailed'),
             description: error.message,
             variant: "destructive",
           });
@@ -171,8 +171,8 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       }
 
       toast({
-        title: "Teacher account created! 🎉",
-        description: "Welcome to Lingo! Your teacher dashboard is ready.",
+        title: t('teacherAccountCreated'),
+        description: t('teacherDashboardReady'),
       });
 
       // Reset form
@@ -184,14 +184,14 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
         toast({
-          title: "Validation error",
+          title: t('validationError'),
           description: firstError.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description: "An unexpected error occurred. Please try again.",
+          title: t('error'),
+          description: t('unexpectedError'),
           variant: "destructive",
         });
       }

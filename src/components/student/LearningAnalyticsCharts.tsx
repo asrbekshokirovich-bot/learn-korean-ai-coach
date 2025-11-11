@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { TrendingUp, Calendar, Target, BookOpen } from "lucide-react";
 import { format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AnalyticsData {
   attendanceData: any[];
@@ -26,6 +27,7 @@ interface AnalyticsData {
 }
 
 export const LearningAnalyticsCharts = () => {
+  const { t } = useLanguage();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     attendanceData: [],
     homeworkData: [],
@@ -198,24 +200,24 @@ export const LearningAnalyticsCharts = () => {
       <CardHeader className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5">
         <CardTitle className="flex items-center gap-2 text-xl">
           <TrendingUp className="w-6 h-6 text-primary" />
-          Learning Progress Analytics
+          {t('learningProgressAnalytics')}
         </CardTitle>
-        <p className="text-sm text-muted-foreground mt-1">Track your performance over the last 6 months</p>
+        <p className="text-sm text-muted-foreground mt-1">{t('trackPerformance')}</p>
       </CardHeader>
       <CardContent className="pt-6">
         <Tabs defaultValue="attendance" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="attendance" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">Attendance</span>
+              <span className="hidden sm:inline">{t('attendance')}</span>
             </TabsTrigger>
             <TabsTrigger value="homework" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Homework</span>
+              <span className="hidden sm:inline">{t('homework')}</span>
             </TabsTrigger>
             <TabsTrigger value="goals" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">Goals</span>
+              <span className="hidden sm:inline">{t('goals')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -249,7 +251,7 @@ export const LearningAnalyticsCharts = () => {
                     fillOpacity={1}
                     fill="url(#colorCompleted)"
                     animationDuration={1000}
-                    name="Lessons Completed"
+                    name={t('lessonsCompleted')}
                   />
                   <Area
                     type="monotone"
@@ -259,7 +261,7 @@ export const LearningAnalyticsCharts = () => {
                     strokeDasharray="5 5"
                     fill="none"
                     animationDuration={1000}
-                    name="Total Lessons"
+                    name={t('totalLessons')}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -269,7 +271,7 @@ export const LearningAnalyticsCharts = () => {
                 <div key={i} className="bg-muted/30 rounded-lg p-4 text-center">
                   <p className="text-sm text-muted-foreground mb-1">{data.month}</p>
                   <p className="text-2xl font-bold text-primary">{data.rate}%</p>
-                  <p className="text-xs text-muted-foreground">{data.completed}/{data.total} lessons</p>
+                  <p className="text-xs text-muted-foreground">{data.completed}/{data.total} {t('lessons')}</p>
                 </div>
               ))}
             </div>
@@ -296,14 +298,14 @@ export const LearningAnalyticsCharts = () => {
                     fill="hsl(var(--accent))"
                     radius={[8, 8, 0, 0]}
                     animationDuration={1000}
-                    name="Completion Rate (%)"
+                    name={t('completionRate')}
                   />
                   <Bar
                     dataKey="avgGrade"
                     fill="hsl(var(--secondary))"
                     radius={[8, 8, 0, 0]}
                     animationDuration={1200}
-                    name="Average Grade"
+                    name={t('averageGrade')}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -343,7 +345,7 @@ export const LearningAnalyticsCharts = () => {
                     dot={{ r: 6, fill: "hsl(var(--primary))" }}
                     activeDot={{ r: 8 }}
                     animationDuration={1000}
-                    name="Avg Progress (%)"
+                    name={t('avgProgress')}
                   />
                   <Line
                     type="monotone"
@@ -353,7 +355,7 @@ export const LearningAnalyticsCharts = () => {
                     dot={{ r: 6, fill: "hsl(var(--secondary))" }}
                     activeDot={{ r: 8 }}
                     animationDuration={1200}
-                    name="Goals Completed"
+                    name={t('goalsCompleted')}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -363,7 +365,7 @@ export const LearningAnalyticsCharts = () => {
                 <div key={i} className="bg-muted/30 rounded-lg p-4 text-center">
                   <p className="text-sm text-muted-foreground mb-1">{data.month}</p>
                   <p className="text-2xl font-bold text-secondary">{data.progress}%</p>
-                  <p className="text-xs text-muted-foreground">{data.completed} completed</p>
+                  <p className="text-xs text-muted-foreground">{data.completed} {t('completed')}</p>
                 </div>
               ))}
             </div>
