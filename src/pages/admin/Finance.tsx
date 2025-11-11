@@ -49,7 +49,6 @@ const transactionSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   description: z.string().min(1, "Description is required"),
   record_date: z.string().min(1, "Date is required"),
-  month_period: z.string().min(1, "Month period is required"),
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -75,7 +74,6 @@ const Finance = () => {
       amount: "",
       description: "",
       record_date: format(new Date(), "yyyy-MM-dd"),
-      month_period: format(startOfMonth(new Date()), "yyyy-MM-dd"),
     },
   });
 
@@ -158,13 +156,17 @@ const Finance = () => {
         chequeFilePath = filePath;
       }
 
+      // Calculate month_period from record_date (first day of the month)
+      const recordDate = new Date(values.record_date);
+      const monthPeriod = format(startOfMonth(recordDate), "yyyy-MM-dd");
+
       // Insert transaction record
       const { error } = await supabase.from("finance_records").insert({
         record_type: values.record_type,
         amount: parseFloat(values.amount),
         description: values.description,
         record_date: values.record_date,
-        month_period: values.month_period,
+        month_period: monthPeriod,
         cheque_file_path: chequeFilePath,
       });
 
@@ -418,25 +420,6 @@ const Finance = () => {
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
-                            <p className="text-xs text-muted-foreground">
-                              The actual date when the transaction occurred
-                            </p>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="month_period"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Accounting Month</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground">
-                              Which month this transaction should be counted in for reports (usually the 1st of the month)
-                            </p>
                             <FormMessage />
                           </FormItem>
                         )}
