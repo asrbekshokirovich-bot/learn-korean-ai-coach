@@ -42,7 +42,26 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
   useEffect(() => {
     initializeVideoLesson();
-    return () => cleanup();
+    
+    // Listen for global stop media event (e.g., from sign out)
+    const handleStopMedia = () => {
+      cleanup();
+    };
+    
+    window.addEventListener('stopAllMedia', handleStopMedia);
+    
+    // Cleanup when component unmounts or browser closes
+    const handleBeforeUnload = () => {
+      cleanup();
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      cleanup();
+      window.removeEventListener('stopAllMedia', handleStopMedia);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
   }, [lessonId, groupId]);
 
   const initializeVideoLesson = async () => {
@@ -225,17 +244,50 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   const cleanup = () => {
+    // Stop recording if active
     if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
+      try {
+        mediaRecorder.stop();
+      } catch (e) {
+        console.log('MediaRecorder already stopped');
+      }
     }
+
+    // Stop all local stream tracks
     if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+      localStream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Stopped local track:', track.kind, track.label);
+      });
+      setLocalStream(null);
     }
+
+    // Stop all remote stream tracks
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => {
+        track.stop();
+      });
+      setRemoteStream(null);
+    }
+
+    // Close peer connection
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
     }
+
+    // Remove realtime channel
     if (realtimeChannelRef.current) {
       supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+
+    // Clear video element sources
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
     }
   };
 

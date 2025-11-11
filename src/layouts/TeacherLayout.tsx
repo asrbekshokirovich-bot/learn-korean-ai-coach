@@ -64,6 +64,12 @@ const TeacherLayout = () => {
   };
 
   const handleSignOut = async () => {
+    // Dispatch event to stop all media streams
+    window.dispatchEvent(new CustomEvent('stopAllMedia'));
+    
+    // Wait a moment for cleanup to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     await supabase.auth.signOut();
     navigate("/");
   };
