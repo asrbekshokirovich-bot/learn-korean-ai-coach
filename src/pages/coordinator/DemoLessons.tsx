@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+// Helper to bypass strict typing when backend tables are not yet available
+const from = (table: string) => (supabase as any).from(table);
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -63,8 +67,7 @@ const DemoLessons = () => {
 
   const loadDemoLessons = async () => {
     try {
-      const { data, error } = await supabase
-        .from('demo_lessons')
+      const { data, error } = await from('demo_lessons')
         .select(`
           *,
           student:profiles!demo_lessons_student_id_fkey(full_name, email, topik_level)
@@ -113,8 +116,7 @@ const DemoLessons = () => {
 
     try {
       // Update demo lesson
-      const { error: demoError } = await supabase
-        .from('demo_lessons')
+      const { error: demoError } = await from('demo_lessons')
         .update({
           status: 'completed',
           completed_at: new Date().toISOString(),
