@@ -160,6 +160,48 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_lessons: {
+        Row: {
+          ai_recommendations: Json | null
+          completed_at: string | null
+          coordinator_id: string
+          coordinator_notes: string | null
+          created_at: string
+          detected_level: string | null
+          id: string
+          scheduled_at: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_recommendations?: Json | null
+          completed_at?: string | null
+          coordinator_id: string
+          coordinator_notes?: string | null
+          created_at?: string
+          detected_level?: string | null
+          id?: string
+          scheduled_at: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_recommendations?: Json | null
+          completed_at?: string | null
+          coordinator_id?: string
+          coordinator_notes?: string | null
+          created_at?: string
+          detected_level?: string | null
+          id?: string
+          scheduled_at?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drama_comments: {
         Row: {
           created_at: string
@@ -534,6 +576,7 @@ export type Database = {
           day_of_week: number[]
           description: string | null
           duration_minutes: number
+          group_level_analysis: Json | null
           id: string
           level: string
           max_students: number
@@ -550,6 +593,7 @@ export type Database = {
           day_of_week?: number[]
           description?: string | null
           duration_minutes?: number
+          group_level_analysis?: Json | null
           id?: string
           level: string
           max_students?: number
@@ -566,6 +610,7 @@ export type Database = {
           day_of_week?: number[]
           description?: string | null
           duration_minutes?: number
+          group_level_analysis?: Json | null
           id?: string
           level?: string
           max_students?: number

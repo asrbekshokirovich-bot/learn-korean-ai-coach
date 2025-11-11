@@ -29,27 +29,57 @@ serve(async (req) => {
 
     if (studentError) throw studentError;
 
-    // Get all active groups for the detected level
+    // Get all active groups
     const { data: groups, error: groupsError } = await supabase
-      .from('lesson_groups')
-      .select(`
-        *,
-        teacher:profiles!lesson_groups_teacher_id_fkey(full_name, email)
-      `)
-      .eq('level', detectedLevel)
-      .eq('is_active', true)
-      .order('current_students', { ascending: true });
+      .from('groups')
+      .select('*')
+      .eq('status', 'active')
+      .order('current_students_count', { ascending: true });
 
     if (groupsError) throw groupsError;
 
-    // Get enrollments for each group to understand student composition
-    const groupIds = (groups || []).map(g => g.id);
+    if (!groups || groups.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          recommendations: [],
+          groups: []
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Analyzing ${groups.length} groups for student level: ${detectedLevel}`);
+
+    // Analyze all groups to get current level data
+    for (const group of groups) {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/analyze-group-level`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${supabaseKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ groupId: group.id }),
+        });
+      } catch (e) {
+        console.error(`Failed to analyze group ${group.id}:`, e);
+      }
+    }
+
+    // Refresh groups data to get analysis
+    const { data: analyzedGroups } = await supabase
+      .from("groups")
+      .select("*")
+      .eq("status", "active");
+
+    // Get enrollments for each group
+    const groupIds = (analyzedGroups || []).map((g: any) => g.id);
     const { data: enrollments } = await supabase
       .from('group_enrollments')
       .select(`
         group_id,
-        student_id,
-        profiles!group_enrollments_student_id_fkey(topik_level)
+        student_id
       `)
       .in('group_id', groupIds)
       .eq('status', 'active');
@@ -76,25 +106,28 @@ Return a JSON array of recommendations with this exact structure:
 
     const userPrompt = `Student Information:
 - Name: ${student.full_name}
-- Detected Level: ${detectedLevel}
+- Detected Level from Demo: ${detectedLevel}
 - Coordinator Notes: ${coordinatorNotes || 'None'}
 
-Available Groups for Level ${detectedLevel}:
-${(groups || []).map((g: any, i: number) => {
+Available Groups:
+${(analyzedGroups || []).map((g: any, i: number) => {
   const groupEnrollments = (enrollments || []).filter((e: any) => e.group_id === g.id);
-  const studentLevels = groupEnrollments.map((e: any) => e.profiles?.topik_level || 'Unknown').join(', ');
+  const analysis = g.group_level_analysis;
   
   return `
 ${i + 1}. ${g.name}
-   - Teacher: ${g.teacher?.full_name || 'Unknown'}
-   - Current Students: ${g.current_students}/${g.max_students}
+   - Declared Level: ${g.level}
+   - AI Assessed Level: ${analysis?.averageLevel || 'Not analyzed'}
+   - Group Cohesion Score: ${analysis?.groupCohesion || 'N/A'}
+   - Suitable for ${detectedLevel}: ${analysis?.suitableForNewStudent?.[detectedLevel] ? 'Yes' : 'No'}
+   - Current Students: ${g.current_students_count}/${g.max_students}
    - Duration: ${g.duration_minutes} minutes
-   - Schedule: Day ${g.schedule_day} at ${g.schedule_time}
-   - Student Levels in Group: ${studentLevels || 'New group'}
+   - Schedule: Days ${Array.isArray(g.day_of_week) ? g.day_of_week.join(', ') : g.day_of_week} at ${g.start_time}
+   - Level Distribution: ${analysis ? JSON.stringify(analysis.levelDistribution) : 'Unknown'}
 `;
 }).join('\n')}
 
-Recommend the best 1-3 groups for this student.`;
+Recommend the best 1-3 groups for this student considering ACTUAL group levels from AI analysis.`;
 
     console.log('Calling Lovable AI for group recommendation...');
 
@@ -140,14 +173,20 @@ Recommend the best 1-3 groups for this student.`;
       recommendations = JSON.parse(aiContent);
     } catch (e) {
       console.error('Failed to parse AI response, using fallback:', e);
-      // Fallback: recommend group with most space at the right level
-      const groupsArray = groups || [];
-      recommendations = groupsArray.slice(0, 3).map((g: any, i: number) => ({
-        group_id: g.id,
-        confidence: 80 - (i * 10),
-        reasoning: `Group has ${g.max_students - g.current_students} available spots and matches the student's level.`,
-        priority: i + 1
-      }));
+      // Fallback: recommend group with most space that matches level
+      const groupsArray = analyzedGroups || [];
+      const matchingGroups = groupsArray.filter((g: any) => 
+        g.level === detectedLevel || 
+        g.group_level_analysis?.averageLevel === detectedLevel
+      );
+      recommendations = (matchingGroups.length > 0 ? matchingGroups : groupsArray)
+        .slice(0, 3)
+        .map((g: any, i: number) => ({
+          group_id: g.id,
+          confidence: 70 - (i * 10),
+          reasoning: `Group has ${g.max_students - g.current_students_count} available spots.`,
+          priority: i + 1
+        }));
     }
 
     // Update demo lesson with recommendations
@@ -170,13 +209,15 @@ Recommend the best 1-3 groups for this student.`;
       JSON.stringify({
         success: true,
         recommendations,
-        groups: (groups || []).map((g: any) => ({
+        groups: (analyzedGroups || []).map((g: any) => ({
           id: g.id,
           name: g.name,
-          teacher: g.teacher?.full_name || 'Unknown',
-          current_students: g.current_students,
+          level: g.level,
+          assessedLevel: g.group_level_analysis?.averageLevel,
+          current_students: g.current_students_count,
           max_students: g.max_students,
-          duration_minutes: g.duration_minutes
+          duration_minutes: g.duration_minutes,
+          cohesionScore: g.group_level_analysis?.groupCohesion
         }))
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
