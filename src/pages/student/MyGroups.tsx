@@ -135,23 +135,30 @@ const MyGroups = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h2 className="text-3xl font-bold mb-2">My Groups</h2>
         <p className="text-muted-foreground">View and chat with your enrolled groups</p>
       </div>
 
-      {enrollments.length === 0 ? (
-        <Card className="p-8 text-center">
-          <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">No Groups Yet</h3>
-          <p className="text-muted-foreground">
-            You haven't been enrolled in any groups yet. Contact support to join a group!
-          </p>
-        </Card>
-      ) : (
-        <div className="grid gap-4">
-          {enrollments.map((enrollment) => {
+      {/* Groups Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-primary" />
+          <h3 className="text-2xl font-semibold">Groups</h3>
+        </div>
+
+        {enrollments.length === 0 ? (
+          <Card className="p-8 text-center">
+            <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">No Groups Yet</h3>
+            <p className="text-muted-foreground">
+              You haven't been enrolled in any groups yet. Contact support to join a group!
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            {enrollments.map((enrollment) => {
             const group = enrollment.groups;
             return (
               <Card key={enrollment.id} className="p-6">
@@ -209,11 +216,18 @@ const MyGroups = () => {
               </Card>
             );
           })}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
-      {/* Big Calendar Section */}
-      <Card className="mt-8">
+      {/* Lesson Calendar Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-primary" />
+          <h3 className="text-2xl font-semibold">Lesson Calendar</h3>
+        </div>
+
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span>Group Lesson Calendar</span>
@@ -278,10 +292,10 @@ const MyGroups = () => {
             })}
           </div>
         </CardContent>
-      </Card>
+        </Card>
 
-      {/* Selected Day Lessons */}
-      {selectedDateLessons.length > 0 && (
+        {/* Selected Day Lessons */}
+        {selectedDateLessons.length > 0 && (
         <Card className="mt-6">
           <CardHeader>
             <CardTitle>
@@ -329,8 +343,9 @@ const MyGroups = () => {
               })}
             </div>
           </CardContent>
-        </Card>
-      )}
+          </Card>
+        )}
+      </div>
     </div>
   );
 };
