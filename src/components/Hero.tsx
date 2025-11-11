@@ -61,16 +61,16 @@ const Hero = () => {
 
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-12">
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">50+</div>
-              <div className="text-sm text-primary-foreground/70">{t('aiPersonas')}</div>
+              <div className="text-3xl md:text-4xl font-bold text-card-foreground">50+</div>
+              <div className="text-sm text-card-foreground/70">{t('aiPersonas')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">90%</div>
-              <div className="text-sm text-primary-foreground/70">{t('topikPassRate')}</div>
+              <div className="text-3xl md:text-4xl font-bold text-card-foreground">90%</div>
+              <div className="text-sm text-card-foreground/70">{t('topikPassRate')}</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-primary-foreground">24/7</div>
-              <div className="text-sm text-primary-foreground/70">{t('aiPractice')}</div>
+              <div className="text-3xl md:text-4xl font-bold text-card-foreground">24/7</div>
+              <div className="text-sm text-card-foreground/70">{t('aiPractice')}</div>
             </div>
           </div>
         </div>
