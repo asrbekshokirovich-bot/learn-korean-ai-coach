@@ -362,6 +362,12 @@ const GroupManagement = () => {
           }
         }
 
+        // Update current_students_count
+        await supabase
+          .from("groups")
+          .update({ current_students_count: selectedStudents.length })
+          .eq("id", groupId);
+
         await loadGroups();
         toast.success("Group updated successfully");
       } else {
@@ -394,6 +400,12 @@ const GroupManagement = () => {
             return;
           }
         }
+
+        // Update current_students_count
+        await supabase
+          .from("groups")
+          .update({ current_students_count: selectedStudents.length })
+          .eq("id", groupId);
 
         await loadGroups();
         toast.success("Group created successfully");

@@ -28,7 +28,10 @@ const MyGroups = () => {
         .from("group_enrollments")
         .select(`
           *,
-          groups:groups!group_enrollments_group_id_fkey(*)
+          groups:groups!group_enrollments_group_id_fkey(
+            *,
+            teacher:profiles!groups_teacher_id_fkey(full_name, email)
+          )
         `)
         .eq("student_id", user.id)
         .eq("status", "active");
@@ -117,7 +120,7 @@ const MyGroups = () => {
                       <div>
                         <p className="text-muted-foreground text-xs">Teacher</p>
                         <p className="font-medium">
-                          {group.profiles?.full_name || "Not assigned"}
+                          {group.teacher?.full_name || "Not assigned"}
                         </p>
                       </div>
                     </div>
