@@ -49,6 +49,7 @@ const transactionSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   description: z.string().min(1, "Description is required"),
   record_date: z.string().min(1, "Date is required"),
+  category: z.string().optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -74,6 +75,7 @@ const Finance = () => {
       amount: "",
       description: "",
       record_date: format(new Date(), "yyyy-MM-dd"),
+      category: "",
     },
   });
 
@@ -168,6 +170,7 @@ const Finance = () => {
         record_date: values.record_date,
         month_period: monthPeriod,
         cheque_file_path: chequeFilePath,
+        category: values.category || null,
       });
 
       if (error) throw error;
@@ -413,6 +416,33 @@ const Finance = () => {
                       />
                       <FormField
                         control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Category</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="tuition">Tuition Fees</SelectItem>
+                                <SelectItem value="salaries">Salaries</SelectItem>
+                                <SelectItem value="marketing">Marketing</SelectItem>
+                                <SelectItem value="utilities">Utilities</SelectItem>
+                                <SelectItem value="supplies">Supplies</SelectItem>
+                                <SelectItem value="rent">Rent</SelectItem>
+                                <SelectItem value="software">Software & Tools</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
                         name="record_date"
                         render={({ field }) => (
                           <FormItem>
@@ -455,6 +485,7 @@ const Finance = () => {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Month</TableHead>
@@ -467,6 +498,11 @@ const Finance = () => {
                     <TableCell>{format(new Date(record.record_date), "MMM dd, yyyy")}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{record.record_type}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {record.category && (
+                        <Badge variant="secondary">{record.category}</Badge>
+                      )}
                     </TableCell>
                     <TableCell>{record.description}</TableCell>
                     <TableCell className="font-semibold">{Number(record.amount).toLocaleString()} so'm</TableCell>
