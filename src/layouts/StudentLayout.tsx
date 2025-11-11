@@ -11,7 +11,6 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Dashboard from "@/pages/student/Dashboard";
 import Practice from "@/pages/student/Practice";
-import TopikPrep from "@/pages/student/TopikPrep";
 import ConversationPractice from "@/pages/student/ConversationPractice";
 import KDrama from "@/pages/student/KDrama";
 import MyGroups from "@/pages/student/MyGroups";
@@ -123,7 +122,6 @@ const StudentLayout = () => {
               <Route path="video-lesson" element={<VideoLesson />} />
               <Route path="practice" element={<Practice />} />
               <Route path="kdrama" element={<KDrama />} />
-              <Route path="topik" element={<TopikPrep />} />
               <Route path="conversations" element={<ConversationPractice />} />
             </Routes>
             </div>
