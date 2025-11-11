@@ -91,38 +91,74 @@ const GroupManagement = () => {
   }, []);
 
   const loadGroups = async () => {
-    const { data, error } = await supabase
+    const { data: groupsData, error: groupsError } = await supabase
       .from("groups")
-      .select(`
-        *,
-        profiles!groups_teacher_id_fkey(full_name, email)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) {
+    if (groupsError) {
       toast.error("Failed to load groups");
       return;
     }
 
-    setGroups(data || []);
+    const teacherIds = (groupsData || [])
+      .map((g: any) => g.teacher_id)
+      .filter((id: string | null | undefined): id is string => !!id);
+
+    let teacherProfilesMap: Record<string, any> = {};
+    if (teacherIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", teacherIds);
+
+      if (!profilesError && profilesData) {
+        teacherProfilesMap = Object.fromEntries(
+          profilesData.map((p: any) => [p.user_id, p])
+        );
+      }
+    }
+
+    const enriched = (groupsData || []).map((g: any) => ({
+      ...g,
+      teacher_profile: g.teacher_id ? teacherProfilesMap[g.teacher_id] : null,
+    }));
+
+    setGroups(enriched);
   };
 
   const loadTeachers = async () => {
-    const { data, error } = await supabase
+    // Step 1: get all user ids that have the 'teacher' role
+    const { data: roles, error: rolesError } = await supabase
       .from("user_roles")
-      .select(`
-        user_id,
-        profiles!user_roles_user_id_fkey(user_id, full_name, email)
-      `)
+      .select("user_id")
       .eq("role", "teacher");
 
-    if (error) {
+    if (rolesError) {
+      console.error("loadTeachers roles error:", rolesError);
       toast.error("Failed to load teachers");
       return;
     }
 
-    const teacherProfiles = data?.map(d => d.profiles).filter(Boolean) || [];
-    setTeachers(teacherProfiles as any);
+    const ids = (roles || []).map((r: any) => r.user_id);
+    if (ids.length === 0) {
+      setTeachers([]);
+      return;
+    }
+
+    // Step 2: load their profiles
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", ids);
+
+    if (profilesError) {
+      console.error("loadTeachers profiles error:", profilesError);
+      toast.error("Failed to load teachers");
+      return;
+    }
+
+    setTeachers((profiles as any) || []);
   };
 
   const onSubmit = async (values: GroupFormValues) => {
@@ -420,7 +456,7 @@ const GroupManagement = () => {
                 <TableCell>
                   {DAYS_OF_WEEK.find(d => d.value === group.day_of_week.toString())?.label} {group.start_time} ({group.duration_minutes}min)
                 </TableCell>
-                <TableCell>{group.profiles?.full_name || "Not assigned"}</TableCell>
+                <TableCell>{group.teacher_profile?.full_name || "Not assigned"}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
