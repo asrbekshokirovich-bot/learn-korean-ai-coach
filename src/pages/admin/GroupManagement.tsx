@@ -165,6 +165,10 @@ const GroupManagement = () => {
     try {
       console.log("Form submitted with values:", values);
       
+      const normalizedStartTime = values.start_time?.length === 5 
+        ? `${values.start_time}:00`
+        : values.start_time;
+
       const groupData = {
         name: values.name,
         level: values.level,
@@ -172,8 +176,9 @@ const GroupManagement = () => {
         max_students: parseInt(values.max_students),
         teacher_id: values.teacher_id || null,
         day_of_week: parseInt(values.day_of_week),
-        start_time: values.start_time,
+        start_time: normalizedStartTime,
         duration_minutes: parseInt(values.duration_minutes),
+        status: 'active',
       };
 
       console.log("Prepared group data:", groupData);
