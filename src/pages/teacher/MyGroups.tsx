@@ -27,6 +27,8 @@ const MyGroups = () => {
   const [homeworkTitle, setHomeworkTitle] = useState("");
   const [homeworkDescription, setHomeworkDescription] = useState("");
   const [homeworkDueDate, setHomeworkDueDate] = useState("");
+  const [homeworkFile, setHomeworkFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
     loadGroups();
@@ -128,8 +130,32 @@ const MyGroups = () => {
     }
 
     try {
+      setUploadingFile(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      let attachmentUrl = null;
+      let attachmentName = null;
+      let attachmentSize = null;
+
+      // Upload file if provided
+      if (homeworkFile) {
+        const fileExt = homeworkFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('homework-files')
+          .upload(fileName, homeworkFile);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw new Error("Failed to upload file");
+        }
+
+        attachmentUrl = fileName;
+        attachmentName = homeworkFile.name;
+        attachmentSize = homeworkFile.size;
+      }
 
       // Get all students in this group
       const { data: enrollments, error: enrollError } = await supabase
@@ -148,7 +174,10 @@ const MyGroups = () => {
         description: homeworkDescription || null,
         due_date: homeworkDueDate ? new Date(homeworkDueDate).toISOString() : null,
         status: "assigned",
-        lesson_id: selectedGroupForCalendar.id // Using group_id as lesson_id for reference
+        lesson_id: selectedGroupForCalendar.id,
+        attachment_url: attachmentUrl,
+        attachment_name: attachmentName,
+        attachment_size: attachmentSize
       }));
 
       const { error: insertError } = await supabase
@@ -162,9 +191,12 @@ const MyGroups = () => {
       setHomeworkTitle("");
       setHomeworkDescription("");
       setHomeworkDueDate("");
+      setHomeworkFile(null);
     } catch (error: any) {
       console.error("Error assigning homework:", error);
       toast.error("Failed to assign homework");
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -293,8 +325,26 @@ const MyGroups = () => {
                       onChange={(e) => setHomeworkDueDate(e.target.value)}
                     />
                   </div>
-                  <Button onClick={handleAssignHomework} className="w-full">
-                    Assign Homework
+                  <div className="space-y-2">
+                    <Label htmlFor="attachment">Attachment (optional)</Label>
+                    <Input
+                      id="attachment"
+                      type="file"
+                      onChange={(e) => setHomeworkFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                    />
+                    {homeworkFile && (
+                      <p className="text-xs text-muted-foreground">
+                        Selected: {homeworkFile.name} ({(homeworkFile.size / 1024).toFixed(2)} KB)
+                      </p>
+                    )}
+                  </div>
+                  <Button 
+                    onClick={handleAssignHomework} 
+                    className="w-full"
+                    disabled={uploadingFile}
+                  >
+                    {uploadingFile ? "Uploading..." : "Assign Homework"}
                   </Button>
                 </div>
               </DialogContent>

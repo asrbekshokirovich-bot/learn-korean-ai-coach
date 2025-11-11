@@ -527,6 +527,9 @@ export type Database = {
       homework_assignments: {
         Row: {
           ai_grade: number | null
+          attachment_name: string | null
+          attachment_size: number | null
+          attachment_url: string | null
           created_at: string
           description: string | null
           due_date: string | null
@@ -544,6 +547,9 @@ export type Database = {
         }
         Insert: {
           ai_grade?: number | null
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_url?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -561,6 +567,9 @@ export type Database = {
         }
         Update: {
           ai_grade?: number | null
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_url?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
