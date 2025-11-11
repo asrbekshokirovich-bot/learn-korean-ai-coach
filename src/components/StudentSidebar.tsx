@@ -24,7 +24,6 @@ export function StudentSidebar() {
 
   const items = [
     { title: t('dashboard'), url: '/student', icon: Home },
-    { title: t('lessons'), url: '/student/lessons', icon: BookOpen },
     { title: 'My Groups', url: '/student/groups', icon: Users },
     { title: t('practice'), url: '/student/practice', icon: Brain },
     { title: 'K-Drama Hub', url: '/student/kdrama', icon: Film },

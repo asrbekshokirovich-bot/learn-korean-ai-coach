@@ -10,7 +10,6 @@ import { LogOut, Moon, Sun } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Dashboard from "@/pages/student/Dashboard";
-import Lessons from "@/pages/student/Lessons";
 import Practice from "@/pages/student/Practice";
 import TopikPrep from "@/pages/student/TopikPrep";
 import ConversationPractice from "@/pages/student/ConversationPractice";
@@ -111,7 +110,6 @@ const StudentLayout = () => {
             <div className="max-w-7xl mx-auto">
             <Routes>
               <Route index element={<Dashboard />} />
-              <Route path="lessons" element={<Lessons />} />
               <Route path="groups" element={<MyGroups />} />
               <Route path="schedule" element={<GroupSchedule />} />
               <Route path="video-lesson" element={<VideoLesson />} />
