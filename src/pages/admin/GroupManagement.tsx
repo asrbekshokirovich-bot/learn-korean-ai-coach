@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -73,6 +74,8 @@ const GroupManagement = () => {
   const [editingGroup, setEditingGroup] = useState<any>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [permChecked, setPermChecked] = useState(false);
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
@@ -101,6 +104,31 @@ const GroupManagement = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Check admin permission via RPC once auth is ready
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!authReady || !session?.user) return;
+      try {
+        const { data, error } = await supabase.rpc('has_role', {
+          _user_id: session.user.id,
+          _role: 'admin'
+        });
+        if (error) {
+          console.error('has_role RPC error:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(Boolean(data));
+        }
+      } catch (e) {
+        console.error('has_role RPC exception:', e);
+        setIsAdmin(false);
+      } finally {
+        setPermChecked(true);
+      }
+    };
+    checkAdmin();
+  }, [authReady, session]);
 
   // Load data only when auth is initialized
   useEffect(() => {
@@ -186,6 +214,10 @@ const GroupManagement = () => {
       
       if (!session?.user) {
         toast.error("Your session expired. Please log in again.");
+        return;
+      }
+      if (!isAdmin) {
+        toast.error("You don't have permission to perform this action.");
         return;
       }
       
@@ -289,7 +321,7 @@ const GroupManagement = () => {
         </div>
         <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
-            <Button>
+            <Button disabled={!permChecked || !session?.user || !isAdmin}>
               <Plus className="w-4 h-4 mr-2" />
               Create Group
             </Button>
@@ -303,6 +335,14 @@ const GroupManagement = () => {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {!permChecked || !session?.user || !isAdmin ? (
+                  <Alert variant="destructive">
+                    <AlertTitle>Permission required</AlertTitle>
+                    <AlertDescription>
+                      You must be logged in as an admin to create or edit groups.
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
