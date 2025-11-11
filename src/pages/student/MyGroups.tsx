@@ -14,6 +14,7 @@ const MyGroups = () => {
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadEnrollments();
@@ -28,17 +29,27 @@ const MyGroups = () => {
         .from("group_enrollments")
         .select(`
           *,
-          groups:groups!group_enrollments_group_id_fkey(
-            *,
-            teacher:profiles!groups_teacher_id_fkey(full_name, email)
-          )
+          groups:groups!group_enrollments_group_id_fkey(*)
         `)
         .eq("student_id", user.id)
         .eq("status", "active");
 
       if (error) throw error;
 
-      setEnrollments(data || []);
+      const enrolls = data || [];
+      setEnrollments(enrolls);
+
+      const teacherIds = Array.from(new Set(enrolls.map((e: any) => e.groups?.teacher_id).filter((id: string) => !!id)));
+      if (teacherIds.length > 0) {
+        const { data: profiles, error: pErr } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", teacherIds);
+        if (!pErr && profiles) {
+          const map = Object.fromEntries(profiles.map((p: any) => [p.user_id, p.full_name]));
+          setTeacherNames(map);
+        }
+      }
     } catch (error: any) {
       toast.error("Failed to load groups");
     } finally {
@@ -120,7 +131,7 @@ const MyGroups = () => {
                       <div>
                         <p className="text-muted-foreground text-xs">Teacher</p>
                         <p className="font-medium">
-                          {group.teacher?.full_name || "Not assigned"}
+                          {teacherNames[group.teacher_id] || "Not assigned"}
                         </p>
                       </div>
                     </div>

@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Clock, Users, Video, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { format, isSameDay, addDays, startOfWeek, getDay } from "date-fns";
+import { format, addDays, startOfWeek, getDay } from "date-fns";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -18,16 +17,14 @@ interface GroupLesson {
   day_of_week: number[];
   start_time: string;
   duration_minutes: number;
-  teacher?: {
-    full_name: string;
-  };
+  teacher_id?: string | null;
 }
 
 const GroupSchedule = () => {
   const [groups, setGroups] = useState<GroupLesson[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedLesson, setSelectedLesson] = useState<GroupLesson | null>(null);
   const [loading, setLoading] = useState(true);
+  const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadGroups();
@@ -48,7 +45,7 @@ const GroupSchedule = () => {
             day_of_week,
             start_time,
             duration_minutes,
-            teacher:profiles!groups_teacher_id_fkey(full_name)
+            teacher_id
           )
         `)
         .eq("student_id", user.id)
@@ -56,11 +53,23 @@ const GroupSchedule = () => {
 
       if (error) throw error;
 
-      const groupsData = (data || [])
+      const groupsData: GroupLesson[] = (data || [])
         .map((e: any) => e.groups)
         .filter((g: any) => g !== null);
-      
+
       setGroups(groupsData);
+
+      // Fetch teacher names separately (no FK relationship in DB schema)
+      const teacherIds = Array.from(new Set(groupsData.map(g => g.teacher_id).filter(Boolean))) as string[];
+      if (teacherIds.length > 0) {
+        const { data: profiles, error: pErr } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", teacherIds);
+        if (!pErr && profiles) {
+          setTeacherNames(Object.fromEntries(profiles.map((p: any) => [p.user_id, p.full_name])));
+        }
+      }
     } catch (error: any) {
       toast.error("Failed to load schedule");
     } finally {
@@ -70,16 +79,16 @@ const GroupSchedule = () => {
 
   const getLessonsForDate = (date: Date) => {
     const dayOfWeek = getDay(date);
-    return groups.filter(group => 
-      Array.isArray(group.day_of_week) 
+    return groups.filter(group =>
+      Array.isArray(group.day_of_week)
         ? group.day_of_week.includes(dayOfWeek)
-        : group.day_of_week === dayOfWeek
+        : (group.day_of_week as unknown as number) === dayOfWeek
     );
   };
 
   const handleJoinLesson = (lesson: GroupLesson) => {
     const now = new Date();
-    const [hours, minutes] = lesson.start_time.split(':').map(Number);
+    const [hours, minutes] = lesson.start_time.split(":").map(Number);
     const lessonStart = new Date(selectedDate!);
     lessonStart.setHours(hours, minutes, 0, 0);
     const lessonEnd = new Date(lessonStart.getTime() + lesson.duration_minutes * 60000);
@@ -95,15 +104,14 @@ const GroupSchedule = () => {
       return;
     }
 
-    // Join the lesson (implement your video call logic here)
     toast.success("Joining lesson...");
-    // window.open(meetingLink, '_blank');
+    // TODO: open meeting link when available
   };
 
   const daysWithLessons = groups.flatMap(group => {
     const weekStart = startOfWeek(new Date());
-    return (Array.isArray(group.day_of_week) ? group.day_of_week : [group.day_of_week]).map(day => 
-      addDays(weekStart, day)
+    return (Array.isArray(group.day_of_week) ? group.day_of_week : [group.day_of_week]).map(day =>
+      addDays(weekStart, day as number)
     );
   });
 
@@ -174,7 +182,7 @@ const GroupSchedule = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-muted-foreground" />
-                            <span>Teacher: {lesson.teacher?.full_name || "Not assigned"}</span>
+                            <span>Teacher: {lesson.teacher_id ? teacherNames[lesson.teacher_id] || "Unknown" : "Not assigned"}</span>
                           </div>
                         </div>
 
@@ -214,7 +222,7 @@ const GroupSchedule = () => {
                       <span>
                         {Array.isArray(group.day_of_week) 
                           ? group.day_of_week.map(d => DAYS_OF_WEEK[d]).join(', ')
-                          : DAYS_OF_WEEK[group.day_of_week]}
+                          : DAYS_OF_WEEK[group.day_of_week as unknown as number]}
                       </span>
                       <span>{group.start_time}</span>
                       <span>{group.duration_minutes} minutes</span>
