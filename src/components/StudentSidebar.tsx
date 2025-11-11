@@ -24,8 +24,6 @@ export function StudentSidebar() {
 
   const items = [
     { title: t('dashboard'), url: '/student', icon: Home },
-    { title: t('myPackage'), url: '/student/package', icon: Calendar },
-    { title: t('bookLesson'), url: '/student/book', icon: BookOpen },
     { title: t('lessons'), url: '/student/lessons', icon: BookOpen },
     { title: 'My Groups', url: '/student/groups', icon: Users },
     { title: t('practice'), url: '/student/practice', icon: Brain },
