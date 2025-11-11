@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { StudentSidebar } from "@/components/StudentSidebar";
+import { SupportButton } from "@/components/SupportButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, Moon, Sun } from "lucide-react";
@@ -121,6 +122,7 @@ const StudentLayout = () => {
           </main>
         </div>
       </div>
+      <SupportButton />
     </SidebarProvider>
   );
 };

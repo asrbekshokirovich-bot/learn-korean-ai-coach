@@ -290,6 +290,7 @@ export type Database = {
       finance_records: {
         Row: {
           amount: number
+          category: string | null
           cheque_file_path: string | null
           created_at: string
           description: string | null
@@ -304,6 +305,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          category?: string | null
           cheque_file_path?: string | null
           created_at?: string
           description?: string | null
@@ -318,6 +320,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          category?: string | null
           cheque_file_path?: string | null
           created_at?: string
           description?: string | null
@@ -870,6 +873,42 @@ export type Database = {
           preferred_time?: string
           status?: string
           student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_requests: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          id: string
+          message: string
+          resolved_at: string | null
+          status: string
+          student_id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          resolved_at?: string | null
+          status?: string
+          student_id: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          resolved_at?: string | null
+          status?: string
+          student_id?: string
+          subject?: string
           updated_at?: string
         }
         Relationships: []
