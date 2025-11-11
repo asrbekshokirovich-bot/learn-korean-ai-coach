@@ -230,7 +230,7 @@ const GroupManagement = () => {
         level: values.level,
         description: values.description || null,
         max_students: parseInt(values.max_students),
-        teacher_id: values.teacher_id || null,
+        teacher_id: (values.teacher_id && values.teacher_id !== "unassigned") ? values.teacher_id : null,
         day_of_week: parseInt(values.day_of_week),
         start_time: normalizedStartTime,
         duration_minutes: parseInt(values.duration_minutes),
@@ -282,7 +282,7 @@ const GroupManagement = () => {
       level: group.level,
       description: group.description || "",
       max_students: group.max_students.toString(),
-      teacher_id: group.teacher_id || "",
+      teacher_id: group.teacher_id || "unassigned",
       day_of_week: group.day_of_week.toString(),
       start_time: group.start_time,
       duration_minutes: group.duration_minutes.toString(),
@@ -423,7 +423,7 @@ const GroupManagement = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No teacher assigned</SelectItem>
+                            <SelectItem value="unassigned">No teacher assigned</SelectItem>
                             {teachers.map((teacher) => (
                               <SelectItem key={teacher.user_id} value={teacher.user_id}>
                                 {teacher.full_name || teacher.email}
