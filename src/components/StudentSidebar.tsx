@@ -1,4 +1,4 @@
-import { Home, BookOpen, Brain, Trophy, Calendar, MessageSquare, Film } from "lucide-react";
+import { Home, BookOpen, Brain, Trophy, Calendar, MessageSquare, Film, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -27,6 +27,7 @@ export function StudentSidebar() {
     { title: t('myPackage'), url: '/student/package', icon: Calendar },
     { title: t('bookLesson'), url: '/student/book', icon: BookOpen },
     { title: t('lessons'), url: '/student/lessons', icon: BookOpen },
+    { title: 'My Groups', url: '/student/groups', icon: Users },
     { title: t('practice'), url: '/student/practice', icon: Brain },
     { title: 'K-Drama Hub', url: '/student/kdrama', icon: Film },
     { title: t('topikPrep'), url: '/student/topik', icon: Trophy },

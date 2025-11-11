@@ -17,6 +17,7 @@ import Practice from "@/pages/student/Practice";
 import TopikPrep from "@/pages/student/TopikPrep";
 import ConversationPractice from "@/pages/student/ConversationPractice";
 import KDrama from "@/pages/student/KDrama";
+import MyGroups from "@/pages/student/MyGroups";
 
 const StudentLayout = () => {
   const navigate = useNavigate();
@@ -113,6 +114,7 @@ const StudentLayout = () => {
               <Route path="package" element={<MyPackage />} />
               <Route path="book" element={<BookLesson />} />
               <Route path="lessons" element={<Lessons />} />
+              <Route path="groups" element={<MyGroups />} />
               <Route path="practice" element={<Practice />} />
               <Route path="kdrama" element={<KDrama />} />
               <Route path="topik" element={<TopikPrep />} />
