@@ -4,19 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Video, Search, Download, Trash2, Play } from "lucide-react";
+import { Video, Search, Download, Play } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface Recording {
   id: string;
@@ -40,7 +30,6 @@ const Recordings = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [playingRecording, setPlayingRecording] = useState<Recording | null>(null);
-  const [deleteRecording, setDeleteRecording] = useState<Recording | null>(null);
 
   useEffect(() => {
     loadRecordings();
@@ -96,35 +85,6 @@ const Recordings = () => {
     setFilteredRecordings(filtered);
   };
 
-  const handleDelete = async () => {
-    if (!deleteRecording) return;
-
-    try {
-      // Delete from storage
-      const urlParts = deleteRecording.recording_url.split("/");
-      const fileName = urlParts[urlParts.length - 1];
-      const { error: storageError } = await supabase.storage
-        .from("lesson-recordings")
-        .remove([fileName]);
-
-      if (storageError) throw storageError;
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from("lesson_recordings")
-        .delete()
-        .eq("id", deleteRecording.id);
-
-      if (dbError) throw dbError;
-
-      toast.success("Recording deleted successfully");
-      setRecordings(recordings.filter((r) => r.id !== deleteRecording.id));
-      setDeleteRecording(null);
-    } catch (error: any) {
-      toast.error("Failed to delete recording");
-      console.error(error);
-    }
-  };
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "Unknown";
@@ -263,13 +223,6 @@ const Recordings = () => {
                     >
                       <Download className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteRecording(recording)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -278,20 +231,6 @@ const Recordings = () => {
         </div>
       )}
 
-      <AlertDialog open={!!deleteRecording} onOpenChange={(open) => !open && setDeleteRecording(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Recording</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this recording? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
