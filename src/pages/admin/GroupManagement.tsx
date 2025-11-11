@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,8 @@ const GroupManagement = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
@@ -85,10 +88,26 @@ const GroupManagement = () => {
     },
   });
 
+  // Establish auth listener first, then read current session
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load data only when auth is initialized
+  useEffect(() => {
+    if (!authReady) return;
     loadGroups();
     loadTeachers();
-  }, []);
+  }, [authReady]);
 
   const loadGroups = async () => {
     const { data: groupsData, error: groupsError } = await supabase
@@ -165,6 +184,11 @@ const GroupManagement = () => {
     try {
       console.log("Form submitted with values:", values);
       
+      if (!session?.user) {
+        toast.error("Your session expired. Please log in again.");
+        return;
+      }
+      
       const normalizedStartTime = values.start_time?.length === 5 
         ? `${values.start_time}:00`
         : values.start_time;
@@ -195,7 +219,7 @@ const GroupManagement = () => {
         }
         toast.success("Group updated successfully");
       } else {
-        const { error } = await supabase.from("groups").insert(groupData);
+        const { error } = await supabase.from("groups").insert([groupData]);
 
         if (error) {
           console.error("Insert error:", error);
@@ -210,7 +234,12 @@ const GroupManagement = () => {
       loadGroups();
     } catch (error: any) {
       console.error("Form submission error:", error);
-      toast.error(error.message || "Failed to save group");
+      const msg = error?.message || "Failed to save group";
+      if (typeof msg === "string" && (msg.toLowerCase().includes("row level security") || msg.toLowerCase().includes("rls"))) {
+        toast.error("Permission denied by security rules. Ensure you are logged in as an admin and try again.");
+      } else {
+        toast.error(msg);
+      }
     }
   };
 
