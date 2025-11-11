@@ -53,6 +53,13 @@ interface Student {
   created_at: string;
 }
 
+interface Admin {
+  user_id: string;
+  email: string;
+  full_name: string | null;
+  created_at: string;
+}
+
 interface KDrama {
   id: string;
   title: string;
@@ -76,6 +83,12 @@ const teacherSchema = z.object({
   topik_level: z.string().optional(),
 });
 
+const adminSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email" }).max(255),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
+  full_name: z.string().trim().min(1, { message: "Name is required" }).max(100),
+});
+
 const kdramaSchema = z.object({
   title: z.string().trim().min(1, { message: "Title is required" }).max(200),
   description: z.string().trim().max(1000).optional(),
@@ -96,8 +109,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
+  const [admins, setAdmins] = useState<Admin[]>([]);
   const [kdramas, setKdramas] = useState<KDrama[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [createAdminDialogOpen, setCreateAdminDialogOpen] = useState(false);
   const [createDramaDialogOpen, setCreateDramaDialogOpen] = useState(false);
   const [editLevelsDialogOpen, setEditLevelsDialogOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
@@ -110,6 +125,11 @@ const AdminDashboard = () => {
   const [teacherPassword, setTeacherPassword] = useState("");
   const [teacherName, setTeacherName] = useState("");
   const [teacherTopik, setTeacherTopik] = useState("");
+
+  // Create admin form state
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminName, setAdminName] = useState("");
 
   // Create K-Drama form state
   const [dramaTitle, setDramaTitle] = useState("");
@@ -180,6 +200,23 @@ const AdminDashboard = () => {
           .order("created_at", { ascending: false });
 
         setStudents(studentProfiles || []);
+      }
+
+      // Load admins
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (adminRoles && adminRoles.length > 0) {
+        const adminIds = adminRoles.map((r) => r.user_id);
+        const { data: adminProfiles } = await supabase
+          .from("profiles")
+          .select("*")
+          .in("user_id", adminIds)
+          .order("created_at", { ascending: false });
+
+        setAdmins(adminProfiles || []);
       }
 
       // Load K-Dramas
@@ -260,7 +297,74 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const validated = adminSchema.parse({
+        email: adminEmail,
+        password: adminPassword,
+        full_name: adminName,
+      });
+
+      const redirectUrl = `${window.location.origin}/`;
+
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: validated.email,
+        password: validated.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            role: "admin",
+            full_name: validated.full_name,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      toast({
+        title: "Admin account created! 🎉",
+        description: `Account for ${validated.full_name} has been created successfully.`,
+      });
+
+      // Reset form
+      setAdminEmail("");
+      setAdminPassword("");
+      setAdminName("");
+      setCreateAdminDialogOpen(false);
+      loadData();
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation error",
+          description: error.issues[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create admin account",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteUser = async (userId: string, userType: string) => {
+    // Prevent deleting yourself
+    if (userId === currentUser?.id) {
+      toast({
+        title: "Cannot delete yourself",
+        description: "You cannot delete your own admin account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete this ${userType}?`)) return;
 
     try {
@@ -501,6 +605,10 @@ const AdminDashboard = () => {
               <Users className="w-4 h-4 mr-2" />
               Students ({students.length})
             </TabsTrigger>
+            <TabsTrigger value="admins">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Admins ({admins.length})
+            </TabsTrigger>
             <TabsTrigger value="kdramas">
               <Film className="w-4 h-4 mr-2" />
               K-Dramas ({kdramas.length})
@@ -659,6 +767,72 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
+          {/* Admins Tab */}
+          <TabsContent value="admins" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Admin Management</h2>
+              <Button onClick={() => setCreateAdminDialogOpen(true)} variant="hero">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Create Admin Account
+              </Button>
+            </div>
+
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : admins.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                        No admins yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    admins.map((admin) => (
+                      <TableRow key={admin.user_id}>
+                        <TableCell className="font-medium">
+                          {admin.full_name || "—"}
+                        </TableCell>
+                        <TableCell>
+                          {admin.email}
+                          {admin.user_id === currentUser?.id && (
+                            <Badge variant="secondary" className="ml-2">You</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(admin.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteUser(admin.user_id, "admin")}
+                            disabled={admin.user_id === currentUser?.id}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
           {/* K-Dramas Tab */}
           <TabsContent value="kdramas" className="space-y-4">
             <div className="flex justify-between items-center">
@@ -739,6 +913,87 @@ const AdminDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Create Admin Dialog */}
+      <Dialog open={createAdminDialogOpen} onOpenChange={setCreateAdminDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create Admin Account</DialogTitle>
+            <DialogDescription>
+              Add a new admin to the platform
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateAdmin} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-name">Full Name *</Label>
+              <Input
+                id="admin-name"
+                placeholder="John Doe"
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                required
+                disabled={loading}
+                maxLength={100}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="admin-email">Email *</Label>
+              <Input
+                id="admin-email"
+                type="email"
+                placeholder="admin@example.com"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                required
+                disabled={loading}
+                maxLength={255}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Password *</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                placeholder="••••••••"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                required
+                disabled={loading}
+                minLength={6}
+                maxLength={72}
+              />
+              <p className="text-xs text-muted-foreground">
+                Must be at least 6 characters
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCreateAdminDialogOpen(false)}
+                disabled={loading}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="hero" disabled={loading} className="flex-1">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Admin"
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Teacher Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
