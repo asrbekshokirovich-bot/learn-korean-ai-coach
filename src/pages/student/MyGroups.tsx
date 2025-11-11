@@ -9,11 +9,13 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { format, getDay, addDays, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const MyGroups = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [selectedGroupForCalendar, setSelectedGroupForCalendar] = useState<any>(null);
@@ -149,14 +151,14 @@ const MyGroups = () => {
     : [];
 
   if (loading) {
-    return <div className="text-center py-8">Loading your groups...</div>;
+    return <div className="text-center py-8">{t('loadingYourGroups')}</div>;
   }
 
   if (selectedGroup) {
     return (
       <div className="space-y-4">
         <Button variant="outline" onClick={() => setSelectedGroup(null)}>
-          ← Back to My Groups
+          {t('backToMyGroups')}
         </Button>
         <GroupChat
           groupId={selectedGroup.id}
@@ -174,7 +176,7 @@ const MyGroups = () => {
     return (
       <div className="space-y-6">
         <Button variant="outline" onClick={() => setSelectedGroupForCalendar(null)}>
-          ← Back to My Groups
+          {t('backToMyGroups')}
         </Button>
 
         <div>
@@ -192,7 +194,7 @@ const MyGroups = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-primary" />
-              Next Lesson
+              {t('nextLesson')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -211,7 +213,7 @@ const MyGroups = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-muted-foreground" />
-                    <span>Teacher: {teacherNames[selectedGroupForCalendar.teacher_id] || "Not assigned"}</span>
+                    <span>{t('teacher')}: {teacherNames[selectedGroupForCalendar.teacher_id] || t('notAssigned')}</span>
                   </div>
                 </div>
                 <Button 
@@ -222,7 +224,7 @@ const MyGroups = () => {
                   }}
                 >
                   <Video className="w-5 h-5 mr-2" />
-                  Join Lesson
+                  {t('joinLesson')}
                 </Button>
               </div>
             </div>
@@ -233,7 +235,7 @@ const MyGroups = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Lesson Calendar</span>
+              <span>{t('lessonCalendar')}</span>
               <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
@@ -255,7 +257,7 @@ const MyGroups = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              {[t('sun'), t('mon'), t('tue'), t('wed'), t('thu'), t('fri'), t('sat')].map((day) => (
                 <div key={day} className="text-center font-semibold text-sm p-2 text-muted-foreground">
                   {day}
                 </div>
@@ -301,7 +303,7 @@ const MyGroups = () => {
           <Card>
             <CardHeader>
               <CardTitle>
-                Lesson for {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Selected Date"}
+                {t('lessonFor')} {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Selected Date"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -323,7 +325,7 @@ const MyGroups = () => {
                       </div>
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-muted-foreground" />
-                        <span>Teacher: {teacherNames[selectedGroupForCalendar.teacher_id] || "Not assigned"}</span>
+                        <span>{t('teacher')}: {teacherNames[selectedGroupForCalendar.teacher_id] || t('notAssigned')}</span>
                       </div>
                     </div>
 
@@ -332,7 +334,7 @@ const MyGroups = () => {
                       onClick={() => handleJoinLesson(selectedGroupForCalendar)}
                     >
                       <Video className="w-4 h-4 mr-2" />
-                      Join Lesson
+                      {t('joinLesson')}
                     </Button>
                   </div>
                 </CardContent>
@@ -347,23 +349,23 @@ const MyGroups = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold mb-2">My Groups</h2>
-        <p className="text-muted-foreground">View and chat with your enrolled groups</p>
+        <h2 className="text-3xl font-bold mb-2">{t('myGroups')}</h2>
+        <p className="text-muted-foreground">{t('viewAndChatWithGroups')}</p>
       </div>
 
       {/* Groups Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-primary" />
-          <h3 className="text-2xl font-semibold">Groups</h3>
+          <h3 className="text-2xl font-semibold">{t('groups')}</h3>
         </div>
 
         {enrollments.length === 0 ? (
           <Card className="p-8 text-center">
             <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Groups Yet</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('noGroupsYet')}</h3>
             <p className="text-muted-foreground">
-              You haven't been enrolled in any groups yet. Contact support to join a group!
+              {t('noGroupsDescription')}
             </p>
           </Card>
         ) : (
@@ -390,7 +392,7 @@ const MyGroups = () => {
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-muted-foreground" />
                         <span>
-                          {group.current_students_count} / {group.max_students} students
+                          {group.current_students_count} / {group.max_students} {t('students')}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -404,16 +406,16 @@ const MyGroups = () => {
                         </span>
                       </div>
                       <div>
-                        <p className="text-muted-foreground text-xs">Teacher</p>
+                        <p className="text-muted-foreground text-xs">{t('teacher')}</p>
                         <p className="font-medium">
-                          {teacherNames[group.teacher_id] || "Not assigned"}
+                          {teacherNames[group.teacher_id] || t('notAssigned')}
                         </p>
                       </div>
                     </div>
 
                     <div className="mt-4">
                       <p className="text-xs text-muted-foreground">
-                        Enrolled on {format(new Date(enrollment.enrolled_at), "MMM dd, yyyy")}
+                        {t('enrolledOn')} {format(new Date(enrollment.enrolled_at), "MMM dd, yyyy")}
                       </p>
                     </div>
                   </div>
@@ -424,11 +426,11 @@ const MyGroups = () => {
                       onClick={() => setSelectedGroupForCalendar(group)}
                     >
                       <Calendar className="w-4 h-4 mr-2" />
-                      View Calendar
+                      {t('viewCalendar')}
                     </Button>
                     <Button onClick={() => setSelectedGroup(group)}>
                       <MessageCircle className="w-4 h-4 mr-2" />
-                      Open Chat
+                      {t('openChat')}
                     </Button>
                   </div>
                 </div>
