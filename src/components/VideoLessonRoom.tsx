@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,8 +13,13 @@ interface VideoLessonRoomProps {
 
 export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const { lessonId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const groupId = searchParams.get('groupId');
+  const groupName = searchParams.get('groupName');
+  const isGroupLesson = !!groupId;
 
   const [videoLesson, setVideoLesson] = useState<any>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -32,19 +37,41 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   useEffect(() => {
     initializeVideoLesson();
     return () => cleanup();
-  }, [lessonId]);
+  }, [lessonId, groupId]);
 
   const initializeVideoLesson = async () => {
     try {
-      // Get video lesson data
-      const { data: lesson, error } = await supabase
-        .from('video_lessons')
-        .select('*, lessons(*)')
-        .eq('lesson_id', lessonId)
-        .single();
+      let sessionData: any = {};
 
-      if (error) throw error;
-      setVideoLesson(lesson);
+      if (isGroupLesson) {
+        // For group lessons, use the group ID as the session identifier
+        sessionData = {
+          id: groupId,
+          name: decodeURIComponent(groupName || 'Group Lesson'),
+          type: 'group'
+        };
+      } else {
+        // Get individual video lesson data
+        const { data: lesson, error } = await supabase
+          .from('video_lessons')
+          .select('*, lessons(*)')
+          .eq('lesson_id', lessonId)
+          .single();
+
+        if (error) throw error;
+        sessionData = lesson;
+
+        // Update status to ongoing
+        await supabase
+          .from('video_lessons')
+          .update({ 
+            status: 'ongoing',
+            start_time: new Date().toISOString()
+          })
+          .eq('id', lesson.id);
+      }
+
+      setVideoLesson(sessionData);
 
       // Start local media
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -57,23 +84,14 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         localVideoRef.current.srcObject = stream;
       }
 
-      // Update status to ongoing
-      await supabase
-        .from('video_lessons')
-        .update({ 
-          status: 'ongoing',
-          start_time: new Date().toISOString()
-        })
-        .eq('id', lesson.id);
-
       // Setup WebRTC peer connection
       setupPeerConnection();
 
       // Setup realtime channel for AI feedback
-      setupRealtimeChannel(lesson.id);
+      setupRealtimeChannel(isGroupLesson ? `group_${groupId}` : sessionData.id);
 
       toast({
-        title: "Lesson Started",
+        title: isGroupLesson ? "Joined Group Lesson" : "Lesson Started",
         description: "Video connection established",
       });
 
@@ -150,32 +168,34 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
   const endLesson = async () => {
     try {
-      // Update lesson status
-      await supabase
-        .from('video_lessons')
-        .update({ 
-          status: 'completed',
-          end_time: new Date().toISOString()
-        })
-        .eq('id', videoLesson.id);
+      if (!isGroupLesson && videoLesson?.id) {
+        // Update lesson status for individual lessons
+        await supabase
+          .from('video_lessons')
+          .update({ 
+            status: 'completed',
+            end_time: new Date().toISOString()
+          })
+          .eq('id', videoLesson.id);
 
-      // Generate AI summary
-      await supabase.functions.invoke('ai-post-lesson-summary', {
-        body: {
-          videoLessonId: videoLesson.id,
-          liveTips: liveFeedback,
-          transcriptSnippets: videoLesson.ai_transcript || []
-        }
-      });
+        // Generate AI summary
+        await supabase.functions.invoke('ai-post-lesson-summary', {
+          body: {
+            videoLessonId: videoLesson.id,
+            liveTips: liveFeedback,
+            transcriptSnippets: videoLesson.ai_transcript || []
+          }
+        });
+      }
 
       cleanup();
       
       toast({
-        title: "Lesson Ended",
-        description: "Generating AI summary...",
+        title: isGroupLesson ? "Left Group Lesson" : "Lesson Ended",
+        description: isGroupLesson ? "You have left the group lesson" : "Generating AI summary...",
       });
 
-      navigate(userRole === 'student' ? '/student/lessons' : '/teacher');
+      navigate(userRole === 'student' ? '/student/my-groups' : '/teacher');
     } catch (error) {
       console.error('Error ending lesson:', error);
     }
@@ -232,7 +252,14 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           />
           {!remoteStream && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-muted-foreground">Waiting for {userRole === 'student' ? 'teacher' : 'student'}...</p>
+              <div className="text-center">
+                <p className="text-muted-foreground mb-2">
+                  {isGroupLesson ? `${groupName || 'Group Lesson'}` : `Waiting for ${userRole === 'student' ? 'teacher' : 'student'}...`}
+                </p>
+                {isGroupLesson && (
+                  <p className="text-sm text-muted-foreground">Waiting for other participants to join...</p>
+                )}
+              </div>
             </div>
           )}
         </div>
