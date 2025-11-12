@@ -439,22 +439,6 @@ export const translations = {
     topikPassRate: "TOPIK Pass Rate",
     aiPractice: "AI Practice",
     
-    // Features Section
-    mostAdvancedExperience: "The Most Advanced Korean Learning Experience",
-    cuttingEdgeAI: "Combining cutting-edge AI technology with expert human instruction for unmatched results",
-    aiCoPilot: "AI Co-Pilot",
-    aiCoPilotDesc: "Real-time pronunciation feedback with 3D mouth models, grammar correction, and cultural nuance detection.",
-    multimodalLearning: "Multimodal Learning",
-    multimodalDesc: "Speech, writing, and handwriting analysis. Practice with Seoul, Busan, Jeju, and Gyeongsang accents.",
-    hybridTeaching: "Hybrid Teaching",
-    hybridTeachingDesc: "Choose between certified native speakers, AI avatars, or group classes with built-in AI assistance.",
-    topikPathway: "TOPIK Pathway",
-    topikPathwayDesc: "AI-generated official-style mock exams with predictive scoring to reach Level 6 certification.",
-    adaptiveCurriculum: "Adaptive Curriculum",
-    adaptiveCurriculumDesc: "Daily personalized lessons based on your performance gaps, interests, and learning style.",
-    fiftyAIPersonas: "50+ AI Personas",
-    fiftyAIPersonasDesc: "Practice with K-drama actors, business professionals, K-pop idols—each with contextual memory.",
-    
     // Pricing Section  
     flexiblePlans: "Flexible Plans for Every Learner",
     startFreeUpgrade: "Start free, upgrade anytime. All plans include AI assistance.",
@@ -697,22 +681,6 @@ export const translations = {
     topikPassRate: "TOPIK 합격률",
     aiPractice: "AI 연습",
     
-    // Features Section
-    mostAdvancedExperience: "가장 진보된 한국어 학습 경험",
-    cuttingEdgeAI: "비할 데 없는 결과를 위해 최첨단 AI 기술과 전문 인간 교육을 결합",
-    aiCoPilot: "AI 코파일럿",
-    aiCoPilotDesc: "3D 입 모델, 문법 교정, 문화적 뉘앙스 감지로 실시간 발음 피드백.",
-    multimodalLearning: "다중 모달 학습",
-    multimodalDesc: "말하기, 쓰기, 손글씨 분석. 서울, 부산, 제주, 경상 억양으로 연습하세요.",
-    hybridTeaching: "하이브리드 교육",
-    hybridTeachingDesc: "인증된 원어민, AI 아바타 또는 내장 AI 지원이 있는 그룹 수업 중에서 선택하세요.",
-    topikPathway: "TOPIK 경로",
-    topikPathwayDesc: "레벨 6 인증에 도달하기 위한 예측 채점이 포함된 AI 생성 공식 스타일 모의 시험.",
-    adaptiveCurriculum: "적응형 커리큘럼",
-    adaptiveCurriculumDesc: "성과 격차, 관심사 및 학습 스타일을 기반으로 한 일일 맞춤형 레슨.",
-    fiftyAIPersonas: "50+ AI 페르소나",
-    fiftyAIPersonasDesc: "K-드라마 배우, 비즈니스 전문가, K-pop 아이돌과 연습—각각 문맥 기억 포함.",
-    
     // Pricing Section  
     flexiblePlans: "모든 학습자를 위한 유연한 플랜",
     startFreeUpgrade: "무료로 시작하고 언제든지 업그레이드하세요. 모든 플랜에 AI 지원이 포함됩니다.",
@@ -922,22 +890,6 @@ export const translations = {
     topikPassRate: "Процент сдачи TOPIK",
     aiPractice: "Практика ИИ",
     
-    // Features Section
-    mostAdvancedExperience: "Самый продвинутый опыт изучения корейского языка",
-    cuttingEdgeAI: "Сочетание передовых технологий ИИ с экспертным обучением человека для непревзойденных результатов",
-    aiCoPilot: "ИИ-копилот",
-    aiCoPilotDesc: "Обратная связь по произношению в реальном времени с 3D-моделями рта, исправление грамматики и обнаружение культурных нюансов.",
-    multimodalLearning: "Мультимодальное обучение",
-    multimodalDesc: "Анализ речи, письма и почерка. Практика с сеульским, пусанским, чеджусским и кёнсанским акцентами.",
-    hybridTeaching: "Гибридное обучение",
-    hybridTeachingDesc: "Выбирайте между сертифицированными носителями языка, аватарами ИИ или групповыми занятиями со встроенной помощью ИИ.",
-    topikPathway: "Путь TOPIK",
-    topikPathwayDesc: "Сгенерированные ИИ пробные экзамены в официальном стиле с предиктивной оценкой для достижения сертификации 6 уровня.",
-    adaptiveCurriculum: "Адаптивная учебная программа",
-    adaptiveCurriculumDesc: "Ежедневные персонализированные уроки на основе ваших пробелов в производительности, интересов и стиля обучения.",
-    fiftyAIPersonas: "50+ ИИ персон",
-    fiftyAIPersonasDesc: "Практикуйтесь с актерами корейских дорам, бизнес-профессионалами, айдолами K-pop — каждый с контекстной памятью.",
-    
     // Pricing Section  
     flexiblePlans: "Гибкие планы для каждого учащегося",
     startFreeUpgrade: "Начните бесплатно, обновляйтесь в любое время. Все планы включают помощь ИИ.",
@@ -1036,27 +988,6 @@ export const translations = {
     homeworkGoals: 'Домашние задания и цели',
     homeworkGoalsDesc: 'Не отставайте с заданиями и персонализированными целями обучения.',
     
-    chooseYourLearningStyle: "Выберите стиль обучения",
-    everySessionIncludesAI: "Каждая сессия включает помощь ИИ—независимо от того, выбираете ли вы профессиональных учителей, аватары ИИ или групповые занятия",
-    oneOnOneNativeTeacher: "1 на 1 с носителем языка",
-    certifiedTopikInstructors: "Сертифицированные инструкторы TOPIK 6",
-    aiCoPilotRealTime: "Предложения ИИ-копилота в реальном времени",
-    customLessonPlans: "Индивидуальные планы уроков",
-    flexibleScheduling: "Гибкое расписание",
-    aiAvatarTeacher: "Учитель-аватар ИИ",
-    culturalPersonas: "50+ культурных персон",
-    availability247: "Доступность 24/7",
-    instantPronunciation: "Мгновенная обратная связь по произношению",
-    adaptiveDifficulty: "Адаптивная сложность",
-    groupClasses: "Групповые занятия (1:6)",
-    smallInteractiveGroups: "Небольшие интерактивные группы",
-    realTimeAIFeedback: "Обратная связь ИИ в реальном времени для всех",
-    peerLearning: "Динамика обучения со сверстниками",
-    costEffective: "Экономически эффективный",
-    tryThisMode: "Попробовать этот режим",
-    modeSelected: "Режим выбран!",
-    modeSelectedDesc: "Вы выбрали {mode}. Зарегистрируйтесь, чтобы начать обучение!",
-    
     // Book Lesson
     bookALesson: "Забронировать урок",
     selectYourLevel: "Выберите свой уровень и предпочтительное время",
@@ -1090,7 +1021,7 @@ export const translations = {
     modeSelected: "Режим выбран!",
     modeSelectedDesc: "Вы выбрали {mode}. Зарегистрируйтесь, чтобы начать обучение!",
     
-
+    // Availability
     myAvailability: "Моя доступность",
     manageAvailability: "Управляйте временем, когда студенты могут бронировать уроки",
     addAvailabilitySlot: "Добавить время доступности",
