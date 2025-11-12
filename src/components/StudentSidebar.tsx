@@ -194,9 +194,22 @@ export function StudentSidebar() {
 
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
-      <SidebarHeader className="p-2">
-        <div className="flex justify-center py-2">
-          <img src={hangukLogo} alt="Hanguk" className="h-14 w-auto" />
+      <SidebarHeader className="p-3">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 border-2 border-primary/20">
+            <AvatarImage src={profile?.profile_picture_url || ''} />
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
+            </AvatarFallback>
+          </Avatar>
+          {open && (
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate">
+                {profile?.full_name || 'Student'}
+              </span>
+              <img src={hangukLogo} alt="Hanguk" className="h-8 w-auto mt-1" />
+            </div>
+          )}
         </div>
       </SidebarHeader>
       

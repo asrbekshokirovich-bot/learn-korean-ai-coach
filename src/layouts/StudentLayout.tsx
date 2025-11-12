@@ -9,7 +9,6 @@ import { LogOut, Moon, Sun } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ProfilePictureUpload } from "@/components/student/ProfilePictureUpload";
-import { StoryUpload } from "@/components/student/StoryUpload";
 import Dashboard from "@/pages/student/Dashboard";
 import Practice from "@/pages/student/Practice";
 import ConversationPractice from "@/pages/student/ConversationPractice";
@@ -109,8 +108,6 @@ const StudentLayout = () => {
             </h1>
             
             <div className="flex items-center gap-2">
-              <StoryUpload />
-              
               <Button
                 variant="ghost"
                 size="icon"
