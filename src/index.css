@@ -24,8 +24,8 @@ All colors MUST be HSL.
     --primary: 210 36% 26%;
     --primary-foreground: 0 0% 100%;
 
-    /* Hanok Teal Secondary - #16A085 */
-    --secondary: 168 74% 40%;
+    /* Bronze Copper Secondary - #B8733F */
+    --secondary: 30 50% 48%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted Text - #64748B */
@@ -85,8 +85,8 @@ All colors MUST be HSL.
     --primary: 210 36% 32%;
     --primary-foreground: 0 0% 100%;
 
-    /* Hanok Teal (brighter for dark mode) */
-    --secondary: 168 74% 45%;
+    /* Bronze Copper (brighter for dark mode) */
+    --secondary: 30 50% 54%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted Text - #94A3B8 */
@@ -108,7 +108,7 @@ All colors MUST be HSL.
     /* Dark Border - #2D3748 */
     --border: 210 24% 20%;
     --input: 210 24% 18%;
-    --ring: 168 74% 45%;
+    --ring: 30 50% 54%;
     
     /* Dark Mode Gradients - Royal Ink to Ginkgo Gold */
     --gradient-hero: linear-gradient(135deg, hsl(210 36% 32%), hsl(36 88% 58%));
