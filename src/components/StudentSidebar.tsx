@@ -195,28 +195,13 @@ export function StudentSidebar() {
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarHeader className="p-3">
-        <div className="flex items-center justify-between w-full gap-3">
-          {/* Logo - Left (bigger) */}
+        {/* Logo - Centered */}
+        <div className="flex justify-center">
           <img 
             src={hangukLogo} 
             alt="Hanguk" 
-            className={open ? "h-20 w-auto shrink-0" : "h-14 w-auto shrink-0"} 
+            className={open ? "h-20 w-auto" : "h-14 w-auto"} 
           />
-          
-          {/* Profile Section - Right */}
-          {open && (
-            <div className="flex items-center gap-2 flex-1 justify-end">
-              <span className="text-sm font-semibold text-foreground truncate">
-                {profile?.full_name || 'Student'}
-              </span>
-              <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
-                <AvatarImage src={profile?.profile_picture_url || ''} />
-                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          )}
         </div>
       </SidebarHeader>
       
@@ -249,6 +234,23 @@ export function StudentSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      {/* Profile Section - Bottom */}
+      <div className="mt-auto border-t border-border/40 p-3">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
+            <AvatarImage src={profile?.profile_picture_url || ''} />
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
+            </AvatarFallback>
+          </Avatar>
+          {open && (
+            <span className="text-sm font-semibold text-foreground truncate flex-1">
+              {profile?.full_name || 'Student'}
+            </span>
+          )}
+        </div>
+      </div>
     </Sidebar>
   );
 }
