@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Brain, Mic, Users, Trophy, Lightbulb, Target } from "lucide-react";
+import { Users, User, Video, Bot, BarChart3, ClipboardCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Features = () => {
@@ -7,34 +7,34 @@ const Features = () => {
   
   const features = [
     {
-      icon: Brain,
-      title: t('aiCoPilot'),
-      description: t('aiCoPilotDesc'),
-    },
-    {
-      icon: Mic,
-      title: t('multimodalLearning'),
-      description: t('multimodalDesc'),
-    },
-    {
       icon: Users,
-      title: t('hybridTeaching'),
-      description: t('hybridTeachingDesc'),
+      title: t('groupClassesFeature'),
+      description: t('groupClassesFeatureDesc'),
     },
     {
-      icon: Trophy,
-      title: t('topikPathway'),
-      description: t('topikPathwayDesc'),
+      icon: User,
+      title: t('individualLessons'),
+      description: t('individualLessonsDesc'),
     },
     {
-      icon: Lightbulb,
-      title: t('adaptiveCurriculum'),
-      description: t('adaptiveCurriculumDesc'),
+      icon: Video,
+      title: t('kdramaLearning'),
+      description: t('kdramaLearningDesc'),
     },
     {
-      icon: Target,
-      title: t('fiftyAIPersonas'),
-      description: t('fiftyAIPersonasDesc'),
+      icon: Bot,
+      title: t('aiPoweredPractice'),
+      description: t('aiPoweredPracticeDesc'),
+    },
+    {
+      icon: BarChart3,
+      title: t('learningAnalytics'),
+      description: t('learningAnalyticsDesc'),
+    },
+    {
+      icon: ClipboardCheck,
+      title: t('homeworkGoals'),
+      description: t('homeworkGoalsDesc'),
     },
   ];
 
