@@ -195,9 +195,9 @@ export function StudentSidebar() {
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarHeader className="p-3">
-        <div className="flex items-center gap-3 justify-between">
+        <div className="flex items-center justify-between w-full">
           {/* Profile Section - Left */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
               <AvatarImage src={profile?.profile_picture_url || ''} />
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -205,18 +205,21 @@ export function StudentSidebar() {
               </AvatarFallback>
             </Avatar>
             {open && (
-              <span className="text-sm font-semibold text-foreground truncate">
+              <span className="text-sm font-semibold text-foreground truncate max-w-[80px]">
                 {profile?.full_name || 'Student'}
               </span>
             )}
           </div>
           
-          {/* Logo - Right (bigger in both states) */}
-          <img 
-            src={hangukLogo} 
-            alt="Hanguk" 
-            className={open ? "h-16 w-auto shrink-0" : "h-12 w-auto shrink-0"} 
-          />
+          {/* Logo - Right Middle */}
+          {open && (
+            <div className="flex-1 flex justify-center pr-2">
+              <img src={hangukLogo} alt="Hanguk" className="h-16 w-auto" />
+            </div>
+          )}
+          {!open && (
+            <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto" />
+          )}
         </div>
       </SidebarHeader>
       
