@@ -49,29 +49,43 @@ const StudentChats = () => {
   }, [selectedStudent]);
 
   const loadStudents = async () => {
-    // Get all students who have sent messages
+    // Get all unique students who have sent messages
     const { data, error } = await supabase
       .from("student_admin_chats")
-      .select(`
-        student_id,
-        profiles!student_admin_chats_student_id_fkey(full_name, email)
-      `)
+      .select("student_id")
       .order("created_at", { ascending: false });
 
     if (error) {
       toast.error("Failed to load students");
+      console.error("Error loading students:", error);
       return;
     }
 
-    // Get unique students
-    const uniqueStudents = data?.reduce((acc: any[], curr) => {
-      if (!acc.find(s => s.student_id === curr.student_id)) {
-        acc.push(curr);
-      }
-      return acc;
-    }, []);
+    // Get unique student IDs
+    const uniqueStudentIds = [...new Set(data?.map(d => d.student_id))];
 
-    setStudents(uniqueStudents || []);
+    // Fetch profile information for each unique student
+    const { data: profilesData, error: profilesError } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, email")
+      .in("user_id", uniqueStudentIds);
+
+    if (profilesError) {
+      toast.error("Failed to load student profiles");
+      console.error("Error loading profiles:", profilesError);
+      return;
+    }
+
+    // Map profiles to student format
+    const studentsWithProfiles = profilesData?.map(profile => ({
+      student_id: profile.user_id,
+      profiles: {
+        full_name: profile.full_name,
+        email: profile.email
+      }
+    }));
+
+    setStudents(studentsWithProfiles || []);
   };
 
   const loadMessages = async (studentId: string) => {
