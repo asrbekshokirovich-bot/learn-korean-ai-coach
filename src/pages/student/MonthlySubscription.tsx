@@ -58,9 +58,16 @@ const MonthlySubscription = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Monthly Subscription</h1>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+          Monthly Subscription
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Unlock unlimited access to Korean learning with professional teachers
+        </p>
+      </div>
 
-      <Card className="p-6">
+      <Card className="p-6 border-2 shadow-glow bg-gradient-to-br from-card to-card/50">
         <div className="flex items-start justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold mb-2">Hanguk Korean - Unlimited</h2>
@@ -122,15 +129,21 @@ const MonthlySubscription = () => {
 
         {!subscription || subscription.payment_status !== 'paid' ? (
           <div className="border-t pt-6">
-            <p className="text-sm text-muted-foreground mb-4">
-              Contact admin to set up your monthly payment or discuss payment options via the Chat with Admin section.
-            </p>
+            <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 p-6 rounded-lg mb-4 border-2 border-primary/20">
+              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                Ready to Start Learning?
+              </h3>
+              <p className="text-sm text-muted-foreground mb-1">
+                Contact our admin team to set up your monthly subscription and get started with unlimited Korean lessons today!
+              </p>
+            </div>
             <Button 
-              className="w-full" 
+              className="w-full shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105" 
               size="lg"
               onClick={() => navigate("/student/admin-chat")}
             >
-              <CreditCard className="h-4 w-4 mr-2" />
+              <CreditCard className="h-5 w-5 mr-2" />
               Contact Admin for Payment
             </Button>
           </div>

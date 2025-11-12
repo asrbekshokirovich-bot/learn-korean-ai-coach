@@ -444,6 +444,61 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* Inspiring CTA for New Students with No Enrollments */}
+      {stats.enrollments === 0 && (
+        <Card className="border-2 border-primary shadow-glow bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl"></div>
+          <CardContent className="pt-8 pb-8 relative z-10">
+            <div className="text-center max-w-2xl mx-auto space-y-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent shadow-glow mb-4">
+                <Sparkles className="w-10 h-10 text-white animate-pulse" />
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+                Start Your Korean Learning Journey!
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                Join our group lessons, learn with professional teachers, and achieve your Korean language goals with AI-powered assistance.
+              </p>
+              
+              <div className="grid md:grid-cols-3 gap-4 mt-6">
+                <div className="p-4 bg-card rounded-lg border shadow-sm">
+                  <Video className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <p className="font-semibold text-sm">Live Group Classes</p>
+                </div>
+                <div className="p-4 bg-card rounded-lg border shadow-sm">
+                  <Users className="w-8 h-8 text-accent mx-auto mb-2" />
+                  <p className="font-semibold text-sm">Expert Teachers</p>
+                </div>
+                <div className="p-4 bg-card rounded-lg border shadow-sm">
+                  <Sparkles className="w-8 h-8 text-secondary mx-auto mb-2" />
+                  <p className="font-semibold text-sm">AI-Powered Learning</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-6 shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105"
+                  onClick={() => navigate("/student/monthly-subscription")}
+                >
+                  <Award className="w-5 h-5 mr-2" />
+                  View Subscription Plans
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="text-lg px-8 py-6 border-2 hover:bg-accent/10 transition-all duration-300 hover:scale-105"
+                  onClick={() => navigate("/student/admin-chat")}
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Chat with Admin
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Goal Progress Section */}
       {goalProgress.length > 0 && (
         <div className="space-y-4">

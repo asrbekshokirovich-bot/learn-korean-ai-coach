@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GroupChat } from "@/components/GroupChat";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle } from "lucide-react";
+import { Users, Calendar, Clock, MessageCircle, Video, AlertCircle, Award } from "lucide-react";
 import { toast } from "sonner";
 import { format, getDay, addDays, startOfWeek, startOfMonth, endOfMonth, eachDayOfInterval } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -361,12 +361,39 @@ const MyGroups = () => {
         </div>
 
         {enrollments.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">{t('noGroupsYet')}</h3>
-            <p className="text-muted-foreground">
-              {t('noGroupsDescription')}
-            </p>
+          <Card className="border-2 border-primary shadow-glow bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl"></div>
+            <CardContent className="p-12 text-center relative z-10">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent shadow-glow mb-6">
+                <Users className="w-10 h-10 text-white animate-pulse" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {t('noGroupsYet') || 'No Groups Yet'}
+              </h3>
+              <p className="text-muted-foreground mb-8 text-lg max-w-md mx-auto">
+                {t('noGroupsDescription') || 'You are not enrolled in any groups yet. Subscribe to join group lessons and start learning Korean with expert teachers!'}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-6 shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105"
+                  onClick={() => navigate("/student/monthly-subscription")}
+                >
+                  <Award className="w-5 h-5 mr-2" />
+                  Subscribe Now
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="text-lg px-8 py-6 border-2 hover:bg-accent/10 transition-all duration-300 hover:scale-105"
+                  onClick={() => navigate("/student/admin-chat")}
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Contact Admin
+                </Button>
+              </div>
+            </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4">
