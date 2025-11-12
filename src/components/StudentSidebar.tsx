@@ -18,7 +18,7 @@ import {
 // items now computed inside component to enable translations
 
 export function StudentSidebar() {
-  const { open } = useSidebar();
+  const { open, setOpen, isMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const { t } = useLanguage();
@@ -33,6 +33,13 @@ export function StudentSidebar() {
     { title: t('kDramaHub'), url: '/student/kdrama', icon: Film },
     { title: t('conversationPractice'), url: '/student/conversations', icon: Brain },
   ];
+
+  const handleNavClick = () => {
+    // Auto-close sidebar on mobile after navigation
+    if (isMobile && open) {
+      setOpen(false);
+    }
+  };
 
   const isActive = (path: string) => currentPath === path;
 
@@ -60,6 +67,7 @@ export function StudentSidebar() {
                     <NavLink
                       to={item.url}
                       end
+                      onClick={handleNavClick}
                       className="group relative overflow-hidden hover:bg-primary/10 transition-all duration-200 rounded-lg"
                       activeClassName="bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border-l-2 border-primary shadow-sm"
                     >

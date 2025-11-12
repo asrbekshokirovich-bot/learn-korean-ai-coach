@@ -50,14 +50,28 @@ const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button size="xl" variant="hero" onClick={() => setSignUpOpen(true)}>
+            <Button 
+              size="xl" 
+              variant="hero" 
+              onClick={() => setSignUpOpen(true)}
+              className="w-full sm:w-auto shadow-elegant hover:shadow-glow hover:scale-105 transition-all duration-300"
+            >
               {t('startLearningFree')}
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button size="xl" variant="outline" className="bg-card/80 backdrop-blur-sm border-primary-foreground/20 text-card-foreground hover:bg-card" onClick={scrollToFeatures}>
-              {t('seeHowItWorks')}
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="w-full sm:w-auto bg-card/80 backdrop-blur-sm border-2 border-primary-foreground/30 text-card-foreground hover:bg-card hover:border-primary transition-all duration-300" 
+              onClick={() => setSignInOpen(true)}
+            >
+              {t('signIn')}
             </Button>
           </div>
+
+          <p className="text-sm text-primary-foreground/60 animate-pulse">
+            {t('seeHowItWorks')}
+          </p>
 
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto pt-12">
             <div className="text-center">

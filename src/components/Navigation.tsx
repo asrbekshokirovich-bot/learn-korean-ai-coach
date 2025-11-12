@@ -118,10 +118,18 @@ const Navigation = () => {
             )}
             {!user ? (
               <>
-                <Button variant="ghost" onClick={() => setSignInOpen(true)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSignInOpen(true)}
+                  className="hover:bg-primary/10 hover:border-primary transition-all"
+                >
                   {t('signIn')}
                 </Button>
-                <Button variant="hero" onClick={() => setSignUpOpen(true)}>
+                <Button 
+                  variant="hero" 
+                  onClick={() => setSignUpOpen(true)}
+                  className="shadow-elegant hover:shadow-glow"
+                >
                   {t('startFree')}
                 </Button>
               </>
@@ -132,23 +140,37 @@ const Navigation = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
+          {/* Mobile Sign In Button - Always Visible */}
+          <div className="md:hidden flex items-center gap-2">
+            {!user && (
+              <Button 
+                size="sm"
+                variant="outline" 
+                onClick={() => setSignInOpen(true)}
+                className="hover:bg-primary/10 hover:border-primary transition-all"
+              >
+                {t('signIn')}
+              </Button>
             )}
-          </button>
+            
+            {/* Mobile menu button */}
+            <button
+              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 transition-transform rotate-90" />
+              ) : (
+                <Menu className="w-6 h-6 transition-transform" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - Improved Animation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border">
+          <div className="md:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
               {navItems.map((item) => (
                 <a
