@@ -194,26 +194,29 @@ export function StudentSidebar() {
 
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
-      <SidebarHeader className="p-3 space-y-3">
-        {/* Logo Section */}
-        <div className="flex justify-center">
-          <img src={hangukLogo} alt="Hanguk" className="h-14 w-auto" />
-        </div>
-        
-        {/* Profile Section */}
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
-            <AvatarImage src={profile?.profile_picture_url || ''} />
-            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-              {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
-            </AvatarFallback>
-          </Avatar>
-          {open && (
-            <div className="flex flex-col flex-1 min-w-0">
+      <SidebarHeader className="p-3">
+        <div className="flex items-center gap-3 justify-between">
+          {/* Profile Section - Left */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
+              <AvatarImage src={profile?.profile_picture_url || ''} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
+              </AvatarFallback>
+            </Avatar>
+            {open && (
               <span className="text-sm font-semibold text-foreground truncate">
                 {profile?.full_name || 'Student'}
               </span>
-            </div>
+            )}
+          </div>
+          
+          {/* Logo - Right */}
+          {open && (
+            <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto shrink-0" />
+          )}
+          {!open && (
+            <img src={hangukLogo} alt="Hanguk" className="h-10 w-auto" />
           )}
         </div>
       </SidebarHeader>
