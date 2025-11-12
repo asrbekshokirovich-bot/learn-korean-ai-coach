@@ -419,24 +419,13 @@ const Finance = () => {
                         name="category"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select category" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="tuition">Tuition Fees</SelectItem>
-                                <SelectItem value="salaries">Salaries</SelectItem>
-                                <SelectItem value="marketing">Marketing</SelectItem>
-                                <SelectItem value="utilities">Utilities</SelectItem>
-                                <SelectItem value="supplies">Supplies</SelectItem>
-                                <SelectItem value="rent">Rent</SelectItem>
-                                <SelectItem value="software">Software & Tools</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormLabel>Category (Optional)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="e.g., Tuition Fees, Salaries, Marketing, etc." 
+                                {...field} 
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
