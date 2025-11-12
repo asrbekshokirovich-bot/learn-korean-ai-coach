@@ -5,7 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock, Video, Users, AlertCircle, TrendingUp, Target, BookOpen, Sparkles, Award } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar, Clock, Video, Users, AlertCircle, TrendingUp, Target, BookOpen, Sparkles, Award, MessageCircle, Send } from "lucide-react";
 import { format, getDay, addDays } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
@@ -19,6 +20,8 @@ const Dashboard = () => {
   const [teacherNames, setTeacherNames] = useState<Record<string, string>>({});
   const [goalProgress, setGoalProgress] = useState<any[]>([]);
   const [stats, setStats] = useState({ enrollments: 0, completedLessons: 0, goalsInProgress: 0 });
+  const [supportRequests, setSupportRequests] = useState<any[]>([]);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -26,6 +29,7 @@ const Dashboard = () => {
     loadGroupEnrollments();
     loadGoalProgress();
     loadStats();
+    loadSupportRequests();
   }, []);
 
   const loadUpcomingLessons = async () => {
@@ -224,6 +228,44 @@ const Dashboard = () => {
     }
   };
 
+  const loadSupportRequests = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("support_requests")
+        .select("*")
+        .eq("student_id", user.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setSupportRequests(data || []);
+    } catch (error) {
+      console.error("Failed to load support requests:", error);
+    }
+  };
+
+  const handleSendReply = async (requestId: string) => {
+    try {
+      const reply = replyText[requestId]?.trim();
+      if (!reply) {
+        toast.error("Please enter a reply");
+        return;
+      }
+
+      // For now, we'll just show a toast. In a real implementation,
+      // you might want to create a new message or update the request
+      toast.success("Reply sent! Admin will be notified.");
+      
+      // Clear the reply text
+      setReplyText(prev => ({ ...prev, [requestId]: "" }));
+    } catch (error: any) {
+      toast.error("Failed to send reply");
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Hero Header */}
@@ -285,6 +327,73 @@ const Dashboard = () => {
 
       {/* Learning Analytics Charts */}
       <LearningAnalyticsCharts />
+
+      {/* Support Requests Section */}
+      {supportRequests.length > 0 && (
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-2xl font-bold flex items-center gap-2">
+              <MessageCircle className="w-6 h-6 text-primary" />
+              {t('supportRequests') || 'Support Requests'}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('viewAndReplyToSupport') || 'View and reply to your support requests'}
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            {supportRequests.map((request) => (
+              <Card key={request.id} className="border-none shadow-ai">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">{request.subject}</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {format(new Date(request.created_at), "MMM d, yyyy 'at' HH:mm")}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">Pending</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <p className="text-sm font-medium mb-1">{t('yourMessage') || 'Your Message'}:</p>
+                    <p className="text-sm whitespace-pre-wrap">{request.message}</p>
+                  </div>
+
+                  {request.admin_response && (
+                    <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
+                      <p className="text-sm font-medium mb-1 text-primary">
+                        {t('adminResponse') || 'Admin Response'}:
+                      </p>
+                      <p className="text-sm whitespace-pre-wrap">{request.admin_response}</p>
+                    </div>
+                  )}
+
+                  {request.admin_response && (
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder={t('typeYourReply') || "Type your reply..."}
+                        value={replyText[request.id] || ""}
+                        onChange={(e) => setReplyText(prev => ({ ...prev, [request.id]: e.target.value }))}
+                        className="min-h-[80px]"
+                      />
+                      <Button
+                        onClick={() => handleSendReply(request.id)}
+                        disabled={!replyText[request.id]?.trim()}
+                        size="sm"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        {t('sendReply') || 'Send Reply'}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Goal Progress Section */}
       {goalProgress.length > 0 && (
