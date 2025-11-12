@@ -23,8 +23,8 @@ All colors MUST be HSL.
     --primary-glow: 250 85% 68%;
     --primary-variant: 260 70% 55%;
 
-    /* Coral-Pink Secondary */
-    --secondary: 340 75% 65%;
+    /* Teal-Cyan Secondary */
+    --secondary: 180 75% 55%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 30% 94%;
@@ -47,9 +47,9 @@ All colors MUST be HSL.
     /* Enhanced gradient system */
     --gradient-hero: linear-gradient(135deg, hsl(250 75% 58%), hsl(260 70% 62%), hsl(270 65% 68%));
     --gradient-accent: linear-gradient(135deg, hsl(195 85% 55%), hsl(205 80% 60%), hsl(215 75% 65%));
-    --gradient-warm: linear-gradient(135deg, hsl(340 75% 65%), hsl(350 80% 68%), hsl(10 75% 70%));
+    --gradient-warm: linear-gradient(135deg, hsl(180 75% 55%), hsl(190 80% 58%), hsl(200 75% 60%));
     --gradient-mesh: radial-gradient(at 40% 20%, hsl(250 85% 88%) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(340 75% 90%) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(180 75% 90%) 0px, transparent 50%),
                      radial-gradient(at 0% 50%, hsl(195 85% 90%) 0px, transparent 50%),
                      radial-gradient(at 100% 100%, hsl(260 70% 92%) 0px, transparent 50%);
     
@@ -57,7 +57,7 @@ All colors MUST be HSL.
     --shadow-elegant: 0 20px 50px -12px hsl(250 75% 58% / 0.25);
     --shadow-glow: 0 0 80px hsl(250 85% 68% / 0.4), 0 0 120px hsl(195 85% 65% / 0.25);
     --shadow-accent: 0 10px 40px -10px hsl(195 85% 55% / 0.35);
-    --shadow-warm: 0 10px 40px -10px hsl(340 75% 65% / 0.3);
+    --shadow-warm: 0 10px 40px -10px hsl(180 75% 55% / 0.3);
     
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -81,8 +81,8 @@ All colors MUST be HSL.
     --primary-glow: 250 85% 72%;
     --primary-variant: 260 70% 60%;
 
-    /* Coral-Pink Secondary */
-    --secondary: 340 75% 68%;
+    /* Teal-Cyan Secondary */
+    --secondary: 180 75% 58%;
     --secondary-foreground: 220 45% 6%;
 
     --muted: 220 30% 16%;
@@ -102,16 +102,16 @@ All colors MUST be HSL.
     
     --gradient-hero: linear-gradient(135deg, hsl(250 75% 62%), hsl(260 70% 66%), hsl(270 65% 72%));
     --gradient-accent: linear-gradient(135deg, hsl(195 85% 58%), hsl(205 80% 63%), hsl(215 75% 68%));
-    --gradient-warm: linear-gradient(135deg, hsl(340 75% 68%), hsl(350 80% 70%), hsl(10 75% 72%));
+    --gradient-warm: linear-gradient(135deg, hsl(180 75% 58%), hsl(190 80% 60%), hsl(200 75% 62%));
     --gradient-mesh: radial-gradient(at 40% 20%, hsl(250 85% 20%) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, hsl(340 75% 18%) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(180 75% 18%) 0px, transparent 50%),
                      radial-gradient(at 0% 50%, hsl(195 85% 16%) 0px, transparent 50%),
                      radial-gradient(at 100% 100%, hsl(260 70% 15%) 0px, transparent 50%);
     
     --shadow-elegant: 0 20px 50px -12px hsl(250 75% 62% / 0.35);
     --shadow-glow: 0 0 80px hsl(250 85% 72% / 0.5), 0 0 120px hsl(195 85% 68% / 0.3);
     --shadow-accent: 0 10px 40px -10px hsl(195 85% 58% / 0.4);
-    --shadow-warm: 0 10px 40px -10px hsl(340 75% 68% / 0.35);
+    --shadow-warm: 0 10px 40px -10px hsl(180 75% 58% / 0.35);
   }
 }
 
