@@ -85,11 +85,15 @@ const StudentLayout = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-gradient-subtle">
-        <StudentSidebar />
+        {/* Hide sidebar on mobile (< 768px), show on desktop */}
+        <div className="hidden md:block">
+          <StudentSidebar />
+        </div>
         <div className="flex-1 flex flex-col">
           {/* Modern minimalist header */}
           <header className="h-14 border-b border-border/20 bg-background/95 backdrop-blur-md flex items-center px-4 sticky top-0 z-10">
-            <SidebarTrigger className="mr-3 hover:bg-accent/50 rounded-lg transition-colors" />
+            {/* Only show sidebar trigger on desktop where sidebar exists */}
+            <SidebarTrigger className="mr-3 hover:bg-accent/50 rounded-lg transition-colors hidden md:inline-flex" />
             
             <h1 className="text-base font-semibold text-foreground/90 mr-auto">
               {t('studentPortal')}
