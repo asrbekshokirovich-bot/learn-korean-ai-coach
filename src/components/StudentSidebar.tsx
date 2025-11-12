@@ -196,7 +196,7 @@ export function StudentSidebar() {
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarHeader className="p-2">
         <div className="flex justify-center py-2">
-          <img src={hangukLogo} alt="Hanguk" className="h-10 w-auto" />
+          <img src={hangukLogo} alt="Hanguk" className="h-14 w-auto" />
         </div>
       </SidebarHeader>
       

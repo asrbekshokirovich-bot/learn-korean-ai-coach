@@ -22,7 +22,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
             <div className="flex justify-center md:justify-start mb-4">
-              <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto" />
+              <img src={hangukLogo} alt="Hanguk" className="h-16 w-auto" />
             </div>
             <p className="text-sm text-primary-foreground/70 mb-6 text-center md:text-left">
               {t('masterKoreanAI')}

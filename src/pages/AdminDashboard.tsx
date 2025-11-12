@@ -674,7 +674,7 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto" />
+              <img src={hangukLogo} alt="Hanguk" className="h-14 w-auto" />
             </div>
             <div className="flex items-center gap-4">
               <Button
