@@ -114,23 +114,7 @@ const StudentLayout = () => {
               
               <LanguageSelector />
               
-              <div className="h-8 w-px bg-border/50 mx-1" />
-              
-              <div className="flex items-center gap-2">
-                <ProfilePictureUpload 
-                  userId={user?.id || ""} 
-                  currentPictureUrl={profile?.profile_picture_url}
-                  userName={profile?.full_name || ""}
-                />
-                <div className="hidden md:flex flex-col items-start">
-                  <p className="text-sm font-medium leading-none">{profile?.full_name || user?.email}</p>
-                  <Badge variant="secondary" className="mt-1 h-4 text-xs px-1.5">
-                    {t('student')}
-                  </Badge>
-                </div>
-              </div>
-              
-              <Button 
+              <Button
                 variant="ghost" 
                 size="icon"
                 onClick={handleSignOut}
