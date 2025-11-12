@@ -54,8 +54,11 @@ export default {
       },
       backgroundImage: {
         'gradient-hero': 'var(--gradient-hero)',
+        'gradient-heritage': 'var(--gradient-hero)',
         'gradient-accent': 'var(--gradient-accent)',
+        'gradient-ginkgo': 'var(--gradient-accent)',
         'gradient-subtle': 'var(--gradient-subtle)',
+        'gradient-night-river': 'linear-gradient(135deg, hsl(210 33% 9%), hsl(220 29% 14%))',
       },
       boxShadow: {
         'sm': 'var(--shadow-sm)',
