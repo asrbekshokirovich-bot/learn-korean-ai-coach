@@ -29,15 +29,17 @@ const Pricing = () => {
     },
     {
       name: t('monthlyUnlimited'),
-      price: "2,490,000",
+      price: "500,000",
+      currency: "UZS",
       description: t('seriousLearners'),
       features: [
         t('unlimitedGroupClasses'),
-        t('privateMonthly'),
-        t('fiftyMinSessions'),
         t('aiCoPilotIncluded'),
         t('homeworkGrading'),
         t('progressAnalytics'),
+        "Access to all group lessons",
+        "Real-time chat with admin support",
+        "K-Drama learning content",
       ],
       cta: t('getStarted'),
       variant: "default" as const,
@@ -45,11 +47,12 @@ const Pricing = () => {
     },
     {
       name: t('topikBootcamp'),
-      price: "8,990,000",
+      price: "1,500,000",
+      currency: "UZS",
       description: t('intensivePrep'),
       features: [
         t('twelveWeekProgram'),
-        t('groupPrivate'),
+        "All Monthly Unlimited features",
         t('topikFocused'),
         t('aiPracticeUnlimited'),
         t('mockTestsIncluded'),
@@ -93,8 +96,12 @@ const Pricing = () => {
                 <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold">₩{plan.price}</span>
-                  <span className="text-muted-foreground">{t('perMonth')}</span>
+                  <span className="text-4xl font-bold">
+                    {plan.currency === "UZS" ? `${plan.price} UZS` : `₩${plan.price}`}
+                  </span>
+                  {plan.price !== "0" && (
+                    <span className="text-muted-foreground">{t('perMonth')}</span>
+                  )}
                 </div>
               </div>
 
