@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle, Calendar, Clock } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle, Calendar, Clock, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 import { AIAssistancePanel } from "./video-lesson/AIAssistancePanel";
@@ -11,9 +11,19 @@ import { LessonChat } from "./video-lesson/LessonChat";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format, addDays, getDay } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface VideoLessonRoomProps {
   userRole: 'student' | 'teacher';
+}
+
+interface Participant {
+  userId: string;
+  userName: string;
+  userRole: 'student' | 'teacher';
+  stream?: MediaStream;
+  peerConnection?: RTCPeerConnection;
+  profilePicture?: string;
 }
 
 export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
@@ -29,7 +39,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
   const [videoLesson, setVideoLesson] = useState<any>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [participants, setParticipants] = useState<Map<string, Participant>>(new Map());
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [currentUserName, setCurrentUserName] = useState<string>('');
+  const [currentUserProfile, setCurrentUserProfile] = useState<string>('');
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
@@ -41,8 +54,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [nextLessonInfo, setNextLessonInfo] = useState<any>(null);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const participantVideosRef = useRef<Map<string, HTMLVideoElement>>(new Map());
   const realtimeChannelRef = useRef<any>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
@@ -72,17 +84,29 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
   const initializeVideoLesson = async () => {
     try {
+      // Get current user info
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, profile_picture_url')
+        .eq('user_id', user.id)
+        .single();
+
+      setCurrentUserId(user.id);
+      setCurrentUserName(profile?.full_name || 'Unknown');
+      setCurrentUserProfile(profile?.profile_picture_url || '');
+
       let sessionData: any = {};
 
       if (isGroupLesson) {
-        // For group lessons, use the group ID as the session identifier
         sessionData = {
           id: groupId,
           name: decodeURIComponent(groupName || 'Group Lesson'),
           type: 'group'
         };
       } else {
-        // Get individual video lesson data
         const { data: lesson, error } = await supabase
           .from('video_lessons')
           .select('*, lessons(*)')
@@ -92,7 +116,6 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         if (error) throw error;
         sessionData = lesson;
 
-        // Update status to ongoing
         await supabase
           .from('video_lessons')
           .update({ 
@@ -106,8 +129,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
       // Start local media
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
+        video: { width: 1280, height: 720 },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
       });
       setLocalStream(stream);
       
@@ -115,11 +142,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         localVideoRef.current.srcObject = stream;
       }
 
-      // Setup WebRTC peer connection
-      setupPeerConnection();
-
-      // Setup realtime channel for AI feedback
-      setupRealtimeChannel(isGroupLesson ? `group_${groupId}` : sessionData.id);
+      // Setup realtime signaling channel
+      setupRealtimeChannel(isGroupLesson ? `group_${groupId}` : sessionData.id, user.id);
 
       // Auto-start recording for teachers in group lessons
       if (userRole === 'teacher' && isGroupLesson) {
@@ -138,15 +162,15 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     }
   };
 
-  const setupPeerConnection = () => {
+  const createPeerConnection = async (remoteUserId: string): Promise<RTCPeerConnection> => {
     const configuration: RTCConfiguration = {
       iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' }
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
       ]
     };
 
     const pc = new RTCPeerConnection(configuration);
-    peerConnectionRef.current = pc;
 
     // Add local stream tracks
     if (localStream) {
@@ -157,28 +181,203 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
     // Handle remote stream
     pc.ontrack = (event) => {
-      setRemoteStream(event.streams[0]);
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
+      console.log('Received remote track from:', remoteUserId);
+      setParticipants(prev => {
+        const updated = new Map(prev);
+        const participant = updated.get(remoteUserId);
+        if (participant) {
+          participant.stream = event.streams[0];
+          updated.set(remoteUserId, participant);
+        }
+        return updated;
+      });
+    };
+
+    // Handle ICE candidates
+    pc.onicecandidate = (event) => {
+      if (event.candidate && realtimeChannelRef.current) {
+        realtimeChannelRef.current.send({
+          type: 'broadcast',
+          event: 'ice-candidate',
+          payload: {
+            candidate: event.candidate,
+            from: currentUserId,
+            to: remoteUserId
+          }
+        });
       }
     };
 
-    // ICE candidate handling would go here
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        // Send candidate through Supabase Realtime
-        console.log('ICE candidate:', event.candidate);
+    pc.onconnectionstatechange = () => {
+      console.log('Connection state:', pc.connectionState, 'for user:', remoteUserId);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        console.log('Connection failed/disconnected, attempting to reconnect...');
       }
     };
+
+    return pc;
   };
 
-  const setupRealtimeChannel = (videoLessonId: string) => {
+  const setupRealtimeChannel = async (videoLessonId: string, userId: string) => {
     const channel = supabase
-      .channel(`video_lesson_${videoLessonId}`)
+      .channel(`video_lesson_${videoLessonId}`, {
+        config: {
+          broadcast: { self: true }
+        }
+      })
+      // User joined
+      .on('broadcast', { event: 'user-joined' }, async ({ payload }) => {
+        if (payload.userId === userId) return; // Ignore self
+        
+        console.log('User joined:', payload);
+        
+        setParticipants(prev => {
+          const updated = new Map(prev);
+          if (!updated.has(payload.userId)) {
+            updated.set(payload.userId, {
+              userId: payload.userId,
+              userName: payload.userName,
+              userRole: payload.userRole,
+              profilePicture: payload.profilePicture
+            });
+          }
+          return updated;
+        });
+
+        // Create offer for new participant
+        try {
+          const pc = await createPeerConnection(payload.userId);
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+
+          setParticipants(prev => {
+            const updated = new Map(prev);
+            const participant = updated.get(payload.userId);
+            if (participant) {
+              participant.peerConnection = pc;
+              updated.set(payload.userId, participant);
+            }
+            return updated;
+          });
+
+          channel.send({
+            type: 'broadcast',
+            event: 'offer',
+            payload: {
+              offer: offer,
+              from: userId,
+              to: payload.userId
+            }
+          });
+        } catch (error) {
+          console.error('Error creating offer:', error);
+        }
+      })
+      // Received offer
+      .on('broadcast', { event: 'offer' }, async ({ payload }) => {
+        if (payload.to !== userId) return;
+        
+        console.log('Received offer from:', payload.from);
+        
+        try {
+          let pc = participants.get(payload.from)?.peerConnection;
+          if (!pc) {
+            pc = await createPeerConnection(payload.from);
+            setParticipants(prev => {
+              const updated = new Map(prev);
+              const participant = updated.get(payload.from);
+              if (participant) {
+                participant.peerConnection = pc;
+                updated.set(payload.from, participant);
+              }
+              return updated;
+            });
+          }
+
+          await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+
+          channel.send({
+            type: 'broadcast',
+            event: 'answer',
+            payload: {
+              answer: answer,
+              from: userId,
+              to: payload.from
+            }
+          });
+        } catch (error) {
+          console.error('Error handling offer:', error);
+        }
+      })
+      // Received answer
+      .on('broadcast', { event: 'answer' }, async ({ payload }) => {
+        if (payload.to !== userId) return;
+        
+        console.log('Received answer from:', payload.from);
+        
+        try {
+          const participant = participants.get(payload.from);
+          if (participant?.peerConnection) {
+            await participant.peerConnection.setRemoteDescription(
+              new RTCSessionDescription(payload.answer)
+            );
+          }
+        } catch (error) {
+          console.error('Error handling answer:', error);
+        }
+      })
+      // Received ICE candidate
+      .on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+        if (payload.to !== userId) return;
+        
+        try {
+          const participant = participants.get(payload.from);
+          if (participant?.peerConnection) {
+            await participant.peerConnection.addIceCandidate(
+              new RTCIceCandidate(payload.candidate)
+            );
+          }
+        } catch (error) {
+          console.error('Error adding ICE candidate:', error);
+        }
+      })
+      // User left
+      .on('broadcast', { event: 'user-left' }, ({ payload }) => {
+        console.log('User left:', payload.userId);
+        
+        setParticipants(prev => {
+          const updated = new Map(prev);
+          const participant = updated.get(payload.userId);
+          if (participant) {
+            participant.peerConnection?.close();
+            participant.stream?.getTracks().forEach(track => track.stop());
+            updated.delete(payload.userId);
+          }
+          return updated;
+        });
+      })
+      // AI feedback
       .on('broadcast', { event: 'ai_feedback' }, (payload) => {
         setLiveFeedback(prev => [...prev, payload.payload]);
       })
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Realtime channel subscribed, announcing presence');
+          // Announce presence
+          channel.send({
+            type: 'broadcast',
+            event: 'user-joined',
+            payload: {
+              userId: userId,
+              userName: currentUserName,
+              userRole: userRole,
+              profilePicture: currentUserProfile
+            }
+          });
+        }
+      });
 
     realtimeChannelRef.current = channel;
   };
@@ -319,6 +518,15 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   const cleanup = () => {
+    // Announce leaving
+    if (realtimeChannelRef.current && currentUserId) {
+      realtimeChannelRef.current.send({
+        type: 'broadcast',
+        event: 'user-left',
+        payload: { userId: currentUserId }
+      });
+    }
+
     // Stop recording if active
     if (mediaRecorder && isRecording) {
       try {
@@ -337,19 +545,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       setLocalStream(null);
     }
 
-    // Stop all remote stream tracks
-    if (remoteStream) {
-      remoteStream.getTracks().forEach(track => {
-        track.stop();
-      });
-      setRemoteStream(null);
-    }
-
-    // Close peer connection
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
+    // Close all peer connections and stop streams
+    participants.forEach((participant) => {
+      participant.peerConnection?.close();
+      participant.stream?.getTracks().forEach(track => track.stop());
+    });
+    setParticipants(new Map());
 
     // Remove realtime channel
     if (realtimeChannelRef.current) {
@@ -360,9 +561,6 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     // Clear video element sources
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
-    }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = null;
     }
   };
 
@@ -565,22 +763,22 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     }
   };
 
+  // Separate participants by role
+  const teacher = Array.from(participants.values()).find(p => p.userRole === 'teacher');
+  const students = Array.from(participants.values()).filter(p => p.userRole === 'student');
+  const allParticipants = teacher ? [teacher, ...students] : students;
+
   return (
     <>
       <div className="h-screen bg-background flex flex-col">
       {/* Video Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 min-h-0">
-        {/* Main Video (Remote) */}
-        <div className="lg:col-span-2 relative bg-muted rounded-lg overflow-hidden">
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
-          {!remoteStream && (
+        {/* Main Video Grid - Shows all participants */}
+        <div className="lg:col-span-2 relative bg-muted rounded-lg overflow-hidden p-4">
+          {allParticipants.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
+                <User className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground mb-2">
                   {isGroupLesson ? `${groupName || t('groupLesson')}` : t(userRole === 'student' ? 'waitingForTeacher' : 'waitingForStudent')}
                 </p>
@@ -589,12 +787,60 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
                 )}
               </div>
             </div>
+          ) : (
+            <div className={`grid gap-3 h-full ${
+              allParticipants.length === 1 ? 'grid-cols-1' :
+              allParticipants.length <= 4 ? 'grid-cols-2' :
+              allParticipants.length <= 9 ? 'grid-cols-3' : 'grid-cols-4'
+            }`}>
+              {allParticipants.map((participant) => (
+                <Card key={participant.userId} className="relative overflow-hidden bg-card">
+                  <video
+                    ref={(el) => {
+                      if (el && participant.stream) {
+                        el.srcObject = participant.stream;
+                        participantVideosRef.current.set(participant.userId, el);
+                      }
+                    }}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {!participant.stream && (
+                    <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={participant.profilePicture} />
+                        <AvatarFallback className="text-2xl">
+                          {participant.userName[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={participant.profilePicture} />
+                      <AvatarFallback className="text-xs">
+                        {participant.userName[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium truncate flex-1">
+                      {participant.userName}
+                    </span>
+                    {participant.userRole === 'teacher' && (
+                      <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
+                        {t('teacher')}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
 
         {/* Left Sidebar: Local Video + AI Panel */}
         <div className="space-y-4 flex flex-col min-h-0">
-          {/* Local Video (PiP) */}
+          {/* Local Video (You) */}
           <Card className="relative aspect-video overflow-hidden flex-shrink-0">
             <video
               ref={localVideoRef}
@@ -605,9 +851,30 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             />
             {isVideoOff && (
               <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                <VideoOff className="w-8 h-8 text-muted-foreground" />
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={currentUserProfile} />
+                  <AvatarFallback className="text-2xl">
+                    {currentUserName[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               </div>
             )}
+            <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={currentUserProfile} />
+                <AvatarFallback className="text-xs">
+                  {currentUserName[0]?.toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium truncate flex-1">
+                {currentUserName}
+              </span>
+              {userRole === 'teacher' && (
+                <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
+                  {t('teacher')}
+                </span>
+              )}
+            </div>
           </Card>
 
           {/* AI Assistance Panel */}
