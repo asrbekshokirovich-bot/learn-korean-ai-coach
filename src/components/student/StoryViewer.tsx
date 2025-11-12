@@ -181,7 +181,7 @@ export const StoryViewer = () => {
               className="flex flex-col items-center gap-2 min-w-[80px] group"
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary via-accent to-secondary rounded-full p-0.5 animate-pulse">
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary to-accent rounded-full p-0.5 animate-pulse">
                   <div className="bg-background rounded-full p-0.5">
                     <Avatar className="h-16 w-16 border-2 border-background">
                       <AvatarImage src={firstStory.profiles.profile_picture_url || undefined} />

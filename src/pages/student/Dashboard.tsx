@@ -317,7 +317,7 @@ const Dashboard = () => {
       </div>
 
       {/* Hero Header with animated gradient */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-accent to-secondary p-8 text-primary-foreground shadow-elegant hover:shadow-glow transition-shadow duration-500">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-accent to-accent/80 p-8 text-primary-foreground shadow-elegant hover:shadow-glow transition-shadow duration-500">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl animate-pulse"></div>
         <div className="relative z-10">
@@ -504,7 +504,7 @@ const Dashboard = () => {
 
       {/* Next Group Lesson Card */}
       {nextGroupLesson && (
-        <Card className="border-none shadow-ai bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 overflow-hidden">
+        <Card className="border-none shadow-ai bg-gradient-to-br from-primary/5 to-accent/5 overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl"></div>
           <CardHeader className="relative z-10">
             <CardTitle className="flex items-center gap-2 text-xl">

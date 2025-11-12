@@ -45,7 +45,7 @@ const HybridModel = () => {
         t('peerLearning'),
         t('costEffective'),
       ],
-      accent: "from-accent to-secondary",
+      accent: "from-primary to-accent",
     },
   ];
   return (

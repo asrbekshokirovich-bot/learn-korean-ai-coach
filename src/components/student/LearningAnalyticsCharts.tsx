@@ -197,7 +197,7 @@ export const LearningAnalyticsCharts = () => {
 
   return (
     <Card className="border-none shadow-ai overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
         <CardTitle className="flex items-center gap-2 text-xl">
           <TrendingUp className="w-6 h-6 text-primary" />
           {t('learningProgressAnalytics')}
