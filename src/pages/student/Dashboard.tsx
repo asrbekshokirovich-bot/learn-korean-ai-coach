@@ -643,7 +643,7 @@ const Dashboard = () => {
             </div>
             <h3 className="text-2xl font-bold mb-2">Start Your Learning Journey</h3>
             <p className="text-muted-foreground mb-6">Contact support to get enrolled in group classes and begin your Korean language adventure</p>
-            <Button size="lg" className="shadow-elegant">
+            <Button size="lg" className="shadow-elegant" onClick={() => navigate("/student/admin-chat")}>
               Contact Support
             </Button>
           </div>
