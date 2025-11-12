@@ -57,15 +57,18 @@ const SortableMenuItem = ({ item, open, onClick, isActive }: any) => {
     <SidebarMenuItem ref={setNodeRef} style={style}>
       <SidebarMenuButton asChild={!isComingSoon}>
         {isComingSoon ? (
-          <div className="group relative overflow-hidden rounded-lg flex items-center opacity-50 cursor-not-allowed px-2 py-1.5">
+          <div className="group relative overflow-hidden rounded-lg flex items-center px-2 py-1.5 opacity-60 cursor-not-allowed">
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mr-1 opacity-0 group-hover:opacity-50 transition-opacity">
+              <GripVertical className="h-3 w-3" />
+            </div>
             <item.icon className="h-4 w-4" />
             {open && (
-              <div className="flex items-center justify-between flex-1 ml-2">
-                <span>{item.title}</span>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+              <>
+                <span className="ml-2 flex-1">{item.title}</span>
+                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 ml-2 border-muted-foreground/30">
                   {item.comingSoonText}
                 </Badge>
-              </div>
+              </>
             )}
           </div>
         ) : (
