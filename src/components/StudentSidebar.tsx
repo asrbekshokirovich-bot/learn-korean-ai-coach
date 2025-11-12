@@ -195,30 +195,27 @@ export function StudentSidebar() {
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarHeader className="p-3">
-        <div className="flex items-center justify-between w-full">
-          {/* Profile Section - Left */}
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
-              <AvatarImage src={profile?.profile_picture_url || ''} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
-              </AvatarFallback>
-            </Avatar>
-            {open && (
-              <span className="text-sm font-semibold text-foreground truncate max-w-[80px]">
+        <div className="flex items-center justify-between w-full gap-3">
+          {/* Logo - Left (bigger) */}
+          <img 
+            src={hangukLogo} 
+            alt="Hanguk" 
+            className={open ? "h-20 w-auto shrink-0" : "h-14 w-auto shrink-0"} 
+          />
+          
+          {/* Profile Section - Right */}
+          {open && (
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              <span className="text-sm font-semibold text-foreground truncate">
                 {profile?.full_name || 'Student'}
               </span>
-            )}
-          </div>
-          
-          {/* Logo - Right Middle */}
-          {open && (
-            <div className="flex-1 flex justify-center pr-2">
-              <img src={hangukLogo} alt="Hanguk" className="h-16 w-auto" />
+              <Avatar className="h-10 w-10 border-2 border-primary/20 shrink-0">
+                <AvatarImage src={profile?.profile_picture_url || ''} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
+                </AvatarFallback>
+              </Avatar>
             </div>
-          )}
-          {!open && (
-            <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto" />
           )}
         </div>
       </SidebarHeader>
