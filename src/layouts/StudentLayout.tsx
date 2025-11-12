@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { StudentSidebar } from "@/components/StudentSidebar";
-import { SupportButton } from "@/components/SupportButton";
+// SupportButton removed - replaced with AdminChat
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, Moon, Sun } from "lucide-react";
@@ -17,6 +17,8 @@ import MyGroups from "@/pages/student/MyGroups";
 import GroupSchedule from "@/pages/student/GroupSchedule";
 import VideoLesson from "@/pages/student/VideoLesson";
 import Recordings from "@/pages/student/Recordings";
+import AdminChat from "@/pages/student/AdminChat";
+import MonthlySubscription from "@/pages/student/MonthlySubscription";
 
 const StudentLayout = () => {
   const navigate = useNavigate();
@@ -123,12 +125,13 @@ const StudentLayout = () => {
               <Route path="practice" element={<Practice />} />
               <Route path="kdrama" element={<KDrama />} />
               <Route path="conversations" element={<ConversationPractice />} />
+              <Route path="admin-chat" element={<AdminChat />} />
+              <Route path="subscription" element={<MonthlySubscription />} />
             </Routes>
             </div>
           </main>
         </div>
       </div>
-      <SupportButton />
     </SidebarProvider>
   );
 };

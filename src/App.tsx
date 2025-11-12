@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import AdminDashboard from "./pages/AdminDashboard";
 import Courses from "./pages/Courses";
+import DemoTeacherDashboard from "./pages/DemoTeacherDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardRoute from "./components/DashboardRoute";
 import NotFound from "./pages/NotFound";
@@ -47,6 +48,14 @@ const App = () => (
                 <DashboardRoute>
                   <TeacherLayout />
                 </DashboardRoute>
+              } 
+            />
+            <Route 
+              path="/demo-teacher" 
+              element={
+                <ProtectedRoute>
+                  <DemoTeacherDashboard />
+                </ProtectedRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

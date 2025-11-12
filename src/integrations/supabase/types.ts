@@ -1136,6 +1136,42 @@ export type Database = {
           },
         ]
       }
+      monthly_subscriptions: {
+        Row: {
+          amount_uzs: number
+          created_at: string
+          id: string
+          month_period: string
+          payment_date: string | null
+          payment_method: string | null
+          payment_status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_uzs?: number
+          created_at?: string
+          id?: string
+          month_period: string
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_uzs?: number
+          created_at?: string
+          id?: string
+          month_period?: string
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount_usd: number
@@ -1238,6 +1274,45 @@ export type Database = {
           first_shown_at?: string
           id?: string
           series_name?: string
+        }
+        Relationships: []
+      }
+      student_admin_chats: {
+        Row: {
+          admin_id: string | null
+          created_at: string
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          message: string
+          sender_role: Database["public"]["Enums"]["app_role"]
+          student_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          message: string
+          sender_role: Database["public"]["Enums"]["app_role"]
+          student_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          message?: string
+          sender_role?: Database["public"]["Enums"]["app_role"]
+          student_id?: string
         }
         Relationships: []
       }
@@ -1620,7 +1695,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "student"
+      app_role: "admin" | "teacher" | "student" | "demo_teacher"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1748,7 +1823,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher", "student"],
+      app_role: ["admin", "teacher", "student", "demo_teacher"],
     },
   },
 } as const

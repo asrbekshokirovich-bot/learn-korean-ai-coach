@@ -1,4 +1,4 @@
-import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video } from "lucide-react";
+import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, CreditCard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -25,10 +25,12 @@ export function StudentSidebar() {
   const items = [
     { title: t('dashboard'), url: '/student', icon: Home },
     { title: t('myGroups'), url: '/student/groups', icon: Users },
+    { title: 'Subscription', url: '/student/subscription', icon: CreditCard },
     { title: t('recordings'), url: '/student/recordings', icon: Video },
+    { title: 'Chat with Admin', url: '/student/admin-chat', icon: MessageSquare },
     { title: t('practice'), url: '/student/practice', icon: Brain },
     { title: t('kDramaHub'), url: '/student/kdrama', icon: Film },
-    { title: t('conversationPractice'), url: '/student/conversations', icon: MessageSquare },
+    { title: t('conversationPractice'), url: '/student/conversations', icon: Brain },
   ];
 
   const isActive = (path: string) => currentPath === path;

@@ -36,6 +36,7 @@ import { z } from "zod";
 import Finance from "@/pages/admin/Finance";
 import BookingManagement from "@/components/admin/BookingManagement";
 import GroupManagement from "@/pages/admin/GroupManagement";
+import StudentChats from "@/pages/admin/StudentChats";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 interface Teacher {
@@ -732,9 +733,9 @@ const AdminDashboard = () => {
               <DollarSign className="w-4 h-4 mr-2" />
               Finance
             </TabsTrigger>
-            <TabsTrigger value="support">
+            <TabsTrigger value="chats">
               <MessageCircle className="w-4 h-4 mr-2" />
-              Support ({supportRequests.filter(r => r.status === 'pending').length})
+              Student Chats
             </TabsTrigger>
           </TabsList>
 
@@ -1036,8 +1037,13 @@ const AdminDashboard = () => {
             <Finance />
           </TabsContent>
 
-          {/* Support Requests Tab */}
-          <TabsContent value="support" className="space-y-4">
+          {/* Student Chats Tab */}
+          <TabsContent value="chats">
+            <StudentChats />
+          </TabsContent>
+
+          {/* Support Requests Tab - REMOVED, replaced with chats */}
+          <TabsContent value="support_old" className="space-y-4">
             <h2 className="text-xl font-semibold">Support Requests</h2>
 
             <Card>
