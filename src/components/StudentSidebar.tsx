@@ -77,9 +77,9 @@ const SortableMenuItem = ({ item, open, onClick, isActive }: any) => {
             end
             onClick={onClick}
             className="group relative overflow-hidden hover:bg-primary/10 transition-all duration-200 rounded-lg flex items-center"
-            activeClassName="bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border-l-2 border-primary shadow-sm"
+            activeClassName="bg-gradient-to-r from-primary/20 to-accent/10 text-primary font-semibold border-l-2 border-primary shadow-sm"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-accent/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
             <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mr-1 opacity-0 group-hover:opacity-50 transition-opacity">
               <GripVertical className="h-3 w-3" />
             </div>
@@ -197,7 +197,7 @@ export function StudentSidebar() {
         {open ? (
           <div className="space-y-3 animate-fade-in">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-hero shadow-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+              <Sparkles className="h-5 w-5 text-white animate-pulse" />
               <span className="font-semibold text-white">
                 Hanguk Learning
               </span>

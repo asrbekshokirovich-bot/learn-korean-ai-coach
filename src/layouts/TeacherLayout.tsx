@@ -83,9 +83,9 @@ const TeacherLayout = () => {
         <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="h-16 border-b bg-card flex items-center px-4 sticky top-0 z-10">
-            <SidebarTrigger className="mr-4" />
+            <SidebarTrigger className="mr-4 hover:bg-primary/10 rounded-lg transition-colors h-10 w-10 flex items-center justify-center bg-primary/5 border-2 border-primary/20" />
             <div className="flex-1 flex items-center gap-3">
-              <h1 className="text-xl font-bold">{t('teacherPortal')}</h1>
+              <h1 className="text-xl font-bold text-primary">{t('teacherPortal')}</h1>
             </div>
             <div className="flex items-center gap-4">
               <Button

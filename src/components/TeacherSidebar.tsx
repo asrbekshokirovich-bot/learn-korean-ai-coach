@@ -35,7 +35,7 @@ export function TeacherSidebar() {
   const isActive = (path: string) => currentPath === path;
 
   return (
-    <Sidebar className={open ? "w-60" : "w-14"} collapsible="icon">
+    <Sidebar className={open ? "w-60 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>{t('teacherPortal')}</SidebarGroupLabel>
@@ -47,8 +47,8 @@ export function TeacherSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-muted/50"
-                      activeClassName="bg-muted text-primary font-medium"
+                      className="hover:bg-primary/10 transition-all duration-200 rounded-lg"
+                      activeClassName="bg-gradient-to-r from-primary/20 to-accent/10 text-primary font-semibold border-l-2 border-primary"
                     >
                       <item.icon className="h-4 w-4" />
                       {open && <span className="ml-2">{item.title}</span>}

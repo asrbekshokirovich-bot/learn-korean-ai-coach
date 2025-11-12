@@ -8,49 +8,54 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    --background: 0 0% 97%;
+    --foreground: 240 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 240 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 240 30% 15%;
 
-    /* Deep Ocean Blue Primary */
-    --primary: 210 90% 48%;
+    /* Seoul Sunset Primary - #FF6B6B */
+    --primary: 0 100% 70%;
     --primary-foreground: 0 0% 100%;
 
-    /* Emerald Green Secondary */
-    --secondary: 160 70% 45%;
+    /* Han River Blue Secondary - #4ECDC4 */
+    --secondary: 177 60% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 15% 96%;
-    --muted-foreground: 215 15% 50%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 240 10% 50%;
 
-    /* Sky Blue Accent */
-    --accent: 200 85% 52%;
-    --accent-foreground: 0 0% 100%;
+    /* Gyeongbokgung Gold Accent - #FFD93D */
+    --accent: 48 100% 62%;
+    --accent-foreground: 240 30% 15%;
 
-    --destructive: 0 72% 51%;
+    /* Gochujang Error - #E74C3C */
+    --destructive: 6 78% 57%;
     --destructive-foreground: 0 0% 100%;
+    
+    /* Matcha Success - #95E1D3 */
+    --success: 166 58% 74%;
+    --success-foreground: 240 30% 15%;
 
-    --border: 210 15% 90%;
-    --input: 210 15% 93%;
-    --ring: 210 90% 48%;
+    --border: 0 0% 90%;
+    --input: 0 0% 93%;
+    --ring: 0 100% 70%;
 
     --radius: 0.5rem;
 
-    /* Clean professional gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(210 90% 48%), hsl(200 85% 52%));
-    --gradient-accent: linear-gradient(135deg, hsl(160 70% 45%), hsl(170 65% 50%));
-    --gradient-subtle: linear-gradient(180deg, hsl(210 20% 98%), hsl(210 15% 96%));
+    /* Korean-themed gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(0 100% 70%), hsl(48 100% 62%));
+    --gradient-accent: linear-gradient(135deg, hsl(177 60% 55%), hsl(166 58% 74%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 97%), hsl(0 0% 95%));
     
-    /* Subtle professional shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(215 25% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.08);
-    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(215 25% 15% / 0.1);
+    /* Warm professional shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(0 100% 70% / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(0 100% 70% / 0.15);
+    --shadow-lg: 0 10px 15px -3px hsl(0 100% 70% / 0.2);
+    --shadow-xl: 0 20px 25px -5px hsl(0 100% 70% / 0.2);
     
     /* Smooth transitions */
     --transition-base: all 0.2s ease-in-out;
@@ -58,45 +63,51 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 215 30% 10%;
-    --foreground: 210 20% 95%;
+    /* Midnight Hanok - #1A1A2E */
+    --background: 240 30% 12%;
+    --foreground: 0 0% 95%;
 
-    --card: 215 28% 14%;
-    --card-foreground: 210 20% 95%;
+    --card: 240 28% 16%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 215 28% 14%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 240 28% 16%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Bright Ocean Blue for dark mode */
-    --primary: 210 90% 55%;
+    /* Seoul Sunset (brighter for dark mode) */
+    --primary: 0 100% 75%;
     --primary-foreground: 0 0% 100%;
 
-    /* Bright Emerald for dark mode */
-    --secondary: 160 70% 50%;
+    /* Han River Blue (brighter for dark mode) */
+    --secondary: 177 60% 60%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 215 25% 18%;
-    --muted-foreground: 210 15% 70%;
+    --muted: 240 25% 20%;
+    --muted-foreground: 0 0% 70%;
 
-    /* Bright Sky Blue Accent */
-    --accent: 200 85% 58%;
-    --accent-foreground: 0 0% 100%;
+    /* Gyeongbokgung Gold (brighter for dark mode) */
+    --accent: 48 100% 68%;
+    --accent-foreground: 240 30% 15%;
 
-    --destructive: 0 72% 56%;
+    /* Gochujang Error (brighter for dark mode) */
+    --destructive: 6 78% 62%;
     --destructive-foreground: 0 0% 100%;
+    
+    /* Matcha Success (brighter for dark mode) */
+    --success: 166 58% 78%;
+    --success-foreground: 240 30% 15%;
 
-    --border: 215 25% 22%;
-    --input: 215 25% 22%;
-    --ring: 210 90% 55%;
+    --border: 240 25% 24%;
+    --input: 240 25% 24%;
+    --ring: 0 100% 75%;
     
-    --gradient-hero: linear-gradient(135deg, hsl(210 90% 55%), hsl(200 85% 58%));
-    --gradient-accent: linear-gradient(135deg, hsl(160 70% 50%), hsl(170 65% 55%));
-    --gradient-subtle: linear-gradient(180deg, hsl(215 30% 10%), hsl(215 25% 14%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 100% 75%), hsl(48 100% 68%));
+    --gradient-accent: linear-gradient(135deg, hsl(177 60% 60%), hsl(166 58% 78%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 30% 12%), hsl(240 28% 16%));
     
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.15);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.2);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.25);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.25);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.5);
   }
 }
 
