@@ -1,7 +1,11 @@
-import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, CreditCard, Sparkles } from "lucide-react";
+import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, CreditCard, Sparkles, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +26,27 @@ export function StudentSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const { t } = useLanguage();
+  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+
+    if (user) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      setProfile(profileData);
+    }
+  };
 
   const items = [
     { title: t('dashboard'), url: '/student', icon: Home },
@@ -46,12 +71,41 @@ export function StudentSidebar() {
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarHeader className={open ? "p-4" : "p-2"}>
-        {open && (
-          <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 animate-fade-in">
-            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-            <span className="font-semibold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Hanguk Learning
-            </span>
+        {open ? (
+          <div className="space-y-3 animate-fade-in">
+            <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+              <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+              <span className="font-semibold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Hanguk Learning
+              </span>
+            </div>
+            
+            {/* Profile Section */}
+            <div className="flex items-center gap-3 px-2 py-3 rounded-lg bg-muted/50 border border-border/40">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+                <AvatarImage src={profile?.profile_picture_url} />
+                <AvatarFallback className="bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {profile?.full_name || user?.email || 'Student'}
+                </p>
+                <Badge variant="secondary" className="mt-0.5 h-4 text-xs">
+                  {t('student')}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center py-2">
+            <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+              <AvatarImage src={profile?.profile_picture_url} />
+              <AvatarFallback className="bg-primary/10">
+                <User className="h-4 w-4 text-primary" />
+              </AvatarFallback>
+            </Avatar>
           </div>
         )}
       </SidebarHeader>
