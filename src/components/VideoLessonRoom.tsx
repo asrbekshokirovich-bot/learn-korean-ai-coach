@@ -62,6 +62,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const participantsRef = useRef<Map<string, Participant>>(new Map());
   const realtimeChannelRef = useRef<any>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingStopTimeoutRef = useRef<number | null>(null);
+
+  const getCurrentVideoTrack = () => {
+    if (isScreenSharing && screenShareStream?.getVideoTracks()?.[0]) return screenShareStream.getVideoTracks()[0];
+    return localStream?.getVideoTracks()?.[0] || null;
+  };
 
   // Keep ref synced with latest participants and bind streams to video elements
   useEffect(() => {
@@ -229,15 +235,19 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
     const pc = new RTCPeerConnection(configuration);
 
-    // Add local stream tracks with logging
-    if (localStream) {
-      console.log(`Adding ${localStream.getTracks().length} tracks to peer connection for:`, remoteUserId);
-      localStream.getTracks().forEach(track => {
-        const sender = pc.addTrack(track, localStream);
-        console.log(`Added ${track.kind} track:`, track.label, 'enabled:', track.enabled);
-      });
+    // Add local media tracks with current video selection
+    const audioTrack = localStream?.getAudioTracks()?.[0] || null;
+    const videoTrack = getCurrentVideoTrack();
+    if (audioTrack) {
+      pc.addTrack(audioTrack, localStream as MediaStream);
+      console.log('Added local audio track');
+    }
+    if (videoTrack) {
+      const srcStream = isScreenSharing && screenShareStream ? screenShareStream : (localStream as MediaStream);
+      pc.addTrack(videoTrack, srcStream);
+      console.log('Added video track (screenShare:', isScreenSharing, ')');
     } else {
-      console.warn('No local stream available when creating peer connection');
+      console.warn('No video track available when creating peer connection');
     }
 
     // Handle remote stream
@@ -284,6 +294,21 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       console.log('ICE connection state:', pc.iceConnectionState, 'for user:', remoteUserId);
     };
 
+    pc.onnegotiationneeded = async () => {
+      try {
+        if (!realtimeChannelRef.current) return;
+        console.log('Negotiation needed with', remoteUserId);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        realtimeChannelRef.current.send({
+          type: 'broadcast',
+          event: 'offer',
+          payload: { offer, from: currentUserId, to: remoteUserId }
+        });
+      } catch (err) {
+        console.error('Negotiation failed', err);
+      }
+    };
     pc.onconnectionstatechange = () => {
       console.log('Connection state:', pc.connectionState, 'for user:', remoteUserId);
       if (pc.connectionState === 'failed') {
@@ -293,7 +318,6 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
     return pc;
   };
-
   const setupRealtimeChannel = async (
     videoLessonId: string, 
     userId: string, 
@@ -328,7 +352,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         // Create offer for new participant
         try {
           const pc = await createPeerConnection(payload.userId);
-          const offer = await pc.createOffer();
+          const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
           await pc.setLocalDescription(offer);
 
           setParticipants(prev => {
@@ -375,7 +399,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             });
           }
 
-          await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
+          await pc.setRemoteDescription(payload.offer);
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
 
@@ -695,6 +719,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     // Stop screen sharing if active
     if (isScreenSharing) {
       stopScreenShare();
+    }
+
+    // Clear auto-stop timer
+    if (recordingStopTimeoutRef.current) {
+      clearTimeout(recordingStopTimeoutRef.current);
+      recordingStopTimeoutRef.current = null;
     }
 
     // Announce leaving
@@ -1109,7 +1139,9 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
                     ref={(el) => {
                       if (el && participant.stream) {
                         el.srcObject = participant.stream;
+                        el.muted = false;
                         participantVideosRef.current.set(participant.userId, el);
+                        el.play().catch((e) => console.log('Autoplay prevented, will play on user interaction', e));
                       }
                     }}
                     autoPlay
