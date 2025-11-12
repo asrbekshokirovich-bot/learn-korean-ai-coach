@@ -92,9 +92,9 @@ export function StudentSidebar() {
   const defaultItems = [
     { title: t('dashboard'), url: '/student', icon: Home },
     { title: t('myGroups'), url: '/student/groups', icon: Users },
-    { title: 'Subscription', url: '/student/subscription', icon: CreditCard },
+    { title: t('subscription'), url: '/student/subscription', icon: CreditCard },
     { title: t('recordings'), url: '/student/recordings', icon: Video },
-    { title: 'Chat with Admin', url: '/student/admin-chat', icon: MessageSquare },
+    { title: t('chatWithAdmin'), url: '/student/admin-chat', icon: MessageSquare },
     { title: t('practice'), url: '/student/practice', icon: Brain },
     { title: t('kDramaHub'), url: '/student/kdrama', icon: Film },
     { title: t('conversationPractice'), url: '/student/conversations', icon: Brain },
