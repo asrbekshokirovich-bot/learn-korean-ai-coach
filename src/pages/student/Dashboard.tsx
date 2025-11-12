@@ -30,7 +30,45 @@ const Dashboard = () => {
     loadGoalProgress();
     loadStats();
     loadSupportRequests();
-  }, []);
+
+    // Subscribe to realtime updates for support requests
+    const setupRealtimeSubscription = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase
+        .channel('support-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'support_requests',
+            filter: `student_id=eq.${user.id}`
+          },
+          (payload) => {
+            const updatedRequest = payload.new as any;
+            const oldRequest = payload.old as any;
+            
+            // Only notify if admin_response was added or changed
+            if (updatedRequest.admin_response && updatedRequest.admin_response !== oldRequest.admin_response) {
+              toast.success((t as any).newSupportResponse || "Admin has responded to your support request!");
+              loadSupportRequests(); // Reload to show the new response
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    const cleanup = setupRealtimeSubscription();
+    return () => {
+      cleanup.then(fn => fn && fn());
+    };
+  }, [t]);
 
   const loadUpcomingLessons = async () => {
     const { data: { user } } = await supabase.auth.getUser();
