@@ -51,6 +51,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [chatOpen, setChatOpen] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [recordingCanvas, setRecordingCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [liveFeedback, setLiveFeedback] = useState<any[]>([]);
   const [showNextLesson, setShowNextLesson] = useState(false);
   const [nextLessonInfo, setNextLessonInfo] = useState<any>(null);
@@ -70,7 +72,13 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         el.srcObject = p.stream;
       }
     });
-  }, [participants]);
+
+    // Update recording if active (add/remove participant streams)
+    if (isRecording && userRole === 'teacher') {
+      console.log('Participants changed during recording, updating composite');
+      // The recording will automatically pick up new streams on next canvas draw
+    }
+  }, [participants, isRecording, userRole]);
 
   useEffect(() => {
     initializeVideoLesson();
@@ -191,9 +199,10 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         userProfile
       );
 
-      // Auto-start recording for teachers in group lessons
+      // Auto-start recording for teachers in group lessons immediately
       if (userRole === 'teacher' && isGroupLesson) {
-        setTimeout(() => startRecording(), 2000);
+        console.log('Teacher joined - starting automatic recording');
+        setTimeout(() => startRecording(), 1000); // Small delay to ensure everything is initialized
       }
 
       toast.success(isGroupLesson ? t('joinedGroupLesson') : t('lessonStarted'));
@@ -738,11 +747,126 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     if (!localStream || isRecording) return;
 
     try {
+      console.log('Starting automatic lesson recording...');
+      
+      // Create canvas for compositing all video streams
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+
+      setRecordingCanvas(canvas);
+
+      // Create audio context for mixing all audio streams
+      const audioCtx = new AudioContext();
+      setAudioContext(audioCtx);
+      
+      const audioDestination = audioCtx.createMediaStreamDestination();
+
+      // Add local stream audio
+      if (localStream.getAudioTracks().length > 0) {
+        const localAudioSource = audioCtx.createMediaStreamSource(localStream);
+        localAudioSource.connect(audioDestination);
+        console.log('Added local audio to recording');
+      }
+
+      // Add all participant audio streams
+      participantsRef.current.forEach((participant, id) => {
+        if (participant.stream && participant.stream.getAudioTracks().length > 0) {
+          try {
+            const source = audioCtx.createMediaStreamSource(participant.stream);
+            source.connect(audioDestination);
+            console.log('Added participant audio to recording:', participant.userName);
+          } catch (err) {
+            console.error('Error adding participant audio:', err);
+          }
+        }
+      });
+
+      // Create composite video stream by drawing all videos to canvas
+      let animationFrameId: number;
+      const drawFrame = () => {
+        if (!ctx) return;
+
+        // Clear canvas
+        ctx.fillStyle = '#1a1f2b';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Calculate grid layout
+        const allStreams: Array<{ stream: MediaStream; name: string }> = [];
+        
+        // Add local stream
+        if (localStream) {
+          allStreams.push({ stream: localStream, name: currentUserName });
+        }
+
+        // Add all participant streams
+        participantsRef.current.forEach((p) => {
+          if (p.stream) {
+            allStreams.push({ stream: p.stream, name: p.userName });
+          }
+        });
+
+        const streamCount = allStreams.length;
+        if (streamCount === 0) {
+          animationFrameId = requestAnimationFrame(drawFrame);
+          return;
+        }
+
+        const cols = Math.ceil(Math.sqrt(streamCount));
+        const rows = Math.ceil(streamCount / cols);
+        const cellWidth = canvas.width / cols;
+        const cellHeight = canvas.height / rows;
+
+        // Draw each video stream
+        allStreams.forEach((item, index) => {
+          const col = index % cols;
+          const row = Math.floor(index / cols);
+          const x = col * cellWidth;
+          const y = row * cellHeight;
+
+          // Create temporary video element for drawing
+          const videoEl = document.createElement('video');
+          videoEl.srcObject = item.stream;
+          videoEl.muted = true;
+          videoEl.play().catch(err => console.log('Play error:', err));
+
+          // Draw video frame
+          try {
+            ctx.drawImage(videoEl, x, y, cellWidth, cellHeight);
+            
+            // Draw name label
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(x + 10, y + cellHeight - 40, cellWidth - 20, 30);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px Arial';
+            ctx.fillText(item.name, x + 20, y + cellHeight - 18);
+          } catch (err) {
+            // Video not ready yet
+          }
+        });
+
+        animationFrameId = requestAnimationFrame(drawFrame);
+      };
+
+      drawFrame();
+
+      // Combine canvas video stream with mixed audio
+      const canvasStream = canvas.captureStream(30); // 30 FPS
+      const videoTrack = canvasStream.getVideoTracks()[0];
+      const audioTrack = audioDestination.stream.getAudioTracks()[0];
+
+      const recordingStream = new MediaStream([videoTrack, audioTrack]);
+
       // Clear previous chunks
       recordedChunksRef.current = [];
       
-      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
-      const recorder = new MediaRecorder(localStream, options);
+      const options = { 
+        mimeType: 'video/webm;codecs=vp9,opus',
+        videoBitsPerSecond: 2500000 // 2.5 Mbps for good quality
+      };
+      const recorder = new MediaRecorder(recordingStream, options);
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -752,7 +876,23 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       };
 
       recorder.onstop = async () => {
-        console.log('Recording stopped naturally, chunks collected:', recordedChunksRef.current.length);
+        console.log('Recording stopped, chunks collected:', recordedChunksRef.current.length);
+        
+        // Stop animation frame
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+
+        // Clean up canvas and audio context
+        if (recordingCanvas) {
+          recordingCanvas.remove();
+          setRecordingCanvas(null);
+        }
+        if (audioContext) {
+          audioContext.close();
+          setAudioContext(null);
+        }
+
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
         console.log('Recording blob size:', blob.size);
         if (blob.size > 0) {
@@ -767,11 +907,11 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       setMediaRecorder(recorder);
       setIsRecording(true);
       
-      console.log('Recording started for group:', groupId);
-      toast.success(t('recordingStarted'));
+      console.log('Automatic recording started for group:', groupId);
+      toast.success('Recording started automatically');
     } catch (error) {
       console.error("Error starting recording:", error);
-      toast.error(t('recordingFailed'));
+      toast.error('Failed to start recording');
     }
   };
 
@@ -1108,14 +1248,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           )}
 
           {userRole === 'teacher' && isGroupLesson && (
-            <Button
-              variant={isRecording ? "destructive" : "outline"}
-              size="lg"
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={!localStream}
-            >
-              <Circle className={`w-5 h-5 ${isRecording ? 'animate-pulse' : ''}`} />
-            </Button>
+            <div className="flex items-center gap-2 px-3 py-2 bg-destructive/20 text-destructive rounded-lg border border-destructive/30">
+              <Circle className={`w-4 h-4 ${isRecording ? 'animate-pulse' : ''}`} />
+              <span className="text-sm font-medium">
+                {isRecording ? 'Recording' : 'Recording Stopped'}
+              </span>
+            </div>
           )}
 
           <Button
