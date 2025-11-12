@@ -87,52 +87,57 @@ const StudentLayout = () => {
       <div className="flex min-h-screen w-full bg-gradient-to-br from-background via-background to-muted/20">
         <StudentSidebar />
         <div className="flex-1 flex flex-col">
-          {/* Header with gradient and glassmorphism */}
-          <header className="h-16 border-b border-border/40 bg-card/80 backdrop-blur-xl flex items-center px-6 sticky top-0 z-10 shadow-sm">
-            <SidebarTrigger className="mr-4 hover:scale-110 transition-transform duration-200" />
-            <div className="flex-1 flex items-center gap-3">
-              <div className="h-8 w-1 bg-gradient-to-b from-primary via-primary/50 to-transparent rounded-full" />
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {t('studentPortal')}
-              </h1>
-            </div>
-            <div className="flex items-center gap-3">
+          {/* Modern minimalist header */}
+          <header className="h-14 border-b border-border/20 bg-background/95 backdrop-blur-md flex items-center px-4 sticky top-0 z-10">
+            <SidebarTrigger className="mr-3 hover:bg-accent/50 rounded-lg transition-colors" />
+            
+            <h1 className="text-base font-semibold text-foreground/90 mr-auto">
+              {t('studentPortal')}
+            </h1>
+            
+            <div className="flex items-center gap-2">
               <StoryUpload />
+              
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleDarkMode}
                 aria-label="Toggle dark mode"
-                className="hover:scale-110 transition-transform duration-200 hover:bg-primary/10"
+                className="h-9 w-9 hover:bg-accent"
               >
                 {isDarkMode ? (
-                  <Sun className="w-5 h-5 text-yellow-500 animate-in spin-in-180 duration-500" />
+                  <Sun className="w-4 h-4" />
                 ) : (
-                  <Moon className="w-5 h-5 text-primary animate-in spin-in-180 duration-500" />
+                  <Moon className="w-4 h-4" />
                 )}
               </Button>
+              
               <LanguageSelector />
-              <div className="flex items-center gap-3">
+              
+              <div className="h-8 w-px bg-border/50 mx-1" />
+              
+              <div className="flex items-center gap-2">
                 <ProfilePictureUpload 
                   userId={user?.id || ""} 
                   currentPictureUrl={profile?.profile_picture_url}
                   userName={profile?.full_name || ""}
                 />
-                <div className="text-right px-3 py-1.5 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                  <p className="text-sm font-semibold">{profile?.full_name || user?.email}</p>
-                  <Badge variant="secondary" className="mt-0.5 bg-primary/20 text-primary border-primary/30">
+                <div className="hidden md:flex flex-col items-start">
+                  <p className="text-sm font-medium leading-none">{profile?.full_name || user?.email}</p>
+                  <Badge variant="secondary" className="mt-1 h-4 text-xs px-1.5">
                     {t('student')}
                   </Badge>
                 </div>
               </div>
+              
               <Button 
-                variant="outline" 
-                size="sm" 
+                variant="ghost" 
+                size="icon"
                 onClick={handleSignOut}
-                className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-all duration-200"
+                className="h-9 w-9 hover:bg-accent ml-1"
+                aria-label="Sign out"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                {t('signOut')}
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
           </header>
