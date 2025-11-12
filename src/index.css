@@ -8,6 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
+    /* Cloud White Background - #F7F7F7 */
     --background: 0 0% 97%;
     --foreground: 240 30% 15%;
 
@@ -25,8 +26,8 @@ All colors MUST be HSL.
     --secondary: 177 60% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 95%;
-    --muted-foreground: 240 10% 50%;
+    --muted: 0 5% 94%;
+    --muted-foreground: 0 0% 45%;
 
     /* Gyeongbokgung Gold Accent - #FFD93D */
     --accent: 48 100% 62%;
@@ -40,8 +41,8 @@ All colors MUST be HSL.
     --success: 166 58% 74%;
     --success-foreground: 240 30% 15%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 93%;
+    --border: 0 5% 88%;
+    --input: 0 5% 92%;
     --ring: 0 100% 70%;
 
     --radius: 0.5rem;
