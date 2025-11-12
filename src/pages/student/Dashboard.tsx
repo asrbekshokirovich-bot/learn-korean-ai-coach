@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, Video, Users, AlertCircle, TrendingUp, Target, BookOpen, Sparkles, Award, MessageCircle, Send } from "lucide-react";
+import { Calendar, Clock, Video, Users, AlertCircle, TrendingUp, Target, BookOpen, Sparkles, Award, MessageCircle, Send, MessageSquare } from "lucide-react";
 import { format, getDay, addDays } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
@@ -305,58 +305,59 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-accent to-secondary p-8 text-primary-foreground shadow-elegant">
-        <div className="absolute inset-0 bg-gradient-mesh opacity-30"></div>
+    <div className="space-y-8 animate-fade-in">
+      {/* Hero Header with animated gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-accent to-secondary p-8 text-primary-foreground shadow-elegant hover:shadow-glow transition-shadow duration-500">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl animate-pulse"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <Sparkles className="w-8 h-8" />
-            <h1 className="text-4xl font-bold">{t('welcomeBackTitle')}</h1>
+            <Sparkles className="w-8 h-8 animate-pulse" />
+            <h1 className="text-4xl font-bold animate-fade-in">{t('welcomeBackTitle')}</h1>
           </div>
-          <p className="text-lg opacity-90">{t('continueYourKoreanLearning')}</p>
+          <p className="text-lg opacity-90 animate-fade-in" style={{ animationDelay: '100ms' }}>{t('continueYourKoreanLearning')}</p>
         </div>
       </div>
 
-      {/* Stats Overview */}
+      {/* Stats Overview with stagger animation */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-ai hover:shadow-glow transition-all duration-300 hover:-translate-y-1">
+        <Card className="border-none shadow-ai hover:shadow-glow transition-all duration-300 hover:-translate-y-1 hover:scale-105 group animate-fade-in bg-gradient-to-br from-card to-card/50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('activeGroups')}</p>
-                <p className="text-3xl font-bold mt-2">{stats.enrollments}</p>
+                <p className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">{t('activeGroups')}</p>
+                <p className="text-3xl font-bold mt-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">{stats.enrollments}</p>
               </div>
-              <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="w-7 h-7 text-primary" />
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                <Users className="w-7 h-7 text-primary group-hover:animate-pulse" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-ai hover:shadow-glow transition-all duration-300 hover:-translate-y-1">
+        <Card className="border-none shadow-ai hover:shadow-glow transition-all duration-300 hover:-translate-y-1 hover:scale-105 group animate-fade-in bg-gradient-to-br from-card to-card/50" style={{ animationDelay: '100ms' }}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('lessonsCompletedCount')}</p>
-                <p className="text-3xl font-bold mt-2">{stats.completedLessons}</p>
+                <p className="text-sm font-medium text-muted-foreground group-hover:text-accent transition-colors">{t('lessonsCompletedCount')}</p>
+                <p className="text-3xl font-bold mt-2 bg-gradient-to-r from-accent to-accent/60 bg-clip-text text-transparent">{stats.completedLessons}</p>
               </div>
-              <div className="h-14 w-14 rounded-full bg-accent/10 flex items-center justify-center">
-                <BookOpen className="w-7 h-7 text-accent" />
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                <BookOpen className="w-7 h-7 text-accent group-hover:animate-pulse" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-ai hover:shadow-glow transition-all duration-300 hover:-translate-y-1">
+        <Card className="border-none shadow-ai hover:shadow-glow transition-all duration-300 hover:-translate-y-1 hover:scale-105 group animate-fade-in bg-gradient-to-br from-card to-card/50" style={{ animationDelay: '200ms' }}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">{t('activeGoals')}</p>
-                <p className="text-3xl font-bold mt-2">{stats.goalsInProgress}</p>
+                <p className="text-sm font-medium text-muted-foreground group-hover:text-secondary transition-colors">{t('activeGoals')}</p>
+                <p className="text-3xl font-bold mt-2 bg-gradient-to-r from-secondary to-secondary/60 bg-clip-text text-transparent">{stats.goalsInProgress}</p>
               </div>
-              <div className="h-14 w-14 rounded-full bg-secondary/10 flex items-center justify-center">
-                <Target className="w-7 h-7 text-secondary" />
+              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-secondary/20 to-secondary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                <Target className="w-7 h-7 text-secondary group-hover:animate-pulse" />
               </div>
             </div>
           </CardContent>
@@ -634,16 +635,18 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty state with enhanced design */}
       {upcomingLessons.length === 0 && groupEnrollments.length === 0 && goalProgress.length === 0 && (
-        <Card className="border-none shadow-ai p-16 text-center bg-gradient-to-br from-muted/30 to-background">
-          <div className="max-w-md mx-auto">
-            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+        <Card className="border-none shadow-ai p-16 text-center bg-gradient-to-br from-muted/30 via-background to-primary/5 relative overflow-hidden animate-fade-in">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50"></div>
+          <div className="max-w-md mx-auto relative z-10">
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse">
               <Calendar className="w-10 h-10 text-primary" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Start Your Learning Journey</h3>
-            <p className="text-muted-foreground mb-6">Contact support to get enrolled in group classes and begin your Korean language adventure</p>
-            <Button size="lg" className="shadow-elegant" onClick={() => navigate("/student/admin-chat")}>
+            <h3 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">Start Your Learning Journey</h3>
+            <p className="text-muted-foreground mb-6 text-lg">Contact support to get enrolled in group classes and begin your Korean language adventure</p>
+            <Button size="lg" className="shadow-elegant hover:shadow-glow transition-all duration-300 hover:scale-105" onClick={() => navigate("/student/admin-chat")}>
+              <MessageSquare className="w-5 h-5 mr-2" />
               Contact Support
             </Button>
           </div>
