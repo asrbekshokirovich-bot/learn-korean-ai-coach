@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { format, startOfMonth } from "date-fns";
 import { toast } from "sonner";
 
 const MonthlySubscription = () => {
+  const navigate = useNavigate();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -123,7 +125,11 @@ const MonthlySubscription = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Contact admin to set up your monthly payment or discuss payment options via the Chat with Admin section.
             </p>
-            <Button disabled className="w-full" size="lg">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={() => navigate("/student/admin-chat")}
+            >
               <CreditCard className="h-4 w-4 mr-2" />
               Contact Admin for Payment
             </Button>
