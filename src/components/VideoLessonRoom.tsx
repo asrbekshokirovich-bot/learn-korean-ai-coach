@@ -1253,7 +1253,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   
   // For students: spotlight is the teacher (or teacher's screen if sharing)
   const spotlightParticipant = userRole === 'student' ? teacher : null;
-  const gridParticipants = userRole === 'student' ? students : (teacher ? [teacher, ...students] : students);
+  // For teachers: show all students in grid (teacher doesn't need to see themselves)
+  const gridParticipants = userRole === 'student' ? students : students;
 
   return (
     <>
