@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useNavigate } from "react-router-dom";
 
 interface SignUpDialogProps {
   open: boolean;
@@ -51,6 +52,7 @@ const teacherSchema = authSchema.extend({
 const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSignIn }: SignUpDialogProps) => {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   // Student form state
@@ -116,6 +118,11 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       setStudentEmail("");
       setStudentPassword("");
       onOpenChange(false);
+
+      // Auto-login: Navigate to student dashboard
+      if (data.session) {
+        navigate("/student");
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
@@ -189,6 +196,11 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       setTeacherPassword("");
       setTopikLevel("");
       onOpenChange(false);
+
+      // Auto-login: Navigate to teacher dashboard
+      if (data.session) {
+        navigate("/teacher");
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const firstError = error.issues[0];
