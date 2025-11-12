@@ -25,6 +25,11 @@ interface SignUpDialogProps {
 
 // Validation schemas
 const authSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, { message: "First name is required" })
+    .max(100, { message: "First name must be less than 100 characters" }),
   email: z
     .string()
     .trim()
@@ -49,6 +54,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
   const [loading, setLoading] = useState(false);
 
   // Student form state
+  const [studentFullName, setStudentFullName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [studentPassword, setStudentPassword] = useState("");
 
@@ -64,6 +70,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
     try {
       // Validate input
       const validated = authSchema.parse({
+        fullName: studentFullName,
         email: studentEmail,
         password: studentPassword,
       });
@@ -77,6 +84,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
           emailRedirectTo: redirectUrl,
           data: {
             role: "student",
+            full_name: validated.fullName,
           },
         },
       });
@@ -104,6 +112,7 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
       });
 
       // Reset form
+      setStudentFullName("");
       setStudentEmail("");
       setStudentPassword("");
       onOpenChange(false);
@@ -213,6 +222,20 @@ const SignUpDialog = ({ open, onOpenChange, defaultTab = "student", onSwitchToSi
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsContent value="student" className="space-y-4 pt-4">
             <form onSubmit={handleStudentSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="student-fullname">First Name</Label>
+                <Input
+                  id="student-fullname"
+                  type="text"
+                  placeholder="Enter your first name"
+                  value={studentFullName}
+                  onChange={(e) => setStudentFullName(e.target.value)}
+                  required
+                  disabled={loading}
+                  maxLength={100}
+                  autoComplete="given-name"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="student-email">{t('email')}</Label>
                 <Input
