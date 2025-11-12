@@ -27,7 +27,6 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [emailNotifications, setEmailNotifications] = useState(true);
   const [lessonReminders, setLessonReminders] = useState(true);
 
   useEffect(() => {
@@ -263,18 +262,6 @@ export default function Settings() {
           <CardDescription>{t('notificationSettingsDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="emailNotifications">{t('emailNotifications')}</Label>
-              <p className="text-sm text-muted-foreground">{t('emailNotificationsDescription')}</p>
-            </div>
-            <Switch
-              id="emailNotifications"
-              checked={emailNotifications}
-              onCheckedChange={setEmailNotifications}
-            />
-          </div>
-          <Separator />
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="lessonReminders">{t('lessonReminders')}</Label>
