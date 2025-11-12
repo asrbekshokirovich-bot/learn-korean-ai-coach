@@ -211,13 +211,12 @@ export function StudentSidebar() {
             )}
           </div>
           
-          {/* Logo - Right */}
-          {open && (
-            <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto shrink-0" />
-          )}
-          {!open && (
-            <img src={hangukLogo} alt="Hanguk" className="h-10 w-auto" />
-          )}
+          {/* Logo - Right (bigger in both states) */}
+          <img 
+            src={hangukLogo} 
+            alt="Hanguk" 
+            className={open ? "h-16 w-auto shrink-0" : "h-12 w-auto shrink-0"} 
+          />
         </div>
       </SidebarHeader>
       
