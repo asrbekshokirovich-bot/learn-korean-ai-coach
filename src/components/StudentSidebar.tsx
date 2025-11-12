@@ -51,23 +51,39 @@ const SortableMenuItem = ({ item, open, onClick, isActive }: any) => {
     transition,
   };
 
+  const isComingSoon = item.comingSoon;
+
   return (
     <SidebarMenuItem ref={setNodeRef} style={style}>
-      <SidebarMenuButton asChild>
-        <NavLink
-          to={item.url}
-          end
-          onClick={onClick}
-          className="group relative overflow-hidden hover:bg-primary/10 transition-all duration-200 rounded-lg flex items-center"
-          activeClassName="bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border-l-2 border-primary shadow-sm"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mr-1 opacity-0 group-hover:opacity-50 transition-opacity">
-            <GripVertical className="h-3 w-3" />
+      <SidebarMenuButton asChild={!isComingSoon}>
+        {isComingSoon ? (
+          <div className="group relative overflow-hidden rounded-lg flex items-center opacity-50 cursor-not-allowed px-2 py-1.5">
+            <item.icon className="h-4 w-4" />
+            {open && (
+              <div className="flex items-center justify-between flex-1 ml-2">
+                <span>{item.title}</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                  {item.comingSoonText}
+                </Badge>
+              </div>
+            )}
           </div>
-          <item.icon className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
-          {open && <span className="ml-2">{item.title}</span>}
-        </NavLink>
+        ) : (
+          <NavLink
+            to={item.url}
+            end
+            onClick={onClick}
+            className="group relative overflow-hidden hover:bg-primary/10 transition-all duration-200 rounded-lg flex items-center"
+            activeClassName="bg-gradient-to-r from-primary/20 to-primary/10 text-primary font-semibold border-l-2 border-primary shadow-sm"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing mr-1 opacity-0 group-hover:opacity-50 transition-opacity">
+              <GripVertical className="h-3 w-3" />
+            </div>
+            <item.icon className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+            {open && <span className="ml-2">{item.title}</span>}
+          </NavLink>
+        )}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -95,9 +111,9 @@ export function StudentSidebar() {
     { title: t('subscription'), url: '/student/subscription', icon: CreditCard },
     { title: t('recordings'), url: '/student/recordings', icon: Video },
     { title: t('chatWithAdmin'), url: '/student/admin-chat', icon: MessageSquare },
-    { title: t('practice'), url: '/student/practice', icon: Brain },
-    { title: t('kDramaHub'), url: '/student/kdrama', icon: Film },
-    { title: t('conversationPractice'), url: '/student/conversations', icon: Brain },
+    { title: t('practice'), url: '/student/practice', icon: Brain, comingSoon: true, comingSoonText: t('comingSoon') },
+    { title: t('kDramaHub'), url: '/student/kdrama', icon: Film, comingSoon: true, comingSoonText: t('comingSoon') },
+    { title: t('conversationPractice'), url: '/student/conversations', icon: Brain, comingSoon: true, comingSoonText: t('comingSoon') },
   ];
 
   useEffect(() => {

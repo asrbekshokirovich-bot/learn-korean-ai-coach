@@ -409,6 +409,7 @@ export const translations = {
     averageGrade: "O'rtacha baho",
     subscription: "Obuna",
     chatWithAdmin: "Administrator bilan suhbat",
+    comingSoon: "Tez kunda",
   },
   en: {
     // Navigation
@@ -650,6 +651,7 @@ export const translations = {
     averageGrade: "Average Grade",
     subscription: "Subscription",
     chatWithAdmin: "Chat with Admin",
+    comingSoon: "Coming Soon",
   },
   ko: {
     // Navigation
@@ -858,7 +860,7 @@ export const translations = {
     noRecordings: "아직 녹화 없음", recordingsWillAppearHere: "수업 녹화가 여기에 표시됩니다",
     
     // Additional error and dialog translations
-    invalidCredentials: "잘못된 자격 증명", emailPasswordIncorrect: "이메일 또는 비밀번호가 잘못되었습니다. 다시 시도하세요.", emailNotConfirmed: "이메일이 확인되지 않음", checkEmailConfirm: "이메일을 확인하고 계정을 확인하세요.", signInFailed: "로그인 실패", validationError: "유효성 검사 오류", error: "오류", unexpectedError: "예기치 않은 오류가 발생했습니다. 다시 시도하세요.", accountAlreadyExists: "계정이 이미 존재합니다", emailAlreadyRegistered: "이 이메일은 이미 등록되어 있습니다. 로그인하세요.", signUpFailed: "가입 실패", accountCreated: "계정이 생성되었습니다! 🎉", welcomeToHanguk: "Hanguk에 오신 것을 환영합니다! 이제 학습을 시작할 수 있습니다.", teacherAccountCreated: "교사 계정이 생성되었습니다! 🎉", teacherDashboardReady: "Hanguk에 오신 것을 환영합니다! 교사 대시보드가 준비되었습니다.", connectionError: "연결 오류", failedToStartLesson: "비디오 수업 시작 실패", savingRecording: "녹화 저장 중...", waitingForTeacher: "선생님을 기다리는 중...", waitingForStudent: "학생을 기다리는 중...", waitingForParticipants: "다른 참가자들이 참여하기를 기다리는 중...", endLesson: "수업 종료", lessonComplete: "수업 완료!", greatJobNextLesson: "잘했어요! 다음 수업입니다:", youHaveLeftLesson: "그룹 수업을 나갔습니다", totalLessons: "전체 수업", averageGrade: "평균 성적", subscription: "구독", chatWithAdmin: "관리자와 채팅",
+    invalidCredentials: "잘못된 자격 증명", emailPasswordIncorrect: "이메일 또는 비밀번호가 잘못되었습니다. 다시 시도하세요.", emailNotConfirmed: "이메일이 확인되지 않음", checkEmailConfirm: "이메일을 확인하고 계정을 확인하세요.", signInFailed: "로그인 실패", validationError: "유효성 검사 오류", error: "오류", unexpectedError: "예기치 않은 오류가 발생했습니다. 다시 시도하세요.", accountAlreadyExists: "계정이 이미 존재합니다", emailAlreadyRegistered: "이 이메일은 이미 등록되어 있습니다. 로그인하세요.", signUpFailed: "가입 실패", accountCreated: "계정이 생성되었습니다! 🎉", welcomeToHanguk: "Hanguk에 오신 것을 환영합니다! 이제 학습을 시작할 수 있습니다.", teacherAccountCreated: "교사 계정이 생성되었습니다! 🎉", teacherDashboardReady: "Hanguk에 오신 것을 환영합니다! 교사 대시보드가 준비되었습니다.", connectionError: "연결 오류", failedToStartLesson: "비디오 수업 시작 실패", savingRecording: "녹화 저장 중...", waitingForTeacher: "선생님을 기다리는 중...", waitingForStudent: "학생을 기다리는 중...", waitingForParticipants: "다른 참가자들이 참여하기를 기다리는 중...", endLesson: "수업 종료", lessonComplete: "수업 완료!", greatJobNextLesson: "잘했어요! 다음 수업입니다:", youHaveLeftLesson: "그룹 수업을 나갔습니다", totalLessons: "전체 수업", averageGrade: "평균 성적", subscription: "구독", chatWithAdmin: "관리자와 채팅", comingSoon: "곧 출시",
   },
   ru: {
     // Navigation
@@ -1268,6 +1270,7 @@ export const translations = {
     averageGrade: "Средняя оценка",
     subscription: "Подписка",
     chatWithAdmin: "Чат с администратором",
+    comingSoon: "Скоро",
   },
 };
 
