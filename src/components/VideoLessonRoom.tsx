@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle, Calendar, Clock, User } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, MessageSquare, Circle, Calendar, Clock, User, Monitor, MonitorOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { toast } from "sonner";
 import { AIAssistancePanel } from "./video-lesson/AIAssistancePanel";
@@ -45,6 +45,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const [currentUserProfile, setCurrentUserProfile] = useState<string>('');
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [aiPanelOpen, setAiPanelOpen] = useState(true);
   const [chatOpen, setChatOpen] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
@@ -88,15 +90,25 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
       
-      const { data: profile } = await supabase
+      console.log('Fetching profile for user:', user.id);
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('full_name, profile_picture_url')
         .eq('user_id', user.id)
         .single();
 
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+      }
+
+      const userName = profile?.full_name || user.email?.split('@')[0] || 'Student';
+      const userProfile = profile?.profile_picture_url || '';
+
+      console.log('User profile loaded:', { userName, userProfile });
+
       setCurrentUserId(user.id);
-      setCurrentUserName(profile?.full_name || 'Unknown');
-      setCurrentUserProfile(profile?.profile_picture_url || '');
+      setCurrentUserName(userName);
+      setCurrentUserProfile(userProfile);
 
       let sessionData: any = {};
 
@@ -127,23 +139,45 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
       setVideoLesson(sessionData);
 
-      // Start local media
+      // Start local media with explicit audio settings
+      console.log('Requesting media devices...');
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 },
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
+          autoGainControl: true,
+          sampleRate: 48000
         }
       });
+      
+      console.log('Media stream acquired:', {
+        videoTracks: stream.getVideoTracks().length,
+        audioTracks: stream.getAudioTracks().length
+      });
+
+      // Ensure audio track is enabled
+      stream.getAudioTracks().forEach(track => {
+        track.enabled = true;
+        console.log('Audio track enabled:', track.label);
+      });
+
       setLocalStream(stream);
       
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
 
-      // Setup realtime signaling channel
-      setupRealtimeChannel(isGroupLesson ? `group_${groupId}` : sessionData.id, user.id);
+      // Setup realtime signaling channel with user info
+      await setupRealtimeChannel(
+        isGroupLesson ? `group_${groupId}` : sessionData.id, 
+        user.id,
+        userName,
+        userProfile
+      );
 
       // Auto-start recording for teachers in group lessons
       if (userRole === 'teacher' && isGroupLesson) {
@@ -166,28 +200,44 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-      ]
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' }
+      ],
+      iceCandidatePoolSize: 10
     };
 
     const pc = new RTCPeerConnection(configuration);
 
-    // Add local stream tracks
+    // Add local stream tracks with logging
     if (localStream) {
+      console.log(`Adding ${localStream.getTracks().length} tracks to peer connection for:`, remoteUserId);
       localStream.getTracks().forEach(track => {
-        pc.addTrack(track, localStream);
+        const sender = pc.addTrack(track, localStream);
+        console.log(`Added ${track.kind} track:`, track.label, 'enabled:', track.enabled);
       });
+    } else {
+      console.warn('No local stream available when creating peer connection');
     }
 
     // Handle remote stream
     pc.ontrack = (event) => {
-      console.log('Received remote track from:', remoteUserId);
+      console.log('Received remote track from:', remoteUserId, 'kind:', event.track.kind);
+      const stream = event.streams[0];
+      console.log('Remote stream tracks:', stream.getTracks().map(t => ({
+        kind: t.kind,
+        label: t.label,
+        enabled: t.enabled
+      })));
+
       setParticipants(prev => {
         const updated = new Map(prev);
         const participant = updated.get(remoteUserId);
         if (participant) {
-          participant.stream = event.streams[0];
+          participant.stream = stream;
           updated.set(remoteUserId, participant);
+          console.log('Updated participant stream:', remoteUserId);
+        } else {
+          console.warn('Received track for unknown participant:', remoteUserId);
         }
         return updated;
       });
@@ -196,6 +246,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate && realtimeChannelRef.current) {
+        console.log('Sending ICE candidate to:', remoteUserId);
         realtimeChannelRef.current.send({
           type: 'broadcast',
           event: 'ice-candidate',
@@ -208,17 +259,26 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState, 'for user:', remoteUserId);
+    };
+
     pc.onconnectionstatechange = () => {
       console.log('Connection state:', pc.connectionState, 'for user:', remoteUserId);
-      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-        console.log('Connection failed/disconnected, attempting to reconnect...');
+      if (pc.connectionState === 'failed') {
+        console.error('Connection failed for user:', remoteUserId);
       }
     };
 
     return pc;
   };
 
-  const setupRealtimeChannel = async (videoLessonId: string, userId: string) => {
+  const setupRealtimeChannel = async (
+    videoLessonId: string, 
+    userId: string, 
+    userName: string, 
+    userProfile: string
+  ) => {
     const channel = supabase
       .channel(`video_lesson_${videoLessonId}`, {
         config: {
@@ -364,16 +424,16 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Realtime channel subscribed, announcing presence');
-          // Announce presence
+          console.log('Realtime channel subscribed, announcing presence with name:', userName);
+          // Announce presence with the passed userName and userProfile
           channel.send({
             type: 'broadcast',
             event: 'user-joined',
             payload: {
               userId: userId,
-              userName: currentUserName,
+              userName: userName,
               userRole: userRole,
-              profilePicture: currentUserProfile
+              profilePicture: userProfile
             }
           });
         }
@@ -396,6 +456,99 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       videoTrack.enabled = !videoTrack.enabled;
       setIsVideoOff(!videoTrack.enabled);
     }
+  };
+
+  const toggleScreenShare = async () => {
+    if (!isScreenSharing) {
+      try {
+        // Start screen sharing
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        });
+
+        console.log('Screen share started');
+        setScreenShareStream(screenStream);
+        setIsScreenSharing(true);
+
+        // Notify all participants about screen share
+        if (realtimeChannelRef.current) {
+          realtimeChannelRef.current.send({
+            type: 'broadcast',
+            event: 'screen-share-started',
+            payload: {
+              userId: currentUserId,
+              userName: currentUserName
+            }
+          });
+        }
+
+        // Replace video track in all peer connections
+        participants.forEach((participant) => {
+          if (participant.peerConnection) {
+            const videoSender = participant.peerConnection
+              .getSenders()
+              .find(sender => sender.track?.kind === 'video');
+            
+            if (videoSender && screenStream.getVideoTracks()[0]) {
+              videoSender.replaceTrack(screenStream.getVideoTracks()[0]);
+              console.log('Replaced video track with screen share for:', participant.userId);
+            }
+          }
+        });
+
+        // Listen for screen share stop (user clicks browser stop button)
+        screenStream.getVideoTracks()[0].onended = () => {
+          stopScreenShare();
+        };
+
+        toast.success('Screen sharing started');
+      } catch (error) {
+        console.error('Error starting screen share:', error);
+        toast.error('Failed to start screen sharing');
+      }
+    } else {
+      stopScreenShare();
+    }
+  };
+
+  const stopScreenShare = () => {
+    if (screenShareStream) {
+      screenShareStream.getTracks().forEach(track => track.stop());
+      setScreenShareStream(null);
+    }
+    
+    setIsScreenSharing(false);
+
+    // Notify participants
+    if (realtimeChannelRef.current) {
+      realtimeChannelRef.current.send({
+        type: 'broadcast',
+        event: 'screen-share-stopped',
+        payload: {
+          userId: currentUserId
+        }
+      });
+    }
+
+    // Replace back to camera video in all peer connections
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      participants.forEach((participant) => {
+        if (participant.peerConnection) {
+          const videoSender = participant.peerConnection
+            .getSenders()
+            .find(sender => sender.track?.kind === 'video');
+          
+          if (videoSender && videoTrack) {
+            videoSender.replaceTrack(videoTrack);
+            console.log('Replaced screen share with camera for:', participant.userId);
+          }
+        }
+      });
+    }
+
+    toast.info('Screen sharing stopped');
   };
 
   const endLesson = async () => {
@@ -518,6 +671,11 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   };
 
   const cleanup = () => {
+    // Stop screen sharing if active
+    if (isScreenSharing) {
+      stopScreenShare();
+    }
+
     // Announce leaving
     if (realtimeChannelRef.current && currentUserId) {
       realtimeChannelRef.current.send({
@@ -916,6 +1074,15 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             onClick={toggleVideo}
           >
             {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+          </Button>
+
+          <Button
+            variant={isScreenSharing ? "default" : "outline"}
+            size="lg"
+            onClick={toggleScreenShare}
+            disabled={!localStream}
+          >
+            {isScreenSharing ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
           </Button>
 
           {isGroupLesson && (
