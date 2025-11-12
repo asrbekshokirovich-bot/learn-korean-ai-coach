@@ -11,6 +11,7 @@ import { format, getDay, addDays } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { LearningAnalyticsCharts } from "@/components/student/LearningAnalyticsCharts";
+import { StoryViewer } from "@/components/student/StoryViewer";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -306,6 +307,15 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Stories Section */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" />
+          Student Stories
+        </h3>
+        <StoryViewer />
+      </div>
+
       {/* Hero Header with animated gradient */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-accent to-secondary p-8 text-primary-foreground shadow-elegant hover:shadow-glow transition-shadow duration-500">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>

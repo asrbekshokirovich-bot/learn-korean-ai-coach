@@ -1229,6 +1229,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          profile_picture_url: string | null
           teacher_levels: string[] | null
           topik_level: string | null
           updated_at: string
@@ -1239,6 +1240,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          profile_picture_url?: string | null
           teacher_levels?: string[] | null
           topik_level?: string | null
           updated_at?: string
@@ -1249,6 +1251,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          profile_picture_url?: string | null
           teacher_levels?: string[] | null
           topik_level?: string | null
           updated_at?: string
@@ -1276,6 +1279,35 @@ export type Database = {
           series_name?: string
         }
         Relationships: []
+      }
+      story_views: {
+        Row: {
+          id: string
+          story_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: string
+          story_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          id?: string
+          story_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "student_stories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_admin_chats: {
         Row: {
@@ -1398,6 +1430,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      student_stories: {
+        Row: {
+          caption: string | null
+          created_at: string
+          expires_at: string
+          file_type: string
+          file_url: string
+          id: string
+          student_id: string
+          view_count: number
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          file_type: string
+          file_url: string
+          id?: string
+          student_id: string
+          view_count?: number
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          expires_at?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+          student_id?: string
+          view_count?: number
+        }
+        Relationships: []
       }
       support_requests: {
         Row: {

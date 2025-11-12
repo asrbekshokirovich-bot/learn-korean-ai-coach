@@ -3,12 +3,13 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { StudentSidebar } from "@/components/StudentSidebar";
-// SupportButton removed - replaced with AdminChat
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ProfilePictureUpload } from "@/components/student/ProfilePictureUpload";
+import { StoryUpload } from "@/components/student/StoryUpload";
 import Dashboard from "@/pages/student/Dashboard";
 import Practice from "@/pages/student/Practice";
 import ConversationPractice from "@/pages/student/ConversationPractice";
@@ -96,6 +97,7 @@ const StudentLayout = () => {
               </h1>
             </div>
             <div className="flex items-center gap-3">
+              <StoryUpload />
               <Button
                 variant="ghost"
                 size="icon"
@@ -110,11 +112,18 @@ const StudentLayout = () => {
                 )}
               </Button>
               <LanguageSelector />
-              <div className="text-right px-3 py-1.5 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                <p className="text-sm font-semibold">{profile?.full_name || user?.email}</p>
-                <Badge variant="secondary" className="mt-0.5 bg-primary/20 text-primary border-primary/30">
-                  {t('student')}
-                </Badge>
+              <div className="flex items-center gap-3">
+                <ProfilePictureUpload 
+                  userId={user?.id || ""} 
+                  currentPictureUrl={profile?.profile_picture_url}
+                  userName={profile?.full_name || ""}
+                />
+                <div className="text-right px-3 py-1.5 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                  <p className="text-sm font-semibold">{profile?.full_name || user?.email}</p>
+                  <Badge variant="secondary" className="mt-0.5 bg-primary/20 text-primary border-primary/30">
+                    {t('student')}
+                  </Badge>
+                </div>
               </div>
               <Button 
                 variant="outline" 
