@@ -194,19 +194,19 @@ export function StudentSidebar() {
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
       <SidebarHeader className={open ? "p-4" : "p-2"}>
         {open ? (
-          <div className="space-y-3 animate-slide-up">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-hero shadow-elegant backdrop-blur-sm">
-              <Sparkles className="h-5 w-5 text-white animate-pulse" />
-              <span className="font-bold text-white">
+          <div className="space-y-3 animate-fade-in">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-hero shadow-lg">
+              <Sparkles className="h-5 w-5 text-white" />
+              <span className="font-semibold text-white">
                 Hanguk Learning
               </span>
             </div>
             
-            {/* Enhanced Profile Section */}
-            <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-card/80 backdrop-blur-sm border border-border/40 shadow-accent hover:shadow-glow transition-all duration-300">
-              <Avatar className="h-10 w-10 ring-2 ring-primary/40 ring-offset-2 ring-offset-background">
+            {/* Profile Section */}
+            <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-card border border-border shadow-md hover:shadow-lg transition-shadow duration-200">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/20">
                 <AvatarImage src={profile?.profile_picture_url} />
-                <AvatarFallback className="bg-gradient-hero text-white">
+                <AvatarFallback className="bg-primary/10 text-primary">
                   <User className="h-5 w-5" />
                 </AvatarFallback>
               </Avatar>
@@ -214,7 +214,7 @@ export function StudentSidebar() {
                 <p className="text-sm font-medium truncate">
                   {profile?.full_name || user?.email || 'Student'}
                 </p>
-                <Badge variant="secondary" className="mt-0.5 h-5 text-xs px-2 bg-gradient-accent text-white border-0">
+                <Badge variant="secondary" className="mt-0.5 h-5 text-xs px-2">
                   {t('student')}
                 </Badge>
               </div>
