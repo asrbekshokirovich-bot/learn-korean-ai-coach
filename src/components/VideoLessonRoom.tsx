@@ -70,6 +70,27 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     return localStream?.getVideoTracks()?.[0] || null;
   };
 
+  // Ensure our local audio/video tracks are present on all active peer connections
+  const ensureLocalTracksForAllPeers = () => {
+    participantsRef.current.forEach((participant, id) => {
+      const pc = participant.peerConnection;
+      if (!pc || !localStream) return;
+      const senders = pc.getSenders();
+      const hasVideo = senders.some(s => s.track?.kind === 'video');
+      const hasAudio = senders.some(s => s.track?.kind === 'audio');
+      if (!hasVideo && localStream.getVideoTracks()[0]) {
+        pc.addTrack(localStream.getVideoTracks()[0], localStream);
+      }
+      if (!hasAudio && localStream.getAudioTracks()[0]) {
+        pc.addTrack(localStream.getAudioTracks()[0], localStream);
+      }
+      if (!hasVideo || !hasAudio) {
+        console.log('🔧 Attached missing local tracks to peer', id);
+        pc.onnegotiationneeded?.(new Event('negotiationneeded') as any);
+      }
+    });
+  };
+
   // Keep ref synced with latest participants and bind streams to video elements
   useEffect(() => {
     participantsRef.current = participants;
@@ -198,6 +219,9 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         localVideoRef.current.srcObject = stream;
       }
 
+      // Attach tracks to any existing peer connections (in case they were created before media access)
+      ensureLocalTracksForAllPeers();
+
       // Setup realtime signaling channel with user info
       await setupRealtimeChannel(
         isGroupLesson ? `group_${groupId}` : sessionData.id, 
@@ -236,13 +260,23 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
     const pc = new RTCPeerConnection(configuration);
 
-    // Add local media tracks
-    if (localStream) {
-      localStream.getTracks().forEach(track => {
-        pc.addTrack(track, localStream);
-        console.log(`Added ${track.kind} track to peer:`, remoteUserId, 'enabled:', track.enabled);
-      });
-    }
+    const attachLocalTracks = () => {
+      if (localStream) {
+        const senders = pc.getSenders();
+        const hasVideo = senders.some(s => s.track?.kind === 'video');
+        const hasAudio = senders.some(s => s.track?.kind === 'audio');
+        if (!hasVideo && localStream.getVideoTracks()[0]) {
+          pc.addTrack(localStream.getVideoTracks()[0], localStream);
+        }
+        if (!hasAudio && localStream.getAudioTracks()[0]) {
+          pc.addTrack(localStream.getAudioTracks()[0], localStream);
+        }
+        console.log(`Ensured local tracks on peer ${remoteUserId}:`, { hasVideo: !!localStream.getVideoTracks()[0], hasAudio: !!localStream.getAudioTracks()[0] });
+      }
+    };
+
+    // Add local media tracks (and ensure again on connectionstate changes)
+    attachLocalTracks();
 
     // Handle remote stream tracks
     pc.ontrack = (event) => {
@@ -293,6 +327,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           console.log('⚠️ No channel for renegotiation');
           return;
         }
+        // Ensure tracks before offering
+        attachLocalTracks();
         
         console.log('🔄 Negotiation needed with', remoteUserId);
         const offer = await pc.createOffer({
@@ -632,8 +668,11 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   const toggleVideo = () => {
     if (localStream) {
       const videoTrack = localStream.getVideoTracks()[0];
+      if (!videoTrack) return;
       videoTrack.enabled = !videoTrack.enabled;
       setIsVideoOff(!videoTrack.enabled);
+      // Ensure peers still have our track
+      ensureLocalTracksForAllPeers();
     }
   };
 
