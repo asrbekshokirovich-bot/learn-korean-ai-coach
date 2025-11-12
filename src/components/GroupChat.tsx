@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, Users, UserCircle, Paperclip, Download, FileText, Image as ImageIcon } from "lucide-react";
+import { Send, Users, UserCircle, Paperclip, Download, FileText, Image as ImageIcon, User } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -55,7 +55,7 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
       .from("group_messages")
       .select(`
         *,
-        sender:profiles!group_messages_sender_id_fkey(full_name, email)
+        sender:profiles!group_messages_sender_id_fkey(full_name, email, profile_picture_url)
       `)
       .eq("group_id", groupId)
       .order("created_at", { ascending: true });
@@ -67,8 +67,8 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
       .from("group_direct_messages")
       .select(`
         *,
-        sender:profiles!group_direct_messages_sender_id_fkey(full_name, email),
-        recipient:profiles!group_direct_messages_recipient_id_fkey(full_name, email)
+        sender:profiles!group_direct_messages_sender_id_fkey(full_name, email, profile_picture_url),
+        recipient:profiles!group_direct_messages_recipient_id_fkey(full_name, email, profile_picture_url)
       `)
       .eq("group_id", groupId)
       .order("created_at", { ascending: true });
@@ -92,7 +92,7 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
           // Fetch sender profile
           const { data: profile } = await supabase
             .from("profiles")
-            .select("full_name, email")
+            .select("full_name, email, profile_picture_url")
             .eq("user_id", payload.new.sender_id)
             .single();
 
@@ -116,13 +116,13 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
           // Fetch sender and recipient profiles
           const { data: senderProfile } = await supabase
             .from("profiles")
-            .select("full_name, email")
+            .select("full_name, email, profile_picture_url")
             .eq("user_id", payload.new.sender_id)
             .single();
 
           const { data: recipientProfile } = await supabase
             .from("profiles")
-            .select("full_name, email")
+            .select("full_name, email, profile_picture_url")
             .eq("user_id", payload.new.recipient_id)
             .single();
 
@@ -284,9 +284,10 @@ export const GroupChat = ({ groupId, teacherId, groupName }: GroupChatProps) => 
         className={`flex gap-3 mb-4 ${isOwnMessage ? "flex-row-reverse" : ""}`}
       >
         <Avatar className="h-8 w-8">
-          <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-            <UserCircle className="w-5 h-5" />
-          </div>
+          <AvatarImage src={msg.sender?.profile_picture_url} />
+          <AvatarFallback>
+            <User className="w-5 h-5" />
+          </AvatarFallback>
         </Avatar>
         <div className={`flex flex-col ${isOwnMessage ? "items-end" : ""} max-w-[70%]`}>
           <div className="flex items-center gap-2 mb-1">

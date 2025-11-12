@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Paperclip, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Send, Paperclip, X, User } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ const StudentChats = () => {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
 
   useEffect(() => {
     loadStudents();
@@ -67,7 +69,7 @@ const StudentChats = () => {
     // Fetch profile information for each unique student
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
-      .select("user_id, full_name, email")
+      .select("user_id, full_name, email, profile_picture_url")
       .in("user_id", uniqueStudentIds);
 
     if (profilesError) {
@@ -81,7 +83,8 @@ const StudentChats = () => {
       student_id: profile.user_id,
       profiles: {
         full_name: profile.full_name,
-        email: profile.email
+        email: profile.email,
+        profile_picture_url: profile.profile_picture_url
       }
     }));
 
@@ -89,9 +92,23 @@ const StudentChats = () => {
   };
 
   const loadMessages = async (studentId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Load admin profile
+    const { data: adminProf } = await supabase
+      .from("profiles")
+      .select("profile_picture_url, full_name")
+      .eq("user_id", user.id)
+      .single();
+    setAdminProfile(adminProf);
+
     const { data, error } = await supabase
       .from("student_admin_chats")
-      .select("*")
+      .select(`
+        *,
+        student:profiles!student_admin_chats_student_id_fkey(profile_picture_url, full_name)
+      `)
       .eq("student_id", studentId)
       .order("created_at", { ascending: true });
 
@@ -199,9 +216,13 @@ const StudentChats = () => {
                 <Button
                   key={student.student_id}
                   variant={selectedStudent?.student_id === student.student_id ? "default" : "ghost"}
-                  className="w-full justify-start"
+                  className="w-full justify-start gap-2"
                   onClick={() => setSelectedStudent(student)}
                 >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={student.profiles?.profile_picture_url} />
+                    <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                  </Avatar>
                   <div className="flex flex-col items-start">
                     <span className="font-medium">{student.profiles?.full_name || 'Unknown'}</span>
                     <span className="text-xs opacity-70">{student.profiles?.email}</span>
@@ -225,8 +246,14 @@ const StudentChats = () => {
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex gap-2 ${msg.sender_role === 'admin' ? 'justify-end' : 'justify-start'}`}
                   >
+                    {msg.sender_role === 'student' && (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={msg.student?.profile_picture_url} />
+                        <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                      </Avatar>
+                    )}
                     <div
                       className={`max-w-[70%] rounded-lg p-3 ${
                         msg.sender_role === 'admin'
@@ -235,7 +262,7 @@ const StudentChats = () => {
                       }`}
                     >
                       <div className="text-sm font-medium mb-1">
-                        {msg.sender_role === 'admin' ? 'You (Admin)' : 'Student'}
+                        {msg.sender_role === 'admin' ? 'You (Admin)' : (msg.student?.full_name || 'Student')}
                       </div>
                       <p className="text-sm">{msg.message}</p>
                       {msg.file_url && (
@@ -252,6 +279,12 @@ const StudentChats = () => {
                         {format(new Date(msg.created_at), 'MMM d, h:mm a')}
                       </div>
                     </div>
+                    {msg.sender_role === 'admin' && adminProfile && (
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={adminProfile.profile_picture_url} />
+                        <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                      </Avatar>
+                    )}
                   </div>
                 ))}
               </div>

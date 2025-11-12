@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Paperclip, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Send, Paperclip, X, User } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -14,6 +15,8 @@ const AdminChat = () => {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
@@ -54,9 +57,20 @@ const AdminChat = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Load user profile
+    const { data: userProf } = await supabase
+      .from("profiles")
+      .select("profile_picture_url, full_name")
+      .eq("user_id", user.id)
+      .single();
+    setUserProfile(userProf);
+
     const { data, error } = await supabase
       .from("student_admin_chats")
-      .select("*")
+      .select(`
+        *,
+        admin:profiles!student_admin_chats_admin_id_fkey(profile_picture_url, full_name)
+      `)
       .eq("student_id", user.id)
       .order("created_at", { ascending: true });
 
@@ -165,8 +179,14 @@ const AdminChat = () => {
             messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.sender_role === 'student' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-2 ${msg.sender_role === 'student' ? 'justify-end' : 'justify-start'}`}
               >
+                {msg.sender_role === 'admin' && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={msg.admin?.profile_picture_url} />
+                    <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                  </Avatar>
+                )}
                 <div
                   className={`max-w-[70%] rounded-lg p-3 ${
                     msg.sender_role === 'student'
@@ -175,7 +195,7 @@ const AdminChat = () => {
                   }`}
                 >
                   <div className="text-sm font-medium mb-1">
-                    {msg.sender_role === 'student' ? 'You' : 'Admin'}
+                    {msg.sender_role === 'student' ? 'You' : (msg.admin?.full_name || 'Admin')}
                   </div>
                   <p className="text-sm">{msg.message}</p>
                   {msg.file_url && (
@@ -192,6 +212,12 @@ const AdminChat = () => {
                     {format(new Date(msg.created_at), 'MMM d, h:mm a')}
                   </div>
                 </div>
+                {msg.sender_role === 'student' && userProfile && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={userProfile.profile_picture_url} />
+                    <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             ))
           )}
