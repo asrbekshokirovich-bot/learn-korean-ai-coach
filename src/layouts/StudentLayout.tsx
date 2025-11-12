@@ -19,6 +19,7 @@ import GroupSchedule from "@/pages/student/GroupSchedule";
 import VideoLesson from "@/pages/student/VideoLesson";
 import Recordings from "@/pages/student/Recordings";
 import AdminChat from "@/pages/student/AdminChat";
+import Settings from "@/pages/student/Settings";
 import MonthlySubscription from "@/pages/student/MonthlySubscription";
 
 const StudentLayout = () => {
@@ -143,6 +144,7 @@ const StudentLayout = () => {
               <Route path="kdrama" element={<KDrama />} />
               <Route path="conversations" element={<ConversationPractice />} />
               <Route path="admin-chat" element={<AdminChat />} />
+              <Route path="settings" element={<Settings />} />
               <Route path="subscription" element={<MonthlySubscription />} />
             </Routes>
             </div>

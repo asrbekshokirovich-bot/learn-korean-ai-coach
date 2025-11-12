@@ -1,4 +1,4 @@
-import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, CreditCard, Sparkles, User, GripVertical } from "lucide-react";
+import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, CreditCard, Sparkles, User, GripVertical, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -114,6 +114,7 @@ export function StudentSidebar() {
     { title: t('subscription'), url: '/student/subscription', icon: CreditCard },
     { title: t('recordings'), url: '/student/recordings', icon: Video },
     { title: t('chatWithAdmin'), url: '/student/admin-chat', icon: MessageSquare },
+    { title: t('settings'), url: '/student/settings', icon: Settings },
     { title: t('practice'), url: '/student/practice', icon: Brain, comingSoon: true, comingSoonText: t('comingSoon') },
     { title: t('kDramaHub'), url: '/student/kdrama', icon: Film, comingSoon: true, comingSoonText: t('comingSoon') },
     { title: t('conversationPractice'), url: '/student/conversations', icon: Brain, comingSoon: true, comingSoonText: t('comingSoon') },

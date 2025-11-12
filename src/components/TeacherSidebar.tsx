@@ -1,4 +1,4 @@
-import { Home, Users, Calendar, DollarSign, Video, Tv } from "lucide-react";
+import { Home, Users, Calendar, DollarSign, Video, Tv, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,6 +29,7 @@ export function TeacherSidebar() {
     { title: t('kDramaHub'), url: '/teacher/kdrama', icon: Tv },
     { title: t('availability'), url: '/teacher/availability', icon: Calendar },
     { title: t('earnings'), url: '/teacher/earnings', icon: DollarSign },
+    { title: t('settings'), url: '/teacher/settings', icon: Settings },
   ];
 
   const isActive = (path: string) => currentPath === path;
