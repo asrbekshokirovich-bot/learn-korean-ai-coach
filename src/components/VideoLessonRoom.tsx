@@ -332,7 +332,8 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     const channel = supabase
       .channel(`video_lesson_${videoLessonId}`, {
         config: {
-          broadcast: { self: true }
+          broadcast: { self: true },
+          presence: { key: userId }
         }
       })
       // User joined
@@ -390,6 +391,85 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           });
         } catch (error) {
           console.error('❌ Error creating offer:', error);
+        }
+      })
+      // Handle presence sync to get existing participants
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = channel.presenceState();
+        console.log('📊 Presence sync - existing participants:', Object.keys(presenceState));
+        
+        Object.entries(presenceState).forEach(([key, presences]: [string, any[]]) => {
+          if (key === userId) return; // Skip self
+          
+          const presence = presences[0];
+          if (presence) {
+            console.log('Adding existing participant:', presence.userName);
+            setParticipants(prev => {
+              const updated = new Map(prev);
+              if (!updated.has(key)) {
+                updated.set(key, {
+                  userId: key,
+                  userName: presence.userName,
+                  userRole: presence.userRole,
+                  profilePicture: presence.profilePicture,
+                  isScreenSharing: false
+                });
+              }
+              return updated;
+            });
+            
+            // Request connection from existing participant
+            setTimeout(() => {
+              channel.send({
+                type: 'broadcast',
+                event: 'request-offer',
+                payload: {
+                  from: userId,
+                  to: key
+                }
+              });
+            }, 200);
+          }
+        });
+      })
+      // Handle request for offer
+      .on('broadcast', { event: 'request-offer' }, async ({ payload }) => {
+        if (payload.to !== userId) return;
+        
+        console.log('📞 Received request-offer from:', payload.from);
+        
+        // Create offer for the requesting user
+        try {
+          const pc = await createPeerConnection(payload.from);
+          
+          setParticipants(prev => {
+            const updated = new Map(prev);
+            const participant = updated.get(payload.from);
+            if (participant) {
+              participant.peerConnection = pc;
+              updated.set(payload.from, participant);
+            }
+            return updated;
+          });
+
+          const offer = await pc.createOffer({ 
+            offerToReceiveAudio: true, 
+            offerToReceiveVideo: true 
+          });
+          await pc.setLocalDescription(offer);
+
+          console.log('📤 Sending requested offer to:', payload.from);
+          channel.send({
+            type: 'broadcast',
+            event: 'offer',
+            payload: {
+              offer: pc.localDescription,
+              from: userId,
+              to: payload.from
+            }
+          });
+        } catch (error) {
+          console.error('❌ Error creating requested offer:', error);
         }
       })
       // Received offer
@@ -513,8 +593,18 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('Realtime channel subscribed, announcing presence with name:', userName);
-          // Announce presence with the passed userName and userProfile
+          console.log('Realtime channel subscribed, tracking presence with name:', userName);
+          
+          // Track presence so others can discover us
+          await channel.track({
+            userId: userId,
+            userName: userName,
+            userRole: userRole,
+            profilePicture: userProfile,
+            online_at: new Date().toISOString()
+          });
+          
+          // Also announce via broadcast for immediate notification
           channel.send({
             type: 'broadcast',
             event: 'user-joined',
