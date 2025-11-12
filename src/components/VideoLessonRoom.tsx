@@ -57,8 +57,20 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const participantVideosRef = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const participantsRef = useRef<Map<string, Participant>>(new Map());
   const realtimeChannelRef = useRef<any>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+
+  // Keep ref synced with latest participants and bind streams to video elements
+  useEffect(() => {
+    participantsRef.current = participants;
+    participants.forEach((p, id) => {
+      const el = participantVideosRef.current.get(id);
+      if (el && p.stream && el.srcObject !== p.stream) {
+        el.srcObject = p.stream;
+      }
+    });
+  }, [participants]);
 
   useEffect(() => {
     initializeVideoLesson();
@@ -340,7 +352,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         console.log('Received offer from:', payload.from);
         
         try {
-          let pc = participants.get(payload.from)?.peerConnection;
+          let pc = participantsRef.current.get(payload.from)?.peerConnection;
           if (!pc) {
             pc = await createPeerConnection(payload.from);
             setParticipants(prev => {
@@ -378,7 +390,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         console.log('Received answer from:', payload.from);
         
         try {
-          const participant = participants.get(payload.from);
+          const participant = participantsRef.current.get(payload.from);
           if (participant?.peerConnection) {
             await participant.peerConnection.setRemoteDescription(
               new RTCSessionDescription(payload.answer)
@@ -393,7 +405,7 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         if (payload.to !== userId) return;
         
         try {
-          const participant = participants.get(payload.from);
+          const participant = participantsRef.current.get(payload.from);
           if (participant?.peerConnection) {
             await participant.peerConnection.addIceCandidate(
               new RTCIceCandidate(payload.candidate)
