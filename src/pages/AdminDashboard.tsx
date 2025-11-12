@@ -31,7 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun, Film, Plus, Calendar } from "lucide-react";
+import { Loader2, UserPlus, Users, GraduationCap, LogOut, Trash2, DollarSign, Moon, Sun, Film, Plus, Calendar, MessageCircle, CheckCircle } from "lucide-react";
 import { z } from "zod";
 import Finance from "@/pages/admin/Finance";
 import BookingManagement from "@/components/admin/BookingManagement";
@@ -77,6 +77,20 @@ interface KDrama {
   created_at: string;
 }
 
+interface SupportRequest {
+  id: string;
+  student_id: string;
+  subject: string;
+  message: string;
+  status: string;
+  admin_response: string | null;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+  student_name?: string;
+  student_email?: string;
+}
+
 const teacherSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }).max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
@@ -112,6 +126,10 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [kdramas, setKdramas] = useState<KDrama[]>([]);
+  const [supportRequests, setSupportRequests] = useState<SupportRequest[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<SupportRequest | null>(null);
+  const [responseDialogOpen, setResponseDialogOpen] = useState(false);
+  const [adminResponse, setAdminResponse] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createAdminDialogOpen, setCreateAdminDialogOpen] = useState(false);
   const [createDramaDialogOpen, setCreateDramaDialogOpen] = useState(false);
@@ -227,6 +245,33 @@ const AdminDashboard = () => {
         .order("created_at", { ascending: false });
 
       setKdramas(dramaData || []);
+
+      // Load Support Requests
+      const { data: requestsData } = await supabase
+        .from("support_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (requestsData) {
+        // Fetch student details for each request
+        const requestsWithStudentInfo = await Promise.all(
+          requestsData.map(async (request) => {
+            const { data: studentProfile } = await supabase
+              .from("profiles")
+              .select("full_name, email")
+              .eq("user_id", request.student_id)
+              .single();
+
+            return {
+              ...request,
+              student_name: studentProfile?.full_name || "Unknown",
+              student_email: studentProfile?.email || "Unknown",
+            };
+          })
+        );
+
+        setSupportRequests(requestsWithStudentInfo);
+      }
     } catch (error: any) {
       toast({
         title: "Error loading data",
@@ -555,6 +600,71 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleOpenResponseDialog = (request: SupportRequest) => {
+    setSelectedRequest(request);
+    setAdminResponse(request.admin_response || "");
+    setResponseDialogOpen(true);
+  };
+
+  const handleRespondToRequest = async () => {
+    if (!selectedRequest) return;
+
+    try {
+      const { error } = await supabase
+        .from("support_requests")
+        .update({
+          admin_response: adminResponse,
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+        })
+        .eq("id", selectedRequest.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Response sent",
+        description: "Your response has been saved and the request marked as resolved.",
+      });
+
+      setResponseDialogOpen(false);
+      setAdminResponse("");
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleMarkAsResolved = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from("support_requests")
+        .update({
+          status: "resolved",
+          resolved_at: new Date().toISOString(),
+        })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Request resolved",
+        description: "Support request has been marked as resolved.",
+      });
+
+      loadData();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
@@ -621,6 +731,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="finance">
               <DollarSign className="w-4 h-4 mr-2" />
               Finance
+            </TabsTrigger>
+            <TabsTrigger value="support">
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Support ({supportRequests.filter(r => r.status === 'pending').length})
             </TabsTrigger>
           </TabsList>
 
@@ -920,6 +1034,82 @@ const AdminDashboard = () => {
           {/* Finance Tab */}
           <TabsContent value="finance">
             <Finance />
+          </TabsContent>
+
+          {/* Support Requests Tab */}
+          <TabsContent value="support" className="space-y-4">
+            <h2 className="text-xl font-semibold">Support Requests</h2>
+
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Subject</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : supportRequests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No support requests yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    supportRequests.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{request.student_name}</div>
+                            <div className="text-xs text-muted-foreground">{request.student_email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{request.subject}</TableCell>
+                        <TableCell className="max-w-md truncate">{request.message}</TableCell>
+                        <TableCell>
+                          {request.status === "pending" ? (
+                            <Badge variant="secondary">Pending</Badge>
+                          ) : (
+                            <Badge variant="outline">Resolved</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenResponseDialog(request)}
+                          >
+                            {request.status === "pending" ? "Respond" : "View"}
+                          </Button>
+                          {request.status === "pending" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMarkAsResolved(request.id)}
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
@@ -1286,49 +1476,123 @@ const AdminDashboard = () => {
 
       {/* Edit Teacher Levels Dialog */}
       <Dialog open={editLevelsDialogOpen} onOpenChange={setEditLevelsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Teaching Levels</DialogTitle>
+            <DialogTitle>Edit Teacher Levels</DialogTitle>
             <DialogDescription>
-              Select the levels that {selectedTeacher?.full_name} can teach
+              Select the levels this teacher can teach
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-3">
-              {['beginner', 'intermediate', 'advanced'].map((level) => (
-                <div key={level} className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id={`level-${level}`}
-                    checked={selectedLevels.includes(level)}
-                    onChange={() => handleToggleLevel(level)}
-                    className="w-4 h-4 rounded border-border"
-                  />
-                  <Label 
-                    htmlFor={`level-${level}`} 
-                    className="cursor-pointer capitalize font-medium"
-                  >
-                    {level}
-                  </Label>
-                </div>
-              ))}
+
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Teaching Levels</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {['beginner', 'intermediate', 'advanced', 'topik1', 'topik2'].map((level) => (
+                  <div key={level} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`level-${level}`}
+                      checked={selectedLevels.includes(level)}
+                      onChange={() => handleToggleLevel(level)}
+                      className="rounded border-gray-300"
+                    />
+                    <label htmlFor={`level-${level}`} className="text-sm capitalize">
+                      {level}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-2 pt-4">
+
+            <div className="flex gap-2 justify-end">
               <Button
-                type="button"
                 variant="outline"
                 onClick={() => setEditLevelsDialogOpen(false)}
-                className="flex-1"
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleSaveTeacherLevels}
-                className="flex-1"
-                disabled={selectedLevels.length === 0}
-              >
-                Save Levels
+              <Button onClick={handleSaveTeacherLevels}>
+                Save Changes
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Support Request Response Dialog */}
+      <Dialog open={responseDialogOpen} onOpenChange={setResponseDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Support Request</DialogTitle>
+            <DialogDescription>
+              {selectedRequest?.status === "pending" 
+                ? "Respond to this support request" 
+                : "View support request details"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label>Student</Label>
+              <div className="text-sm">
+                <div className="font-medium">{selectedRequest?.student_name}</div>
+                <div className="text-muted-foreground">{selectedRequest?.student_email}</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Subject</Label>
+              <div className="text-sm font-medium">{selectedRequest?.subject}</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Message</Label>
+              <div className="text-sm bg-muted p-3 rounded-md whitespace-pre-wrap">
+                {selectedRequest?.message}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Submitted</Label>
+              <div className="text-sm text-muted-foreground">
+                {selectedRequest && new Date(selectedRequest.created_at).toLocaleString()}
+              </div>
+            </div>
+
+            {selectedRequest?.status === "resolved" && selectedRequest.admin_response && (
+              <div className="space-y-2">
+                <Label>Admin Response</Label>
+                <div className="text-sm bg-muted p-3 rounded-md whitespace-pre-wrap">
+                  {selectedRequest.admin_response}
+                </div>
+              </div>
+            )}
+
+            {selectedRequest?.status === "pending" && (
+              <div className="space-y-2">
+                <Label>Your Response</Label>
+                <Textarea
+                  placeholder="Type your response here..."
+                  value={adminResponse}
+                  onChange={(e) => setAdminResponse(e.target.value)}
+                  className="min-h-[120px]"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setResponseDialogOpen(false)}
+              >
+                {selectedRequest?.status === "pending" ? "Cancel" : "Close"}
+              </Button>
+              {selectedRequest?.status === "pending" && (
+                <Button onClick={handleRespondToRequest} disabled={!adminResponse.trim()}>
+                  Send Response & Resolve
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
