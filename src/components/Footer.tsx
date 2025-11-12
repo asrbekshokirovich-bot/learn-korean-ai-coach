@@ -1,5 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import hangukLogo from "@/assets/hanguk-logo-new.jpg";
+import hangukLogo from "@/assets/hanguk-logo-icon.png";
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -21,11 +21,10 @@ const Footer = () => {
       <div className="container px-4">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <img src={hangukLogo} alt="Hanguk" className="h-8 w-auto" />
-              <h3 className="text-2xl font-bold">Hanguk</h3>
+            <div className="flex justify-center md:justify-start mb-4">
+              <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto" />
             </div>
-            <p className="text-sm text-primary-foreground/70 mb-6">
+            <p className="text-sm text-primary-foreground/70 mb-6 text-center md:text-left">
               {t('masterKoreanAI')}
             </p>
           </div>

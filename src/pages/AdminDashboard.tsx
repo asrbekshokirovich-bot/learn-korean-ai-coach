@@ -38,7 +38,7 @@ import BookingManagement from "@/components/admin/BookingManagement";
 import GroupManagement from "@/pages/admin/GroupManagement";
 import StudentChats from "@/pages/admin/StudentChats";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import hangukLogo from "@/assets/hanguk-logo-new.jpg";
+import hangukLogo from "@/assets/hanguk-logo-icon.png";
 
 interface Teacher {
   user_id: string;
@@ -674,13 +674,7 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img src={hangukLogo} alt="Hanguk" className="h-10 w-auto" />
-              <div>
-                <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                <p className="text-sm text-muted-foreground">
-                  Manage teachers and students
-                </p>
-              </div>
+              <img src={hangukLogo} alt="Hanguk" className="h-12 w-auto" />
             </div>
             <div className="flex items-center gap-4">
               <Button

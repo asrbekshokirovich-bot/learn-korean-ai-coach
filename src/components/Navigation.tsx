@@ -7,7 +7,7 @@ import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
-import hangukLogo from "@/assets/hanguk-logo-new.jpg";
+import hangukLogo from "@/assets/hanguk-logo-icon.png";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -83,8 +83,7 @@ const Navigation = () => {
       <div className="container px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
-            <img src={hangukLogo} alt="Hanguk" className="h-8 w-auto" />
-            <span className="text-2xl font-bold text-primary">Hanguk</span>
+            <img src={hangukLogo} alt="Hanguk" className="h-10 w-auto" />
           </div>
 
           {/* Desktop Navigation */}

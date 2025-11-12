@@ -2,7 +2,7 @@ import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, Cre
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import hangukLogo from "@/assets/hanguk-logo-new.jpg";
+import hangukLogo from "@/assets/hanguk-logo-icon.png";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -194,44 +194,10 @@ export function StudentSidebar() {
 
   return (
     <Sidebar className={open ? "w-64 border-r border-border/40" : "w-14"} collapsible="icon">
-      <SidebarHeader className={open ? "p-4" : "p-2"}>
-        {open ? (
-          <div className="space-y-3 animate-fade-in">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-hero shadow-lg">
-              <img src={hangukLogo} alt="Hanguk" className="h-6 w-auto" />
-              <span className="font-semibold text-white">
-                Hanguk Learning
-              </span>
-            </div>
-            
-            {/* Profile Section */}
-            <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-card border border-border shadow-md hover:shadow-lg transition-shadow duration-200">
-              <Avatar className="h-10 w-10 ring-2 ring-primary/20">
-                <AvatarImage src={profile?.profile_picture_url} />
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {profile?.full_name || user?.email || 'Student'}
-                </p>
-                <Badge variant="secondary" className="mt-0.5 h-5 text-xs px-2">
-                  {t('student')}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex justify-center py-2">
-            <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-              <AvatarImage src={profile?.profile_picture_url} />
-              <AvatarFallback className="bg-primary/10">
-                <User className="h-4 w-4 text-primary" />
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        )}
+      <SidebarHeader className="p-2">
+        <div className="flex justify-center py-2">
+          <img src={hangukLogo} alt="Hanguk" className="h-10 w-auto" />
+        </div>
       </SidebarHeader>
       
       <SidebarContent className="px-2">
