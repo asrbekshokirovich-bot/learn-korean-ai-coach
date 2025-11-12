@@ -7,7 +7,7 @@ import SignInDialog from "./SignInDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageSelector } from "./LanguageSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
-import hangukLogo from "@/assets/hanguk-logo.png";
+import hangukLogo from "@/assets/hanguk-logo-new.jpg";
 
 const Navigation = () => {
   const navigate = useNavigate();

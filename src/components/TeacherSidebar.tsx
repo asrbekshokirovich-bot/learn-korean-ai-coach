@@ -2,12 +2,14 @@ import { Home, Users, Calendar, DollarSign, Video, Tv, Settings } from "lucide-r
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import hangukLogo from "@/assets/hanguk-logo-new.jpg";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -36,6 +38,20 @@ export function TeacherSidebar() {
 
   return (
     <Sidebar className={open ? "w-60 border-r border-border/40" : "w-14"} collapsible="icon">
+      <SidebarHeader className={open ? "p-4" : "p-2"}>
+        {open ? (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-hero shadow-lg animate-fade-in">
+            <img src={hangukLogo} alt="Hanguk" className="h-6 w-auto" />
+            <span className="font-semibold text-white">
+              Hanguk Teaching
+            </span>
+          </div>
+        ) : (
+          <div className="flex justify-center py-2">
+            <img src={hangukLogo} alt="Hanguk" className="h-8 w-auto" />
+          </div>
+        )}
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>{t('teacherPortal')}</SidebarGroupLabel>

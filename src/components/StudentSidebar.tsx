@@ -2,6 +2,7 @@ import { Home, BookOpen, Brain, Calendar, MessageSquare, Film, Users, Video, Cre
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import hangukLogo from "@/assets/hanguk-logo-new.jpg";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -197,7 +198,7 @@ export function StudentSidebar() {
         {open ? (
           <div className="space-y-3 animate-fade-in">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-hero shadow-lg">
-              <Sparkles className="h-5 w-5 text-white animate-pulse" />
+              <img src={hangukLogo} alt="Hanguk" className="h-6 w-auto" />
               <span className="font-semibold text-white">
                 Hanguk Learning
               </span>
