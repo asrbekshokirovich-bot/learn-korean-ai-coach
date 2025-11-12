@@ -24,6 +24,7 @@ interface Participant {
   stream?: MediaStream;
   peerConnection?: RTCPeerConnection;
   profilePicture?: string;
+  isScreenSharing?: boolean;
 }
 
 export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
@@ -235,43 +236,35 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
     const pc = new RTCPeerConnection(configuration);
 
-    // Add local media tracks with current video selection
-    const audioTrack = localStream?.getAudioTracks()?.[0] || null;
-    const videoTrack = getCurrentVideoTrack();
-    if (audioTrack) {
-      pc.addTrack(audioTrack, localStream as MediaStream);
-      console.log('Added local audio track');
-    }
-    if (videoTrack) {
-      const srcStream = isScreenSharing && screenShareStream ? screenShareStream : (localStream as MediaStream);
-      pc.addTrack(videoTrack, srcStream);
-      console.log('Added video track (screenShare:', isScreenSharing, ')');
-    } else {
-      console.warn('No video track available when creating peer connection');
-    }
-
-    // Handle remote stream
-    pc.ontrack = (event) => {
-      console.log('Received remote track from:', remoteUserId, 'kind:', event.track.kind);
-      const stream = event.streams[0];
-      console.log('Remote stream tracks:', stream.getTracks().map(t => ({
-        kind: t.kind,
-        label: t.label,
-        enabled: t.enabled
-      })));
-
-      setParticipants(prev => {
-        const updated = new Map(prev);
-        const participant = updated.get(remoteUserId);
-        if (participant) {
-          participant.stream = stream;
-          updated.set(remoteUserId, participant);
-          console.log('Updated participant stream:', remoteUserId);
-        } else {
-          console.warn('Received track for unknown participant:', remoteUserId);
-        }
-        return updated;
+    // Add local media tracks
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        pc.addTrack(track, localStream);
+        console.log(`Added ${track.kind} track to peer:`, remoteUserId, 'enabled:', track.enabled);
       });
+    }
+
+    // Handle remote stream tracks
+    pc.ontrack = (event) => {
+      console.log('⭐ Received remote track:', event.track.kind, 'from:', remoteUserId, 'streams:', event.streams.length);
+      
+      if (event.streams && event.streams[0]) {
+        const stream = event.streams[0];
+        console.log('Remote stream ID:', stream.id, 'tracks:', stream.getTracks().length);
+        
+        setParticipants(prev => {
+          const updated = new Map(prev);
+          const participant = updated.get(remoteUserId);
+          if (participant) {
+            participant.stream = stream;
+            updated.set(remoteUserId, participant);
+            console.log('✅ Updated participant stream for:', remoteUserId);
+          } else {
+            console.warn('⚠️ Received track for unknown participant:', remoteUserId);
+          }
+          return updated;
+        });
+      }
     };
 
     // Handle ICE candidates
@@ -296,17 +289,29 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
 
     pc.onnegotiationneeded = async () => {
       try {
-        if (!realtimeChannelRef.current) return;
-        console.log('Negotiation needed with', remoteUserId);
-        const offer = await pc.createOffer();
+        if (!realtimeChannelRef.current) {
+          console.log('⚠️ No channel for renegotiation');
+          return;
+        }
+        
+        console.log('🔄 Negotiation needed with', remoteUserId);
+        const offer = await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: true
+        });
         await pc.setLocalDescription(offer);
+        
         realtimeChannelRef.current.send({
           type: 'broadcast',
           event: 'offer',
-          payload: { offer, from: currentUserId, to: remoteUserId }
+          payload: { 
+            offer: pc.localDescription, 
+            from: currentUserId, 
+            to: remoteUserId 
+          }
         });
       } catch (err) {
-        console.error('Negotiation failed', err);
+        console.error('❌ Negotiation failed:', err);
       }
     };
     pc.onconnectionstatechange = () => {
@@ -332,9 +337,9 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
       })
       // User joined
       .on('broadcast', { event: 'user-joined' }, async ({ payload }) => {
-        if (payload.userId === userId) return; // Ignore self
+        if (payload.userId === userId) return;
         
-        console.log('User joined:', payload);
+        console.log('👤 User joined:', payload.userName, payload.userRole);
         
         setParticipants(prev => {
           const updated = new Map(prev);
@@ -343,18 +348,20 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
               userId: payload.userId,
               userName: payload.userName,
               userRole: payload.userRole,
-              profilePicture: payload.profilePicture
+              profilePicture: payload.profilePicture,
+              isScreenSharing: false
             });
           }
           return updated;
         });
 
+        // Wait a bit for state to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Create offer for new participant
         try {
           const pc = await createPeerConnection(payload.userId);
-          const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-          await pc.setLocalDescription(offer);
-
+          
           setParticipants(prev => {
             const updated = new Map(prev);
             const participant = updated.get(payload.userId);
@@ -365,28 +372,37 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             return updated;
           });
 
+          const offer = await pc.createOffer({ 
+            offerToReceiveAudio: true, 
+            offerToReceiveVideo: true 
+          });
+          await pc.setLocalDescription(offer);
+
+          console.log('📤 Sending offer to:', payload.userName);
           channel.send({
             type: 'broadcast',
             event: 'offer',
             payload: {
-              offer: offer,
+              offer: pc.localDescription,
               from: userId,
               to: payload.userId
             }
           });
         } catch (error) {
-          console.error('Error creating offer:', error);
+          console.error('❌ Error creating offer:', error);
         }
       })
       // Received offer
       .on('broadcast', { event: 'offer' }, async ({ payload }) => {
         if (payload.to !== userId) return;
         
-        console.log('Received offer from:', payload.from);
+        console.log('📥 Received offer from:', payload.from);
         
         try {
           let pc = participantsRef.current.get(payload.from)?.peerConnection;
+          
           if (!pc) {
+            console.log('Creating new peer connection for offer');
             pc = await createPeerConnection(payload.from);
             setParticipants(prev => {
               const updated = new Map(prev);
@@ -399,28 +415,29 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             });
           }
 
-          await pc.setRemoteDescription(payload.offer);
+          await pc.setRemoteDescription(new RTCSessionDescription(payload.offer));
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
 
+          console.log('📤 Sending answer to:', payload.from);
           channel.send({
             type: 'broadcast',
             event: 'answer',
             payload: {
-              answer: answer,
+              answer: pc.localDescription,
               from: userId,
               to: payload.from
             }
           });
         } catch (error) {
-          console.error('Error handling offer:', error);
+          console.error('❌ Error handling offer:', error);
         }
       })
       // Received answer
       .on('broadcast', { event: 'answer' }, async ({ payload }) => {
         if (payload.to !== userId) return;
         
-        console.log('Received answer from:', payload.from);
+        console.log('📥 Received answer from:', payload.from);
         
         try {
           const participant = participantsRef.current.get(payload.from);
@@ -428,9 +445,12 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
             await participant.peerConnection.setRemoteDescription(
               new RTCSessionDescription(payload.answer)
             );
+            console.log('✅ Set remote description from answer');
+          } else {
+            console.warn('⚠️ No peer connection for answer from:', payload.from);
           }
         } catch (error) {
-          console.error('Error handling answer:', error);
+          console.error('❌ Error handling answer:', error);
         }
       })
       // Received ICE candidate
@@ -448,7 +468,31 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
           console.error('Error adding ICE candidate:', error);
         }
       })
-      // User left
+      // Screen share events
+      .on('broadcast', { event: 'screen-share-started' }, ({ payload }) => {
+        console.log('📺 User started screen sharing:', payload.userName);
+        setParticipants(prev => {
+          const updated = new Map(prev);
+          const participant = updated.get(payload.userId);
+          if (participant) {
+            participant.isScreenSharing = true;
+            updated.set(payload.userId, participant);
+          }
+          return updated;
+        });
+      })
+      .on('broadcast', { event: 'screen-share-stopped' }, ({ payload }) => {
+        console.log('📺 User stopped screen sharing:', payload.userId);
+        setParticipants(prev => {
+          const updated = new Map(prev);
+          const participant = updated.get(payload.userId);
+          if (participant) {
+            participant.isScreenSharing = false;
+            updated.set(payload.userId, participant);
+          }
+          return updated;
+        });
+      })
       .on('broadcast', { event: 'user-left' }, ({ payload }) => {
         console.log('User left:', payload.userId);
         
@@ -529,15 +573,20 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
         }
 
         // Replace video track in all peer connections
-        participants.forEach((participant) => {
+        participantsRef.current.forEach((participant) => {
           if (participant.peerConnection) {
             const videoSender = participant.peerConnection
               .getSenders()
               .find(sender => sender.track?.kind === 'video');
             
             if (videoSender && screenStream.getVideoTracks()[0]) {
-              videoSender.replaceTrack(screenStream.getVideoTracks()[0]);
-              console.log('Replaced video track with screen share for:', participant.userId);
+              videoSender.replaceTrack(screenStream.getVideoTracks()[0])
+                .then(() => {
+                  console.log('✅ Replaced video track with screen share for:', participant.userId);
+                })
+                .catch(err => {
+                  console.error('❌ Failed to replace track:', err);
+                });
             }
           }
         });
@@ -579,15 +628,20 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     // Replace back to camera video in all peer connections
     if (localStream) {
       const videoTrack = localStream.getVideoTracks()[0];
-      participants.forEach((participant) => {
+      participantsRef.current.forEach((participant) => {
         if (participant.peerConnection) {
           const videoSender = participant.peerConnection
             .getSenders()
             .find(sender => sender.track?.kind === 'video');
           
           if (videoSender && videoTrack) {
-            videoSender.replaceTrack(videoTrack);
-            console.log('Replaced screen share with camera for:', participant.userId);
+            videoSender.replaceTrack(videoTrack)
+              .then(() => {
+                console.log('✅ Replaced screen share with camera for:', participant.userId);
+              })
+              .catch(err => {
+                console.error('❌ Failed to replace track:', err);
+              });
           }
         }
       });
@@ -1103,79 +1157,137 @@ export const VideoLessonRoom = ({ userRole }: VideoLessonRoomProps) => {
     }
   };
 
-  // Separate participants by role
+  // Separate participants by role and determine spotlight
   const teacher = Array.from(participants.values()).find(p => p.userRole === 'teacher');
   const students = Array.from(participants.values()).filter(p => p.userRole === 'student');
-  const allParticipants = teacher ? [teacher, ...students] : students;
+  
+  // For students: spotlight is the teacher (or teacher's screen if sharing)
+  const spotlightParticipant = userRole === 'student' ? teacher : null;
+  const gridParticipants = userRole === 'student' ? students : (teacher ? [teacher, ...students] : students);
 
   return (
     <>
       <div className="h-screen bg-background flex flex-col">
       {/* Video Grid */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 min-h-0">
-        {/* Main Video Grid - Shows all participants */}
-        <div className="lg:col-span-2 relative bg-muted rounded-lg overflow-hidden p-4">
-          {allParticipants.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <User className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground mb-2">
-                  {isGroupLesson ? `${groupName || t('groupLesson')}` : t(userRole === 'student' ? 'waitingForTeacher' : 'waitingForStudent')}
-                </p>
-                {isGroupLesson && (
-                  <p className="text-sm text-muted-foreground">{t('waitingForParticipants')}</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className={`grid gap-3 h-full ${
-              allParticipants.length === 1 ? 'grid-cols-1' :
-              allParticipants.length <= 4 ? 'grid-cols-2' :
-              allParticipants.length <= 9 ? 'grid-cols-3' : 'grid-cols-4'
-            }`}>
-              {allParticipants.map((participant) => (
-                <Card key={participant.userId} className="relative overflow-hidden bg-card">
-                  <video
-                    ref={(el) => {
-                      if (el && participant.stream) {
-                        el.srcObject = participant.stream;
-                        el.muted = false;
-                        participantVideosRef.current.set(participant.userId, el);
-                        el.play().catch((e) => console.log('Autoplay prevented, will play on user interaction', e));
-                      }
-                    }}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                  {!participant.stream && (
-                    <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={participant.profilePicture} />
-                        <AvatarFallback className="text-2xl">
-                          {participant.userName[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                  )}
-                  <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={participant.profilePicture} />
-                      <AvatarFallback className="text-xs">
-                        {participant.userName[0]?.toUpperCase()}
+        {/* Main Video Area - Spotlight for students, Grid for teachers */}
+        <div className="lg:col-span-2 relative bg-muted rounded-lg overflow-hidden">
+          {userRole === 'student' && spotlightParticipant ? (
+            // Student view: Show teacher as spotlight
+            <Card className="relative h-full overflow-hidden bg-card">
+              <video
+                ref={(el) => {
+                  if (el && spotlightParticipant.stream) {
+                    el.srcObject = spotlightParticipant.stream;
+                    el.muted = false;
+                    participantVideosRef.current.set(spotlightParticipant.userId, el);
+                    el.play().catch((e) => console.log('Autoplay prevented:', e));
+                  }
+                }}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+              {!spotlightParticipant.stream && (
+                <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                  <div className="text-center">
+                    <Avatar className="h-24 w-24 mx-auto mb-4">
+                      <AvatarImage src={spotlightParticipant.profilePicture} />
+                      <AvatarFallback className="text-4xl">
+                        {spotlightParticipant.userName[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium truncate flex-1">
-                      {participant.userName}
-                    </span>
-                    {participant.userRole === 'teacher' && (
-                      <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
-                        {t('teacher')}
-                      </span>
+                    <p className="text-muted-foreground">Connecting to teacher...</p>
+                  </div>
+                </div>
+              )}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 bg-background/90 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={spotlightParticipant.profilePicture} />
+                  <AvatarFallback>
+                    {spotlightParticipant.userName[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-semibold flex-1">
+                  {spotlightParticipant.userName}
+                </span>
+                <span className="text-xs bg-primary/20 text-primary px-3 py-1 rounded-full">
+                  {t('teacher')}
+                </span>
+                {spotlightParticipant.isScreenSharing && (
+                  <span className="text-xs bg-accent/20 text-accent px-3 py-1 rounded-full flex items-center gap-1">
+                    <Monitor className="w-3 h-3" />
+                    Sharing Screen
+                  </span>
+                )}
+              </div>
+            </Card>
+          ) : (
+            // Teacher view OR student with no teacher: Show grid of all participants
+            <div className="h-full p-4">
+              {gridParticipants.length === 0 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <User className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-2">
+                      {isGroupLesson ? `${groupName || t('groupLesson')}` : t(userRole === 'student' ? 'waitingForTeacher' : 'waitingForStudent')}
+                    </p>
+                    {isGroupLesson && (
+                      <p className="text-sm text-muted-foreground">{t('waitingForParticipants')}</p>
                     )}
                   </div>
-                </Card>
-              ))}
+                </div>
+              ) : (
+                <div className={`grid gap-3 h-full ${
+                  gridParticipants.length === 1 ? 'grid-cols-1' :
+                  gridParticipants.length <= 4 ? 'grid-cols-2' :
+                  gridParticipants.length <= 9 ? 'grid-cols-3' : 'grid-cols-4'
+                }`}>
+                  {gridParticipants.map((participant) => (
+                    <Card key={participant.userId} className="relative overflow-hidden bg-card">
+                      <video
+                        ref={(el) => {
+                          if (el && participant.stream) {
+                            el.srcObject = participant.stream;
+                            el.muted = false;
+                            participantVideosRef.current.set(participant.userId, el);
+                            el.play().catch((e) => console.log('Autoplay prevented:', e));
+                          }
+                        }}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                      {!participant.stream && (
+                        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={participant.profilePicture} />
+                            <AvatarFallback className="text-2xl">
+                              {participant.userName[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-lg">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={participant.profilePicture} />
+                          <AvatarFallback className="text-xs">
+                            {participant.userName[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium truncate flex-1">
+                          {participant.userName}
+                        </span>
+                        {participant.userRole === 'teacher' && (
+                          <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
+                            {t('teacher')}
+                          </span>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
