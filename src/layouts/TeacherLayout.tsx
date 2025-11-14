@@ -14,6 +14,7 @@ import VideoLesson from "@/pages/teacher/VideoLesson";
 import MyGroups from "@/pages/teacher/MyGroups";
 import Recordings from "@/pages/teacher/Recordings";
 import Settings from "@/pages/teacher/Settings";
+import AddMeetingLink from "@/pages/teacher/AddMeetingLink";
 
 const TeacherLayout = () => {
   const navigate = useNavigate();
@@ -118,6 +119,7 @@ const TeacherLayout = () => {
                 <Route path="recordings" element={<Recordings />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="video-lesson" element={<VideoLesson />} />
+                <Route path="meeting-links" element={<AddMeetingLink />} />
               </Routes>
             </div>
           </main>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, startOfWeek, addDays } from "date-fns";
 
 const Schedule = () => {
+  const navigate = useNavigate();
   const [lessons, setLessons] = useState<any[]>([]);
   const { toast } = useToast();
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -169,7 +171,16 @@ const Schedule = () => {
                       </span>
                     </div>
                   </div>
-                  <Badge>{lesson.status}</Badge>
+                  <div className="flex gap-2">
+                    <Badge>{lesson.status}</Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate(`/student/video-lesson?lessonId=${lesson.id}`)}
+                    >
+                      Join
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
