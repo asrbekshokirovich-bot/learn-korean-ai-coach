@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ interface GroupLesson {
 }
 
 const GroupSchedule = () => {
+  const navigate = useNavigate();
   const [groups, setGroups] = useState<GroupLesson[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(true);
@@ -87,25 +89,7 @@ const GroupSchedule = () => {
   };
 
   const handleJoinLesson = (lesson: GroupLesson) => {
-    const now = new Date();
-    const [hours, minutes] = lesson.start_time.split(":").map(Number);
-    const lessonStart = new Date(selectedDate!);
-    lessonStart.setHours(hours, minutes, 0, 0);
-    const lessonEnd = new Date(lessonStart.getTime() + lesson.duration_minutes * 60000);
-
-    if (now < lessonStart) {
-      const minutesUntil = Math.floor((lessonStart.getTime() - now.getTime()) / 60000);
-      toast.error(`Lesson hasn't started yet. It will begin in ${minutesUntil} minutes.`);
-      return;
-    }
-
-    if (now > lessonEnd) {
-      toast.error("This lesson has already ended.");
-      return;
-    }
-
-    toast.success("Joining lesson...");
-    // TODO: open meeting link when available
+    navigate(`/student/video-lesson?groupId=${lesson.id}`);
   };
 
   const daysWithLessons = groups.flatMap(group => {
