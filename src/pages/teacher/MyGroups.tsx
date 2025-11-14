@@ -186,26 +186,8 @@ const MyGroups = () => {
     return nextDate;
   };
 
-  const handleJoinLesson = (group: any) => {
-    const now = new Date();
-    const [hours, minutes] = group.start_time.split(":").map(Number);
-    const lessonStart = new Date(selectedDate!);
-    lessonStart.setHours(hours, minutes, 0, 0);
-    const lessonEnd = new Date(lessonStart.getTime() + group.duration_minutes * 60000);
-
-    if (now < lessonStart) {
-      const minutesUntil = Math.floor((lessonStart.getTime() - now.getTime()) / 60000);
-      toast.error(`Lesson hasn't started yet. It will begin in ${minutesUntil} minutes.`);
-      return;
-    }
-
-    if (now > lessonEnd) {
-      toast.error("This lesson has already ended.");
-      return;
-    }
-
-    toast.success("Joining lesson...");
-    navigate(`/teacher/video-lesson?groupId=${group.id}&groupName=${encodeURIComponent(group.name)}`);
+  const handleAddLink = (group: any) => {
+    navigate(`/teacher/meeting-links`);
   };
 
   const loadGroupLessons = async (groupId: string) => {
@@ -417,13 +399,10 @@ const MyGroups = () => {
                 </div>
                 <Button 
                   size="lg"
-                  onClick={() => {
-                    setSelectedDate(nextLessonDate);
-                    handleJoinLesson(selectedGroupForCalendar);
-                  }}
+                  onClick={() => handleAddLink(selectedGroupForCalendar)}
                 >
                   <Video className="w-5 h-5 mr-2" />
-                  Join Lesson
+                  Add Link
                 </Button>
               </div>
             </div>
@@ -926,10 +905,10 @@ const MyGroups = () => {
 
                     <Button 
                       className="w-full" 
-                      onClick={() => handleJoinLesson(selectedGroupForCalendar)}
+                      onClick={() => handleAddLink(selectedGroupForCalendar)}
                     >
                       <Video className="w-4 h-4 mr-2" />
-                      Join Lesson
+                      Add Link
                     </Button>
                   </div>
                 </CardContent>
